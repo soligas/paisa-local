@@ -32,11 +32,17 @@ const mapPlace = (d: any): PlaceData => ({
   isVerified: d.is_verified ?? true,
   coordenadas: d.coordenadas || { lat: 6.25, lng: -75.5 },
   budget: d.budget || { busTicket: 25000, averageMeal: 20000 },
+  budgetRange: d.budget_range || '$$',
   neighborTip: d.neighbor_tip,
   trivia: d.trivia,
   viaEstado: d.via_estado || 'Despejada',
   tiempoDesdeMedellin: d.tiempo_viaje || '2h',
-  seguridadTexto: 'Logística verificada por la comunidad'
+  seguridadTexto: `Plan ${d.parche_type || 'Familiar'}. Vía: ${d.via_estado || 'Despejada'}.`,
+  // Nuevos campos mapeados desde el SQL Maestro
+  parcheType: d.parche_type as any,
+  carType: d.car_type as any,
+  terminalInfo: d.terminal_info,
+  signatureDish: d.signature_dish
 });
 
 export async function testSupabaseConnection(): Promise<boolean> {
@@ -114,6 +120,33 @@ export async function insertUGC(review: Omit<UGCContent, 'id' | 'created_at'>) {
 
 export async function seedMassiveData(table: string, data: any | any[]) {
   if (!supabase) return;
-  const { error } = await supabase.from(table).upsert(data, { onConflict: table === 'places' ? 'titulo' : 'nombre' });
+  // Convertimos las llaves de camelCase (Frontend) a snake_case (SQL) antes de insertar
+  const formattedData = Array.isArray(data) ? data.map(formatItem) : formatItem(data);
+  
+  const { error } = await supabase.from(table).upsert(formattedData, { 
+    onConflict: table === 'places' ? 'titulo' : 'nombre' 
+  });
   if (error) throw error;
+}
+
+function formatItem(item: any) {
+  return {
+    titulo: item.titulo,
+    region: item.region,
+    descripcion: item.descripcion,
+    imagen_url: item.imagen_url || item.imagen,
+    vibe_score: item.vibe_score || item.vibeScore,
+    nomad_score: item.nomad_score || item.nomadScore,
+    coordenadas: item.coordenadas,
+    budget: item.budget,
+    neighbor_tip: item.neighbor_tip || item.neighborTip,
+    trivia: item.trivia,
+    via_estado: item.via_estado || item.viaEstado,
+    tiempo_viaje: item.tiempo_viaje || item.tiempoDesdeMedellin,
+    parche_type: item.parche_type || item.parcheType,
+    car_type: item.car_type || item.carType,
+    terminal_info: item.terminal_info || item.terminalInfo,
+    signature_dish: item.signature_dish || item.signatureDish,
+    budget_range: item.budget_range || item.budgetRange
+  };
 }

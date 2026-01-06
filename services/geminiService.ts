@@ -53,19 +53,30 @@ export async function searchUnified(query: string, lang: SupportedLang = 'es'): 
   try {
     const ai = new GoogleGenAI({ apiKey });
     const matchedTown = MUNICIPIOS_ANTIOQUIA.find(m => cleanString(m) === nQuery || cleanString(m).includes(nQuery));
-    const searchQuery = matchedTown ? `Logística de viaje a ${matchedTown}, Antioquia` : query;
+    const searchQuery = matchedTown ? `Logística viaje Medellín a ${matchedTown} Antioquia terminal norte o sur precios 2024 plato tipico` : query;
 
     const response = await ai.models.generateContent({
       model: "gemini-3-pro-preview",
-      contents: `Search in Antioquia/Medellin for: "${searchQuery}".
-      Found: ${combined.map(r => r.type === 'place' ? (r as any).titulo : (r as any).nombre).join(", ")}.
-      Return an ARRAY JSON of 4 items.
-      IF PLACE: {type: 'place', nombre, region, descripcion, bus_terminal, bus_price_cop (number), duration_hours, safety_score (1-10), safety_tip, secret_tip}.
-      IF DISH: {type: 'dish', nombre, descripcion, best_place, price_est}.
-      Language: ${lang}.`,
+      contents: `Explora Antioquia para: "${searchQuery}".
+      Retorna un ARRAY JSON de 4 items con datos REALES de logística.
+      Si es lugar: {
+        type: 'place', 
+        nombre, 
+        region, 
+        descripcion, 
+        bus_terminal: "Norte" o "Sur", 
+        bus_price_cop: número, 
+        duration: "2h",
+        parche: "Familiar/Rumba/Romantico/Aventura",
+        acceso: "Cualquier Carro/4x4 Recomendado",
+        plato_insignia: "Plato típico real del pueblo",
+        budget_range: "$/$$/$$$"
+      }.
+      Si es plato: {type: 'dish', nombre, descripcion, donde: "Municipio o Restaurante", precio_est: número}.
+      Idioma: ${lang}.`,
       config: {
         tools: [{ googleSearch: {} }],
-        systemInstruction: "You are the ultimate Antioquia travel concierge. You MUST provide real logistics: terminal names, bus prices, and travel times. Be precise for all 125 municipalities."
+        systemInstruction: "Eres el experto logístico de Antioquia. Tu prioridad es decir la verdad sobre: 1. Terminal de salida (Norte/Sur), 2. Si se llega en carro pequeño o 4x4, 3. Cuál es el plato que NO se pueden perder."
       },
     });
 
@@ -81,10 +92,10 @@ export async function searchUnified(query: string, lang: SupportedLang = 'es'): 
             type: 'dish',
             nombre: res.nombre,
             descripcion: res.descripcion,
-            dondeProbar: res.best_place || "Medellín",
+            dondeProbar: res.donde || "Antioquia",
             categoria: "Gastronomía",
-            precioLocalEstimated: res.price_est || "30,000",
-            precioTuristaEstimated: "45,000",
+            precioLocalEstimated: (res.precio_est || 30000).toLocaleString(),
+            precioTuristaEstimated: ((res.precio_est || 30000) * 1.3).toLocaleString(),
             precioVerificado: false,
             economiaCircular: true,
             ...common
@@ -95,18 +106,23 @@ export async function searchUnified(query: string, lang: SupportedLang = 'es'): 
           titulo: res.nombre,
           region: res.region || "Antioquia",
           descripcion: res.descripcion,
-          seguridadTexto: `Seguridad ${res.safety_score || '8'}/10: ${res.safety_tip || 'Tranquilo.'}`,
+          seguridadTexto: `Destino ${res.parche || 'Familiar'}. Acceso: ${res.acceso || 'Cualquier Carro'}.`,
           vibeScore: 90,
           nomadScore: 85,
           viaEstado: 'Despejada',
-          tiempoDesdeMedellin: res.duration_hours || '3h',
+          tiempoDesdeMedellin: res.duration || '3h',
           budget: { 
             busTicket: parseInt(res.bus_price_cop?.toString().replace(/\D/g, '')) || 25000, 
-            averageMeal: 25000 
+            averageMeal: 30000 
           },
+          budgetRange: res.budget_range || '$$',
           coordenadas: { lat: 6.25, lng: -75.5 },
-          neighborTip: res.secret_tip || "Pregunta por el café local.",
-          trivia: `🚌 Terminal ${res.bus_terminal || 'Norte/Sur'} • 💰 Pasaje: $${res.bus_price_cop || '25k'}`,
+          neighborTip: `No te vayas sin probar: ${res.plato_insignia || 'el café local'}.`,
+          trivia: `🚌 Terminal ${res.bus_terminal || 'Norte/Sur'} • 💰 Bus: $${res.bus_price_cop?.toLocaleString() || '25k'}`,
+          parcheType: res.parche,
+          carType: res.acceso,
+          terminalInfo: res.bus_terminal,
+          signatureDish: res.plato_insignia,
           ...common
         };
       });
@@ -150,7 +166,7 @@ export async function getSearchSuggestions(query: string): Promise<string[]> {
     const ai = new GoogleGenAI({ apiKey });
     const response = await ai.models.generateContent({
       model: "gemini-3-flash-preview",
-      contents: `3 popular search terms in Antioquia starting with "${query}". JSON string array.`,
+      contents: `3 términos de búsqueda populares en Antioquia que empiecen con "${query}". Retorna solo un array JSON de strings.`,
       config: { responseMimeType: "application/json" }
     });
     const aiSugs = safeJsonParse(response.text) || [];

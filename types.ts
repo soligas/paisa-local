@@ -3,9 +3,31 @@ export type SupportedLang = 'es' | 'en' | 'pt';
 export type AppTab = 'home' | 'explore' | 'gastronomy' | 'culture';
 export type AntioquiaRegion = 'Oriente' | 'Suroeste' | 'Occidente' | 'Norte' | 'Bajo Cauca' | 'Nordeste' | 'Magdalena Medio' | 'Urabá' | 'Valle de Aburrá';
 
-export interface GroundingLink {
-  uri: string;
-  title: string;
+export interface PlaceData {
+  type: 'place';
+  titulo: string;
+  region: AntioquiaRegion;
+  descripcion: string;
+  seguridadTexto: string;
+  vibeScore: number;
+  nomadScore: number;
+  viaEstado: 'Despejada' | 'Paso Restringido' | 'Cerrada';
+  tiempoDesdeMedellin: string;
+  budget: {
+    busTicket: number;
+    averageMeal: number;
+  };
+  budgetRange?: '$' | '$$' | '$$$';
+  coordenadas: { lat: number; lng: number };
+  imagen: string;
+  isVerified?: boolean;
+  neighborTip?: string;
+  trivia?: string;
+  // Nuevos campos de UX Research
+  parcheType?: 'Familiar' | 'Rumba' | 'Romántico' | 'Aventura' | 'Cultural';
+  carType?: 'Cualquier Carro' | '4x4 Recomendado' | 'Solo Campero';
+  terminalInfo?: string;
+  signatureDish?: string;
 }
 
 export interface DishData {
@@ -19,7 +41,8 @@ export interface DishData {
   precioTuristaEstimated: string;
   precioVerificado: boolean;
   economiaCircular: boolean;
-  productoresOrigen?: { nombre: string; finca: string; impacto: string }[];
+  // Added missing field for UI consistency
+  productoresOrigen?: { nombre: string; finca: string }[];
 }
 
 export interface CultureExperience {
@@ -32,39 +55,18 @@ export interface CultureExperience {
   imagen: string;
   costoSugeridoCOP: string;
   horarioRecomendado: string;
+  // Added missing field for UI consistency
   maestroOficio?: { nombre: string; especialidad: string; años: number };
 }
 
+// Added ChallengeData to fix import error in ChallengeCard.tsx
 export interface ChallengeData {
+  id: string;
   titulo: string;
   mision: string;
   dificultad: 'Fácil' | 'Media' | 'Arriero';
   recompensa: string;
   completado: boolean;
-}
-
-export interface PlaceData {
-  type: 'place';
-  titulo: string;
-  region: AntioquiaRegion;
-  descripcion: string;
-  seguridadTexto: string;
-  verdadIncomoda?: string;
-  vibeScore: number;
-  nomadScore: number;
-  viaEstado: 'Despejada' | 'Paso Restringido' | 'Cerrada';
-  tiempoDesdeMedellin: string;
-  budget: {
-    busTicket: number;
-    averageMeal: number;
-  };
-  coordenadas: { lat: number; lng: number };
-  imagen: string;
-  itinerarioImpacto?: { hora: string; actividad: string; beneficio: string }[];
-  isVerified?: boolean;
-  sources?: any[];
-  neighborTip?: string;
-  trivia?: string;
 }
 
 export type UnifiedItem = PlaceData | DishData | CultureExperience;
@@ -82,6 +84,6 @@ export interface AppState {
   favorites: string[];
   foodFavorites: string[];
   cultureFavorites: string[];
-  visitedTowns: string[]; // Nuevo: Municipios sellados en el pasaporte
-  transcription: string; // Nuevo: Texto del Arriero en tiempo real
+  visitedTowns: string[];
+  transcription: string;
 }

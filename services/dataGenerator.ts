@@ -21,20 +21,25 @@ export async function generateAndSeedPueblos(onProgress: (current: number, total
       const response = await ai.models.generateContent({
         model: "gemini-3-pro-preview",
         contents: `Investiga y genera datos turísticos detallados para estos municipios de Antioquia: ${batch.join(", ")}.
-        Entrega un ARRAY JSON con esquema:
+        IMPORTANTE: Usa datos reales de logística 2024.
+        Entrega un ARRAY JSON con este esquema EXACTO:
         {
           "titulo": "Nombre",
           "region": "Subregión",
-          "descripcion": "Descripción",
-          "imagen_url": "URL",
-          "vibe_score": 90,
-          "nomad_score": 80,
+          "descripcion": "Descripción cautivadora",
+          "imagen_url": "URL de Unsplash representativa",
+          "vibe_score": 95,
           "coordenadas": {"lat": 0, "lng": 0},
-          "budget": {"busTicket": 0, "averageMeal": 0},
-          "neighbor_tip": "Tip",
-          "trivia": "Trivia",
+          "budget": {"busTicket": número, "averageMeal": número},
+          "neighbor_tip": "Consejo de local",
+          "trivia": "Dato curioso",
           "via_estado": "Despejada",
-          "tiempo_viaje": "3h"
+          "tiempo_viaje": "3h",
+          "parche_type": "Familiar/Rumba/Romantico/Aventura",
+          "car_type": "Cualquier Carro/4x4 Recomendado",
+          "terminal_info": "Norte/Sur",
+          "signature_dish": "Nombre del plato insignia",
+          "budget_range": "$/$$/$$$"
         }`,
         config: {
           tools: [{ googleSearch: {} }],
