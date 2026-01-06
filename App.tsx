@@ -10,7 +10,7 @@ import {
   searchUnified, cleanString,
   connectArrieroLive, decodeAudioData, decode, getSearchSuggestions
 } from './services/geminiService';
-import { testSupabaseConnection, isPlacesEmpty } from './services/supabaseService';
+import { testSupabaseConnection, isPlacesEmpty, isSupabaseConfigured } from './services/supabaseService';
 import { generateAndSeedPueblos } from './services/dataGenerator';
 import { localData } from './data';
 
@@ -41,7 +41,8 @@ const UI_STRINGS = {
     errorDesc: 'Avemaría! Algo falló. Usando datos locales.',
     syncing: 'Sincronizando el Universo...',
     syncDone: '¡Todo el departamento está en tu bolsillo!',
-    emptyMsg: 'Tu base de datos está vacía. ¿Sincronizamos el Universo Paisa?'
+    emptyMsg: 'Tu base de datos está vacía. ¿Sincronizamos el Universo Paisa?',
+    configPending: 'Configuración pendiente'
   },
   en: {
     lvl: 'LEVEL',
@@ -57,7 +58,8 @@ const UI_STRINGS = {
     errorDesc: 'Oops! Fallback to local data.',
     syncing: 'Syncing the Universe...',
     syncDone: 'The whole state is now in your pocket!',
-    emptyMsg: 'Your database is empty. Sync the Paisa Universe?'
+    emptyMsg: 'Your database is empty. Sync the Paisa Universe?',
+    configPending: 'Config pending'
   },
   pt: {
     lvl: 'NÍVEL',
@@ -73,7 +75,8 @@ const UI_STRINGS = {
     errorDesc: 'Ops! Usando datos locais.',
     syncing: 'Sincronizando o Universo...',
     syncDone: 'Todo o estado está agora no seu bolso!',
-    emptyMsg: 'Seu banco de dados está vazio. Sincronizar o Universo Paisa?'
+    emptyMsg: 'Seu banco de dados está vazio. Sincronizar o Universo Paisa?',
+    configPending: 'Configuração pendente'
   }
 };
 
@@ -88,7 +91,7 @@ export default function App() {
     transcription: ''
   });
 
-  const [dbStatus, setDbStatus] = useState<'online' | 'offline' | 'checking'>('checking');
+  const [dbStatus, setDbStatus] = useState<'online' | 'offline' | 'checking' | 'pending'>('checking');
   const [dbEmpty, setDbEmpty] = useState(false);
   const [syncProgress, setSyncProgress] = useState<{current: number, total: number, last: string} | null>(null);
   const [xp, setXp] = useState(() => Number(localStorage.getItem('paisa_xp') || 0));
@@ -103,6 +106,10 @@ export default function App() {
 
   useEffect(() => {
     const checkDB = async () => {
+      if (!isSupabaseConfigured) {
+        setDbStatus('pending');
+        return;
+      }
       const isUp = await testSupabaseConnection();
       setDbStatus(isUp ? 'online' : 'offline');
       if (isUp) {
@@ -241,8 +248,11 @@ export default function App() {
             </div>
             <span className="font-paisa text-[9px] text-paisa-emerald uppercase">{t.lvl} {Math.floor(xp/500)+1}</span>
             <div className="h-4 w-px bg-slate-200 mx-2" />
-            <div className={`flex items-center gap-1.5 px-2 py-1 rounded-full text-[8px] font-black uppercase ${dbStatus === 'online' ? 'bg-emerald-50 text-emerald-600' : 'bg-red-50 text-red-600'}`}>
-               <Database size={10} /> {dbStatus}
+            <div className={`flex items-center gap-1.5 px-2 py-1 rounded-full text-[8px] font-black uppercase ${
+              dbStatus === 'online' ? 'bg-emerald-50 text-emerald-600' : 
+              dbStatus === 'pending' ? 'bg-amber-50 text-amber-600' : 
+              'bg-red-50 text-red-600'}`}>
+               <Database size={10} /> {dbStatus === 'pending' ? t.configPending : dbStatus}
             </div>
             {dbStatus === 'online' && (
               <button onClick={handleSyncUniverse} className={`p-2 rounded-full transition-all group relative ${dbEmpty ? 'bg-paisa-gold text-white animate-pulse' : 'bg-slate-100 text-slate-400 hover:bg-paisa-emerald hover:text-white'}`}>

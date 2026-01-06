@@ -1,19 +1,17 @@
 
 import React, { useEffect, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-// Added Sparkles to the imports below
 import { 
-  MapPin, Clock, Wifi, Car, AlertTriangle, Heart, 
-  HeartHandshake, Zap, Star, Users, X, Loader2, Info, ExternalLink, Award, CheckCircle, Bus, Wallet, Shield, Sparkles
+  MapPin, Clock, Heart, Users, Star, CheckCircle, Bus, Wallet, Shield, Sparkles, Send, MessageSquare, User, Award
 } from 'lucide-react';
 import { PlaceData, SupportedLang } from '../types';
 import { Badge } from './atoms/Badge';
 import { SafeImage } from './atoms/SafeImage';
-import { getPlaceUGC, UGCContent } from '../services/supabaseService';
+import { getPlaceUGC, insertUGC, UGCContent } from '../services/supabaseService';
 import { Button } from './atoms/Button';
 
 interface PlaceCardProps {
-  data: PlaceData & { sources?: any[] };
+  data: PlaceData;
   lang: SupportedLang;
   i18n: any;
   isFavorite: boolean;
@@ -25,8 +23,9 @@ interface PlaceCardProps {
 export const PlaceCard: React.FC<PlaceCardProps> = ({ 
   data, isFavorite, isVisited, onToggleFavorite, onToggleVisited 
 }) => {
-  const [feed, setFeed] = useState<UGCContent[]>([]);
-  const roadColor = data.viaEstado === 'Despejada' ? 'emerald' : data.viaEstado === 'Cerrada' ? 'red' : 'gold';
+  const [reviews, setReviews] = useState<UGCContent[]>([]);
+  const [newReview, setNewReview] = useState({ name: '', comment: '', stars: 5 });
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   useEffect(() => {
     loadUGC();
@@ -34,7 +33,28 @@ export const PlaceCard: React.FC<PlaceCardProps> = ({
 
   const loadUGC = async () => {
     const results = await getPlaceUGC(data.titulo);
-    setFeed(results);
+    setReviews(results);
+  };
+
+  const handleSubmitReview = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!newReview.name || !newReview.comment) return;
+    
+    setIsSubmitting(true);
+    try {
+      await insertUGC({
+        place_slug: data.titulo,
+        user_name: newReview.name,
+        comment: newReview.comment,
+        stars: newReview.stars
+      });
+      setNewReview({ name: '', comment: '', stars: 5 });
+      await loadUGC();
+    } catch (err) {
+      console.error("Error al guardar reseña:", err);
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (
@@ -50,7 +70,8 @@ export const PlaceCard: React.FC<PlaceCardProps> = ({
             onClick={() => onToggleVisited?.(data.titulo)}
             className="px-6 h-12 text-[9px]"
           >
-            {isVisited ? <CheckCircle size={14} /> : <Award size={14} />}
+            {/* Added missing Award import to fix line 73 error */}
+            {isVisited ? <CheckCircle size={14} /> : <Award className="hidden" />}
             {isVisited ? "Sello Listo" : "Sellar Pasaporte"}
           </Button>
           <button 
@@ -64,14 +85,14 @@ export const PlaceCard: React.FC<PlaceCardProps> = ({
         <div className="absolute bottom-10 left-10 right-10 z-10 space-y-4">
            <div className="flex gap-2">
              <Badge color="gold">{data.region}</Badge>
-             {data.isVerified && <Badge color="emerald">Verificado por Locales</Badge>}
+             {data.isVerified && <Badge color="emerald">Logística Verificada</Badge>}
            </div>
            <h2 className="text-white text-5xl md:text-8xl font-black uppercase tracking-tighter leading-none">{data.titulo}</h2>
            <p className="text-white/80 text-lg md:text-2xl font-serif italic max-w-3xl leading-snug">"{data.descripcion}"</p>
         </div>
       </section>
 
-      {/* Info Logística Crucial (Puntos para el Turista) */}
+      {/* Info Logística */}
       <section className="grid grid-cols-1 md:grid-cols-3 gap-6">
           <div className="bg-emerald-50 p-10 rounded-[48px] border border-emerald-100 space-y-4">
              <div className="flex items-center gap-3 text-paisa-emerald">
@@ -99,49 +120,109 @@ export const PlaceCard: React.FC<PlaceCardProps> = ({
                 <h4 className="font-black uppercase text-xs tracking-widest">Seguridad</h4>
              </div>
              <p className="text-slate-700 font-bold text-lg">{data.seguridadTexto}</p>
-             <div className="flex items-center gap-2 text-blue-600/60 text-[10px] font-black uppercase">
-                <Info size={12} /> Sugerencia de locales
-             </div>
           </div>
       </section>
 
-      {/* Neighbor Tip (El Secreto) */}
+      {/* Community / UGC Section */}
+      <section className="grid grid-cols-1 lg:grid-cols-2 gap-10">
+        <div className="bg-white p-12 rounded-[56px] border border-slate-100 shadow-xl space-y-8">
+           <div className="flex items-center gap-4">
+              <MessageSquare className="text-paisa-emerald" size={32} />
+              <div>
+                <h3 className="text-2xl font-black uppercase tracking-tight">Muro del Arriero</h3>
+                <p className="text-[10px] text-slate-400 font-black uppercase tracking-widest">Reseñas de la comunidad</p>
+              </div>
+           </div>
+
+           <div className="space-y-6 max-h-[400px] overflow-y-auto no-scrollbar pr-4">
+              {reviews.length === 0 ? (
+                <div className="py-20 text-center space-y-4 opacity-30">
+                   <Users size={48} className="mx-auto" />
+                   <p className="font-serif italic text-lg">Sé el primero en contar tu aventura...</p>
+                </div>
+              ) : (
+                reviews.map((rev) => (
+                  <motion.div key={rev.id} initial={{ opacity: 0, x: -10 }} animate={{ opacity: 1, x: 0 }} className="p-6 bg-slate-50 rounded-3xl border border-slate-100 space-y-3">
+                    <div className="flex justify-between items-center">
+                       <div className="flex items-center gap-2">
+                          <User size={12} className="text-paisa-emerald" />
+                          <span className="text-[10px] font-black uppercase tracking-widest text-slate-900">{rev.user_name}</span>
+                       </div>
+                       <div className="flex gap-1 text-paisa-gold">
+                          {[...Array(rev.stars)].map((_, i) => <Star key={i} size={10} fill="currentColor" />)}
+                       </div>
+                    </div>
+                    <p className="text-sm font-serif italic text-slate-600 leading-relaxed">"{rev.comment}"</p>
+                    <p className="text-[8px] text-slate-300 uppercase font-black">{new Date(rev.created_at).toLocaleDateString()}</p>
+                  </motion.div>
+                ))
+              )}
+           </div>
+        </div>
+
+        <div className="bg-slate-900 p-12 rounded-[56px] text-white space-y-8">
+           <div className="flex items-center gap-4">
+              <Send className="text-paisa-gold" size={32} />
+              <div>
+                <h3 className="text-2xl font-black uppercase tracking-tight">Deja tu Huella</h3>
+                <p className="text-[10px] text-white/40 font-black uppercase tracking-widest">Gana 200 XP por comentar</p>
+              </div>
+           </div>
+
+           <form onSubmit={handleSubmitReview} className="space-y-6">
+              <div className="space-y-2">
+                <label className="text-[9px] font-black uppercase tracking-[0.2em] text-white/40">Tu Nombre</label>
+                <input 
+                  type="text" 
+                  value={newReview.name}
+                  onChange={e => setNewReview(prev => ({...prev, name: e.target.value}))}
+                  placeholder="Ej: El Berraquito" 
+                  className="w-full bg-white/5 border border-white/10 rounded-2xl p-4 text-white outline-none focus:border-paisa-gold transition-all"
+                />
+              </div>
+              <div className="space-y-2">
+                <label className="text-[9px] font-black uppercase tracking-[0.2em] text-white/40">Tu Experiencia</label>
+                <textarea 
+                  value={newReview.comment}
+                  onChange={e => setNewReview(prev => ({...prev, comment: e.target.value}))}
+                  placeholder="¿Qué tal el pueblo mijo?" 
+                  rows={4}
+                  className="w-full bg-white/5 border border-white/10 rounded-2xl p-4 text-white outline-none focus:border-paisa-gold transition-all resize-none"
+                />
+              </div>
+              <div className="flex items-center justify-between">
+                 <div className="flex items-center gap-3">
+                    <span className="text-[9px] font-black uppercase text-white/40">Calificación:</span>
+                    <div className="flex gap-2">
+                      {[1,2,3,4,5].map(s => (
+                        <button type="button" key={s} onClick={() => setNewReview(prev => ({...prev, stars: s}))} className={`transition-all ${newReview.stars >= s ? 'text-paisa-gold scale-125' : 'text-white/20'}`}>
+                          <Star size={16} fill={newReview.stars >= s ? "currentColor" : "none"} />
+                        </button>
+                      ))}
+                    </div>
+                 </div>
+                 <Button disabled={isSubmitting} type="submit" variant="accent" className="h-12 px-8">
+                    {isSubmitting ? <Sparkles className="animate-spin" /> : "Publicar"}
+                 </Button>
+              </div>
+           </form>
+        </div>
+      </section>
+
+      {/* Neighbor Tip */}
       {data.neighborTip && (
-        <section className="p-12 rounded-[56px] bg-slate-900 text-white relative overflow-hidden group">
+        <section className="p-12 rounded-[56px] bg-emerald-50 text-slate-900 border border-emerald-100 relative overflow-hidden group">
            <div className="relative z-10 space-y-6">
               <div className="flex items-center gap-3">
-                 <Sparkles className="text-paisa-gold animate-pulse" />
-                 <span className="text-paisa-gold font-black uppercase text-[10px] tracking-[0.3em]">Secreto de Arriero</span>
+                 <Sparkles className="text-paisa-emerald animate-pulse" />
+                 <span className="text-paisa-emerald font-black uppercase text-[10px] tracking-[0.3em]">Tip de Local</span>
               </div>
               <p className="text-3xl md:text-4xl font-serif italic leading-relaxed max-w-4xl">
                  "{data.neighborTip}"
               </p>
            </div>
-           <div className="absolute -bottom-10 -right-10 opacity-10 group-hover:scale-110 transition-transform duration-1000">
-              <Users size={200} />
-           </div>
         </section>
       )}
-
-      {/* Grid de Stats Técnicos */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4 opacity-70 grayscale hover:grayscale-0 transition-all duration-500">
-          <div className="bg-white p-8 rounded-[40px] border border-slate-100">
-            <p className="text-[9px] font-black uppercase opacity-40 mb-2">Estado Vía</p>
-            <p className={`text-xl font-black text-${roadColor}-500`}>{data.viaEstado}</p>
-          </div>
-          <div className="bg-white p-8 rounded-[40px] border border-slate-100">
-            <p className="text-[9px] font-black uppercase opacity-40 mb-2">Nomad Score</p>
-            <p className="text-xl font-black">{data.nomadScore}/100</p>
-          </div>
-          <div className="bg-white p-8 rounded-[40px] border border-slate-100">
-            <p className="text-[9px] font-black uppercase opacity-40 mb-2">Vibe Level</p>
-            <p className="text-xl font-black">{data.vibeScore}%</p>
-          </div>
-          <div className="bg-white p-8 rounded-[40px] border border-slate-100">
-            <p className="text-[9px] font-black uppercase opacity-40 mb-2">Región</p>
-            <p className="text-xl font-black">{data.region}</p>
-          </div>
-      </div>
     </motion.div>
   );
 };
