@@ -10,6 +10,8 @@ import {
   searchUnified, cleanString,
   connectArrieroLive, decodeAudioData, decode, getSearchSuggestions
 } from './services/geminiService';
+import { testSupabaseConnection, isPlacesEmpty } from './services/supabaseService';
+import { generateAndSeedPueblos } from './services/dataGenerator';
 import { localData } from './data';
 
 import { Badge } from './components/atoms/Badge';
@@ -36,7 +38,10 @@ const UI_STRINGS = {
     resultsFor: 'Explorando',
     listening: 'Escuchando...',
     talk: 'Hablar con Arriero',
-    errorDesc: '¡Avemaría! Hubo un problema. Mostrando datos de respaldo.'
+    errorDesc: 'Avemaría! Algo falló. Usando datos locales.',
+    syncing: 'Sincronizando el Universo...',
+    syncDone: '¡Todo el departamento está en tu bolsillo!',
+    emptyMsg: 'Tu base de datos está vacía. ¿Sincronizamos el Universo Paisa?'
   },
   en: {
     lvl: 'LEVEL',
@@ -49,20 +54,26 @@ const UI_STRINGS = {
     resultsFor: 'Exploring',
     listening: 'Listening...',
     talk: 'Talk to Guide',
-    errorDesc: 'Oops! Something went wrong. Showing fallback data.'
+    errorDesc: 'Oops! Fallback to local data.',
+    syncing: 'Syncing the Universe...',
+    syncDone: 'The whole state is now in your pocket!',
+    emptyMsg: 'Your database is empty. Sync the Paisa Universe?'
   },
   pt: {
     lvl: 'NÍVEL',
     consulting: 'Consultando terminais e guias locais...',
     title: 'Antioquia',
-    subtitle: 'Seu concierge logístico para os 125 municípios.',
+    subtitle: 'Seu concierge logístico para os 125 municipios.',
     placeholder: 'Procure uma vila, terminal ou prato...',
     back: 'Voltar ao mix',
     trending: 'Mais buscados',
     resultsFor: 'Explorando',
     listening: 'Ouvindo...',
-    talk: 'Falar com Guia',
-    errorDesc: 'Ops! Algo deu errado. Mostrando dados locais.'
+    talk: 'Falar con Guia',
+    errorDesc: 'Ops! Usando datos locais.',
+    syncing: 'Sincronizando o Universo...',
+    syncDone: 'Todo o estado está agora no seu bolso!',
+    emptyMsg: 'Seu banco de dados está vazio. Sincronizar o Universo Paisa?'
   }
 };
 
@@ -77,14 +88,44 @@ export default function App() {
     transcription: ''
   });
 
+  const [dbStatus, setDbStatus] = useState<'online' | 'offline' | 'checking'>('checking');
+  const [dbEmpty, setDbEmpty] = useState(false);
+  const [syncProgress, setSyncProgress] = useState<{current: number, total: number, last: string} | null>(null);
   const [xp, setXp] = useState(() => Number(localStorage.getItem('paisa_xp') || 0));
   const [isLiveActive, setIsLiveActive] = useState(false);
+  
   const audioContextRef = useRef<AudioContext | null>(null);
   const liveSessionRef = useRef<any>(null);
   const nextStartTimeRef = useRef<number>(0);
   const activeSourcesRef = useRef<Set<AudioBufferSourceNode>>(new Set());
 
   const t = UI_STRINGS[state.language];
+
+  useEffect(() => {
+    const checkDB = async () => {
+      const isUp = await testSupabaseConnection();
+      setDbStatus(isUp ? 'online' : 'offline');
+      if (isUp) {
+        const isEmpty = await isPlacesEmpty();
+        setDbEmpty(isEmpty);
+      }
+    };
+    checkDB();
+  }, []);
+
+  const handleSyncUniverse = async () => {
+    if (dbStatus !== 'online') return;
+    try {
+      await generateAndSeedPueblos((current, total, last) => {
+        setSyncProgress({ current, total, last });
+      });
+      setDbEmpty(false);
+      setTimeout(() => setSyncProgress(null), 3000);
+      addXP(1000);
+    } catch (e) {
+      setSyncProgress(null);
+    }
+  };
 
   useEffect(() => {
     const timer = setTimeout(async () => {
@@ -166,6 +207,31 @@ export default function App() {
   return (
     <div className="min-h-screen bg-slate-50 text-slate-900 font-sans pb-40">
       
+      {/* Sincronización Progress Overlay */}
+      <AnimatePresence>
+        {syncProgress && (
+          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="fixed inset-0 z-[1000] glass flex items-center justify-center p-10">
+            <div className="bg-white rounded-[64px] shadow-4xl p-16 max-w-xl w-full text-center space-y-10 border border-slate-100">
+               <div className="relative inline-block">
+                  <Rocket size={64} className="text-paisa-emerald animate-bounce" />
+                  <Sparkles className="absolute -top-4 -right-4 text-paisa-gold animate-pulse" />
+               </div>
+               <div className="space-y-4">
+                  <h3 className="text-4xl font-black uppercase tracking-tighter text-paisa-emerald">{t.syncing}</h3>
+                  <p className="text-xl font-serif italic text-slate-400">Poblando el universo de {syncProgress.total} municipios...</p>
+               </div>
+               <div className="w-full h-4 bg-slate-100 rounded-full overflow-hidden">
+                  <motion.div initial={{ width: 0 }} animate={{ width: `${(syncProgress.current/syncProgress.total)*100}%` }} className="xp-bar h-full" />
+               </div>
+               <div className="flex items-center justify-center gap-3 py-4 bg-emerald-50 rounded-3xl">
+                  <MapPin size={18} className="text-paisa-emerald" />
+                  <span className="font-black uppercase text-[10px] tracking-widest text-paisa-emerald">Llegando a: {syncProgress.last}</span>
+               </div>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
       {/* HUD de Progreso */}
       <header className="fixed top-0 inset-x-0 z-[500] px-6 py-4 glass border-b border-slate-100 flex items-center justify-between">
          <div className="flex items-center gap-4">
@@ -174,6 +240,16 @@ export default function App() {
                <motion.div initial={{ width: 0 }} animate={{ width: `${(xp % 500) / 5}%` }} className="xp-bar h-full" />
             </div>
             <span className="font-paisa text-[9px] text-paisa-emerald uppercase">{t.lvl} {Math.floor(xp/500)+1}</span>
+            <div className="h-4 w-px bg-slate-200 mx-2" />
+            <div className={`flex items-center gap-1.5 px-2 py-1 rounded-full text-[8px] font-black uppercase ${dbStatus === 'online' ? 'bg-emerald-50 text-emerald-600' : 'bg-red-50 text-red-600'}`}>
+               <Database size={10} /> {dbStatus}
+            </div>
+            {dbStatus === 'online' && (
+              <button onClick={handleSyncUniverse} className={`p-2 rounded-full transition-all group relative ${dbEmpty ? 'bg-paisa-gold text-white animate-pulse' : 'bg-slate-100 text-slate-400 hover:bg-paisa-emerald hover:text-white'}`}>
+                <Rocket size={12} />
+                <span className="absolute top-full left-1/2 -translate-x-1/2 mt-2 px-2 py-1 bg-slate-900 text-white text-[8px] rounded opacity-0 group-hover:opacity-100 pointer-events-none whitespace-nowrap">Sincronizar Universo</span>
+              </button>
+            )}
          </div>
          <div className="flex gap-2">
            {['es', 'en', 'pt'].map(l => (
@@ -185,9 +261,9 @@ export default function App() {
       </header>
 
       <div className="pt-32 px-6 max-w-6xl mx-auto space-y-16">
-        {/* Cabecera Principal y Buscador */}
         <div className="flex flex-col items-center text-center gap-10">
           <PaisaLogo onClick={resetView} className="scale-125 cursor-pointer hover:rotate-2 transition-transform" />
+          
           <SearchBox 
             value={state.busqueda} 
             onChange={(v) => setState(s => ({...s, busqueda: v}))} 
@@ -196,6 +272,17 @@ export default function App() {
             placeholder={t.placeholder}
             isSearchingSuggestions={state.buscandoSugerencias}
           />
+
+          {dbEmpty && dbStatus === 'online' && !state.cargando && !state.unifiedResults.length && (
+            <motion.button 
+              initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}
+              onClick={handleSyncUniverse}
+              className="flex items-center gap-4 px-8 py-4 bg-paisa-gold/10 border border-paisa-gold text-paisa-gold rounded-full text-xs font-black uppercase tracking-widest hover:bg-paisa-gold hover:text-white transition-all"
+            >
+              <Rocket size={18} /> {t.emptyMsg}
+            </motion.button>
+          )}
+
           {state.error && <div className="text-red-500 font-black uppercase text-[10px] tracking-widest bg-red-50 px-6 py-2 rounded-full border border-red-100">{state.error}</div>}
         </div>
 
@@ -230,18 +317,15 @@ export default function App() {
                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-10">
                   {state.unifiedResults.map((item, i) => (
                     <motion.div 
-                      key={i} 
-                      initial={{ opacity: 0, y: 20 }} 
-                      animate={{ opacity: 1, y: 0 }} 
-                      transition={{ delay: i * 0.1 }}
+                      key={i} initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.1 }}
                       onClick={() => item.type === 'place' && setState(s => ({...s, tarjeta: item as PlaceData}))}
                     >
                        {item.type === 'place' ? (
-                          <div className="group bg-white rounded-[48px] overflow-hidden shadow-2xl border border-slate-100 h-full cursor-pointer hover:-translate-y-3 transition-all">
+                          <div className={`group bg-white rounded-[48px] overflow-hidden shadow-2xl border h-full cursor-pointer hover:-translate-y-3 transition-all ${item.isVerified ? 'border-paisa-gold shadow-paisa-gold/10' : 'border-slate-100'}`}>
                              <div className="relative aspect-video">
                                 <SafeImage src={item.imagen} alt={item.titulo} className="w-full h-full" />
                                 <div className="absolute top-6 left-6 flex flex-col gap-2">
-                                  <Badge color="emerald">Destino</Badge>
+                                  {item.isVerified ? <Badge color="gold">Dato Verificado</Badge> : <Badge color="emerald">Destino</Badge>}
                                 </div>
                                 <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent" />
                                 <div className="absolute bottom-8 left-8">
@@ -257,10 +341,6 @@ export default function App() {
                                      <span className="text-[10px] font-black uppercase tracking-widest text-slate-400">{item.trivia}</span>
                                   </div>
                                 )}
-                                <div className="flex items-center justify-between pt-6 border-t border-slate-50 text-paisa-emerald">
-                                   <span className="text-[10px] font-black uppercase tracking-widest">Ver Guía Completa</span>
-                                   <ArrowRight size={18} />
-                                </div>
                              </div>
                           </div>
                        ) : item.type === 'dish' ? (
@@ -274,7 +354,6 @@ export default function App() {
             </motion.div>
           ) : (
             <motion.div key="home" initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="space-y-24 pb-20">
-              {/* Dashboard para el Turista */}
               <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
                 <button onClick={() => handleSearch("Pueblos Patrimonio")} className="group p-10 bg-white rounded-[40px] shadow-xl border border-slate-100 flex flex-col items-center gap-6 hover:-translate-y-2 transition-all">
                    <div className="p-6 rounded-3xl bg-emerald-50 text-paisa-emerald group-hover:bg-paisa-emerald group-hover:text-white transition-all"><Map size={36} /></div>

@@ -6,7 +6,6 @@ import { localData } from "../data";
 
 const FALLBACK_IMG = "https://images.unsplash.com/photo-1590487988256-9ed24133863e?auto=format&fit=crop&q=80&w=1200";
 
-// Lista oficial completa de los 125 municipios de Antioquia para validación y sugerencias
 export const MUNICIPIOS_ANTIOQUIA = [
   "Abejorral", "Abriaquí", "Alejandría", "Amagá", "Amalfi", "Andes", "Angelópolis", "Angostura", "Anorí", "Anzá", "Apartadó", "Arboletes", "Argelia", "Armenia", "Barbosa", "Belmira", "Bello", "Betania", "Betulia", "Briceño", "Buriticá", "Caicedo", "Caldas", "Campamento", "Cañasgordas", "Caracolí", "Caramanta", "Carepa", "Carmen de Viboral", "Carolina del Príncipe", "Caucasia", "Chigorodó", "Cisneros", "Ciudad Bolívar", "Cocorná", "Concepción", "Concordia", "Copacabana", "Dabeiba", "Donmatías", "Ebéjico", "El Bagre", "El Peñol", "El Retiro", "El Santuario", "Entrerríos", "Envigado", "Fredonia", "Frontino", "Giraldo", "Girardota", "Gómez Plata", "Granada", "Guadalupe", "Guarne", "Guatapé", "Heliconia", "Hispania", "Itagüí", "Ituango", "Jardín", "Jericó", "La Ceja", "La Estrella", "La Pintada", "La Unión", "Liborina", "Maceo", "Marinilla", "Medellín", "Montebello", "Murindó", "Mutatá", "Nariño", "Nechí", "Necoclí", "Olaya", "Peque", "Pueblorrico", "Puerto Berrío", "Puerto Nare", "Puerto Triunfo", "Remedios", "Rionegro", "Sabanalarga", "Sabaneta", "Salgar", "San Andrés de Cuerquia", "San Carlos", "San Francisco", "San Jerónimo", "San José de la Montaña", "San Juan de Urabá", "San Luis", "San Pedro de los Milagros", "San Pedro de Urabá", "San Rafael", "San Roque", "San Vicente Ferrer", "Santa Bárbara", "Santa Fe de Antioquia", "Santa Rosa de Osos", "Santo Domingo", "Segovia", "Sonsón", "Sopetrán", "Támesis", "Tarazá", "Tarso", "Titiribí", "Toledo", "Turbo", "Uramita", "Urrao", "Valdivia", "Valparaíso", "Vegachí", "Venecia", "Vigía del Fuerte", "Yalí", "Yarumal", "Yolombó", "Yondó", "Zaragoza"
 ];
@@ -29,18 +28,16 @@ export async function searchUnified(query: string, lang: SupportedLang = 'es'): 
   const nQuery = cleanString(query);
   if (!nQuery) return [];
 
-  // 1. Prioridad: Datos Locales
   const localResults: UnifiedItem[] = Object.values(localData)
     .filter((p: any) => cleanString(p.titulo).includes(nQuery) || cleanString(p.region).includes(nQuery))
     .map(p => ({ ...p, type: 'place', isVerified: true }));
 
-  // 2. Supabase (Si está configurado)
   let dbResults: UnifiedItem[] = [];
   try {
     const dbPlaces = await searchVerifiedPlaces(query);
     const dbDishes = await getVerifiedDishes(query);
     dbResults = [...(dbPlaces || []), ...(dbDishes || [])];
-  } catch (e) { /* ignore */ }
+  } catch (e) { }
 
   const combined = [...localResults];
   dbResults.forEach(item => {
@@ -50,13 +47,11 @@ export async function searchUnified(query: string, lang: SupportedLang = 'es'): 
     }
   });
 
-  // 3. IA - Concierge Logístico Profesional
   const apiKey = (process.env.API_KEY || '').toString();
   if (!apiKey || apiKey === 'undefined') return combined;
 
   try {
     const ai = new GoogleGenAI({ apiKey });
-    // Detección de municipio real para forzar logística
     const matchedTown = MUNICIPIOS_ANTIOQUIA.find(m => cleanString(m) === nQuery || cleanString(m).includes(nQuery));
     const searchQuery = matchedTown ? `Logística de viaje a ${matchedTown}, Antioquia` : query;
 
@@ -65,13 +60,12 @@ export async function searchUnified(query: string, lang: SupportedLang = 'es'): 
       contents: `Search in Antioquia/Medellin for: "${searchQuery}".
       Found: ${combined.map(r => r.type === 'place' ? (r as any).titulo : (r as any).nombre).join(", ")}.
       Return an ARRAY JSON of 4 items.
-      IF PLACE: {type: 'place', nombre, region, descripcion, bus_terminal (North/South/Specific), bus_price_cop (number), duration_hours, safety_score (1-10), safety_tip, secret_tip}.
+      IF PLACE: {type: 'place', nombre, region, descripcion, bus_terminal, bus_price_cop (number), duration_hours, safety_score (1-10), safety_tip, secret_tip}.
       IF DISH: {type: 'dish', nombre, descripcion, best_place, price_est}.
       Language: ${lang}.`,
       config: {
         tools: [{ googleSearch: {} }],
-        thinkingConfig: { thinkingBudget: 3500 },
-        systemInstruction: "You are the ultimate Antioquia travel concierge. You MUST provide real logistics: which terminal in Medellin, actual bus prices, and travel times. Be precise for all 125 municipalities."
+        systemInstruction: "You are the ultimate Antioquia travel concierge. You MUST provide real logistics: terminal names, bus prices, and travel times. Be precise for all 125 municipalities."
       },
     });
 
@@ -79,10 +73,9 @@ export async function searchUnified(query: string, lang: SupportedLang = 'es'): 
     if (Array.isArray(aiData)) {
       const mappedAi = aiData.map((res: any): UnifiedItem => {
         const common = { 
-          imagen: res.unsplash_id ? `https://images.unsplash.com/photo-${res.unsplash_id}?auto=format&fit=crop&q=80&w=1200` : (res.imagen || FALLBACK_IMG),
+          imagen: res.imagen || FALLBACK_IMG,
           isVerified: false 
         };
-        
         if (res.type === 'dish') {
           return {
             type: 'dish',
@@ -97,7 +90,6 @@ export async function searchUnified(query: string, lang: SupportedLang = 'es'): 
             ...common
           };
         }
-        
         return {
           type: 'place',
           titulo: res.nombre,
@@ -120,8 +112,7 @@ export async function searchUnified(query: string, lang: SupportedLang = 'es'): 
       });
       return [...combined, ...mappedAi];
     }
-  } catch (err) { console.error("Search Logic Error", err); }
-
+  } catch (err) { }
   return combined;
 }
 
@@ -130,7 +121,7 @@ export const connectArrieroLive = (lang: SupportedLang, callbacks: any) => {
   if (!apiKey || apiKey === 'undefined') return null;
   const ai = new GoogleGenAI({ apiKey });
   return ai.live.connect({
-    model: 'gemini-2.5-flash-native-audio-preview-09-2025',
+    model: 'gemini-2.5-flash-native-audio-preview-12-2025',
     config: {
       responseModalities: [Modality.AUDIO],
       outputAudioTranscription: {},
@@ -152,13 +143,9 @@ export const connectArrieroLive = (lang: SupportedLang, callbacks: any) => {
 export async function getSearchSuggestions(query: string): Promise<string[]> {
   const nQuery = cleanString(query);
   if (nQuery.length < 2) return [];
-  
-  // Sugerencias inmediatas de la lista oficial
   const townMatches = MUNICIPIOS_ANTIOQUIA.filter(m => cleanString(m).includes(nQuery)).slice(0, 3);
-  
   const apiKey = (process.env.API_KEY || '').toString();
   if (!apiKey || apiKey === 'undefined') return townMatches;
-
   try {
     const ai = new GoogleGenAI({ apiKey });
     const response = await ai.models.generateContent({
