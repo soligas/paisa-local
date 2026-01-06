@@ -1,0 +1,93 @@
+{
+  "jardin": {
+    "titulo": "Jardín",
+    "region": "Suroeste",
+    "descripcion": "El pueblo más bonito de Antioquia, famoso por sus sillas coloridas y su ambiente cafetero.",
+    "seguridadTexto": "Muy seguro. Ambiente familiar y tranquilo.",
+    "vibeScore": 98,
+    "radarStats": {
+      "comida": 92,
+      "paisaje": 98,
+      "fiesta": 70,
+      "tranquilidad": 95,
+      "historia": 85
+    },
+    "tags": ["Café", "Colorido", "Tranquilidad"],
+    "budget": {
+      "busTicket": 35000,
+      "averageMeal": 30000,
+      "averageHotel": 180000,
+      "peajes": 25000
+    },
+    "clima": {
+      "temp": "19°C",
+      "sensacion": "Fresco y agradable",
+      "recomendacion": "Lleva un saco ligero para la noche."
+    },
+    "coordenadas": {
+      "lat": 5.5991,
+      "lng": -75.8197
+    },
+    "itinerarioVisual": [
+      { "hora": "08:00", "actividad": "Café en la plaza principal", "lugar": "Plaza de Jardín", "tip": "Prueba el café Macanas." },
+      { "hora": "11:00", "actividad": "Visita a la Cueva del Esplendor", "lugar": "Vereda La Linda", "tip": "Reserva guía con anticipación." },
+      { "hora": "16:00", "actividad": "Teleférico La Garrucha", "lugar": "Sector El Mirador", "tip": "La mejor vista del pueblo." }
+    ],
+    "gastronomia": [
+      { "nombre": "Trucha al ajillo", "descripcion": "Pescado fresco de los criaderos locales." },
+      { "nombre": "Postre de natas", "descripcion": "Tradición dulce del suroeste." }
+    ],
+    "joyasOcultas": ["Cascada del Amor", "Camino de la Herrera"],
+    "spotsFotos": ["Basílica de la Inmaculada Concepción", "Balcones de la plaza"],
+    "trivia": "Jardín se fundó en 1863 y su plaza es Monumento Nacional.",
+    "equipajeChecklist": ["Cámara", "Chaqueta ligera", "Zapatos de trekking"],
+    "transporteInterno": "Moto-taxis (Chivas pequeñas)",
+    "imagen": "https://images.unsplash.com/photo-1599140849279-101442488c2f",
+    "links": [],
+    "trovaLocal": "En Jardín todo es belleza, / las flores y el cafetal, / aquí se olvida la tristeza / con un tinto sin igual."
+  },
+  "guatape": {
+    "titulo": "Guatapé",
+    "region": "Oriente",
+    "descripcion": "Pueblo de zócalos y colores junto al embalse Peñol-Guatapé.",
+    "seguridadTexto": "Seguro y muy turístico.",
+    "vibeScore": 96,
+    "radarStats": {
+      "comida": 88,
+      "paisaje": 100,
+      "fiesta": 85,
+      "tranquilidad": 50,
+      "historia": 75
+    },
+    "tags": ["Aventura", "Zócalos", "Agua"],
+    "budget": {
+      "busTicket": 20000,
+      "averageMeal": 35000,
+      "averageHotel": 250000,
+      "peajes": 15000
+    },
+    "clima": {
+      "temp": "21°C",
+      "sensacion": "Templado",
+      "recomendacion": "Bloqueador solar obligatorio."
+    },
+    "coordenadas": {
+      "lat": 6.2335,
+      "lng": -75.1581
+    },
+    "itinerarioVisual": [
+      { "hora": "09:00", "actividad": "Subir a la Piedra del Peñol", "lugar": "Peñol", "tip": "Son 740 escalones, ¡tú puedes!" },
+      { "hora": "13:00", "actividad": "Almuerzo frente al Malecón", "lugar": "Malecón de Guatapé", "tip": "Pide una bandeja paisa." }
+    ],
+    "gastronomia": [
+      { "nombre": "Chicharrón de Guatapé", "descripcion": "Extra crujiente y famoso." }
+    ],
+    "joyasOcultas": ["Isla de la Fantasía"],
+    "spotsFotos": ["Calle del Recuerdo", "Plazoleta de los Zócalos"],
+    "trivia": "Cada zócalo cuenta una historia de la familia que vive en la casa.",
+    "equipajeChecklist": ["Gorra", "Ropa de cambio", "Gafas de sol"],
+    "transporteInterno": "Tuk-tuks",
+    "imagen": "https://images.unsplash.com/photo-1591143831388-75095d3a958a",
+    "links": []
+  }
+}

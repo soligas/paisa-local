@@ -1,0 +1,30 @@
+
+[
+  {
+    "titulo": "Jericó",
+    "region": "Suroeste",
+    "descripcion": "La Atenas del Suroeste, cuna de la Santa Madre Laura y los famosos carrieles.",
+    "imagen_url": "https://images.unsplash.com/photo-1582298538104-fe2e74c27f59?auto=format&fit=crop&q=80&w=1200",
+    "vibe_score": 97,
+    "coordenadas": {"lat": 5.791, "lng": -75.786},
+    "neighbor_tip": "Subí al Cerro El Salvador para la mejor vista al atardecer."
+  },
+  {
+    "titulo": "Santa Fe de Antioquia",
+    "region": "Occidente",
+    "descripcion": "Ciudad Madre de Antioquia, con calles empedradas y arquitectura colonial intacta.",
+    "imagen_url": "https://images.unsplash.com/photo-1590487988256-9ed24133863e?auto=format&fit=crop&q=80&w=1200",
+    "vibe_score": 94,
+    "coordenadas": {"lat": 6.557, "lng": -75.828},
+    "neighbor_tip": "No te vayas sin cruzar el Puente de Occidente a pie."
+  },
+  {
+    "titulo": "San Rafael",
+    "region": "Oriente",
+    "descripcion": "Tierra de aguas cristalinas, charcos naturales y biodiversidad única.",
+    "imagen_url": "https://images.unsplash.com/photo-1518495973542-4542c06a5843?auto=format&fit=crop&q=80&w=1200",
+    "vibe_score": 92,
+    "coordenadas": {"lat": 6.284, "lng": -75.026},
+    "neighbor_tip": "El charco 'Las Tangas' es el favorito de los locales."
+  }
+]
