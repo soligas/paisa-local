@@ -2,10 +2,16 @@
 import { createClient, SupabaseClient } from '@supabase/supabase-js';
 import { PlaceData, DishData, CultureExperience } from '../types';
 
-const supabaseUrl = (process.env.VITE_SUPABASE_URL || '').toString();
-const supabaseAnonKey = (process.env.VITE_SUPABASE_ANON_KEY || '').toString();
+const supabaseUrl = (process.env.VITE_SUPABASE_URL || '').toString().trim();
+const supabaseAnonKey = (process.env.VITE_SUPABASE_ANON_KEY || '').toString().trim();
 
-export const isSupabaseConfigured = !!(supabaseUrl && supabaseAnonKey && supabaseUrl.startsWith('http'));
+// Verificamos si la configuración es válida (debe empezar con http y tener una key)
+export const isSupabaseConfigured = !!(
+  supabaseUrl && 
+  supabaseAnonKey && 
+  supabaseUrl.startsWith('http') &&
+  supabaseAnonKey.length > 20
+);
 
 export const supabase: SupabaseClient | null = isSupabaseConfigured 
   ? createClient(supabaseUrl, supabaseAnonKey) 
