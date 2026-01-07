@@ -2,6 +2,10 @@
 import { PlaceData } from "../types";
 import { localData } from "../data";
 
+// Función para quitar tildes y normalizar texto
+const normalizeText = (str: string) => 
+  str.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase().trim();
+
 const DEFAULT_LOGISTICS: Record<string, { terminal: string, avgPrice: number, time: string }> = {
   'Oriente': { terminal: 'Norte', avgPrice: 18000, time: '1.5h' },
   'Suroeste': { terminal: 'Sur', avgPrice: 32000, time: '3h' },
@@ -14,10 +18,6 @@ const DEFAULT_LOGISTICS: Record<string, { terminal: string, avgPrice: number, ti
   'Bajo Cauca': { terminal: 'Norte', avgPrice: 65000, time: '6h' }
 };
 
-/**
- * Intenta leer un JSON de precios desde variables de entorno de Vercel.
- * Ej: OVERRIDE_PRICES = {"Jardín": 40000}
- */
 function getOverridenPrice(name: string): number | null {
   try {
     const override = process.env.OVERRIDE_PRICES;
@@ -25,9 +25,7 @@ function getOverridenPrice(name: string): number | null {
       const prices = JSON.parse(override);
       return prices[name] || null;
     }
-  } catch (e) {
-    console.error("[LOGISTICS] Error parseando OVERRIDE_PRICES", e);
-  }
+  } catch (e) { return null; }
   return null;
 }
 
@@ -36,12 +34,14 @@ export function getQuickLogistics(region: string) {
 }
 
 export function getLocalPlace(query: string): PlaceData | null {
-  const normalized = query.toLowerCase().trim();
-  
-  const found = Object.values(localData).find(p => 
-    p.titulo.toLowerCase().includes(normalized) || 
-    normalized.includes(p.titulo.toLowerCase())
-  );
+  const q = normalizeText(query);
+  if (!q) return null;
+
+  // Buscamos coincidencia ignorando acentos
+  const found = Object.values(localData).find(p => {
+    const tituloNorm = normalizeText(p.titulo);
+    return tituloNorm.includes(q) || q.includes(tituloNorm);
+  });
   
   if (found) {
     const logistics = getQuickLogistics(found.region);
