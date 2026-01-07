@@ -13,72 +13,56 @@ function safeJsonParse(text: any): any {
 }
 
 export async function searchUnified(query: string, lang: SupportedLang = 'es'): Promise<UnifiedItem[]> {
-  // 1. Prioridad Máxima: Datos locales estáticos (Carga instantánea)
   const localMatch = getLocalPlace(query);
   const results: UnifiedItem[] = localMatch ? [localMatch] : [];
 
   const apiKey = (process.env.API_KEY || '').toString();
-  if (!apiKey) return results;
+  if (!apiKey) {
+    console.warn("[GEMINI-CONFIG] API_KEY no encontrada. Solo se mostrarán resultados locales.");
+    return results;
+  }
 
   const ai = new GoogleGenAI({ apiKey });
   
   try {
-    // 2. Capa de IA con Grounding para datos reales (Vías, Buses, Precios actualizados)
+    console.info(`[GEMINI-GROUNDING] Iniciando búsqueda para: ${query}`);
     const response = await ai.models.generateContent({
       model: "gemini-3-pro-preview",
-      contents: `ACTÚA COMO UN GUÍA PAISA EXPERTO. 
-      Investiga en GOOGLE SEARCH para: "${query}" en Antioquia.
-      Necesito datos REALES de HOY:
-      1. Logística: Terminal de salida desde Medellín, precio de bus ACTUAL, estado de la vía (Derrumbes/Pare y Siga).
-      2. Gastronomía: Mejor sitio para comer plato típico y precio estimado.
-      3. Tip de Local: Un secreto que no esté en guías turísticas.
-
-      RESPONDE SOLO EN JSON ARRAY:
-      [{
-        "type": "place",
-        "nombre": "string",
-        "region": "Subregión",
-        "descripcion": "string corta",
-        "via_status": "string (Estado real de la carretera)",
-        "precio_bus": number,
-        "terminal": "Norte/Sur",
-        "tiempo": "string",
-        "neighbor_tip": "string",
-        "imagen_keyword": "string para buscar imagen"
-      }]
-      Idioma: ${lang}.`,
+      contents: `Investiga en GOOGLE SEARCH para: "${query}" en Antioquia.
+      Necesito datos REALES de HOY: Logística (Terminal, Precio Bus, Vía), Gastronomía y Tip de Local.
+      RESPONDE SOLO EN JSON ARRAY con tipo 'place'. Idioma: ${lang}.`,
       config: {
         tools: [{ googleSearch: {} }],
-        systemInstruction: "Eres el Arriero Digital de Paisa Local Pro. Tu verdad viene de Google Search para dar seguridad al viajero."
+        systemInstruction: "Eres el Arriero Digital de Paisa Local Pro."
       },
     });
 
     const aiData = safeJsonParse(response.text);
     if (Array.isArray(aiData)) {
+      console.info(`[GEMINI-GROUNDING] Éxito. Encontrados ${aiData.length} resultados.`);
       const mappedAi = aiData.map((res: any): UnifiedItem => ({
         type: 'place',
-        titulo: res.nombre,
-        // Fixed: Ensure region is a valid AntioquiaRegion type and added required coordenadas
-        region: (res.region && ['Oriente', 'Suroeste', 'Occidente', 'Norte', 'Bajo Cauca', 'Nordeste', 'Magdalena Medio', 'Urabá', 'Valle de Aburrá'].includes(res.region) ? res.region : 'Valle de Aburrá') as AntioquiaRegion,
+        titulo: res.nombre || res.titulo,
+        region: (res.region || 'Valle de Aburrá') as AntioquiaRegion,
         descripcion: res.descripcion,
-        seguridadTexto: `Vía: ${res.via_status || 'Verificada por IA'}. Salida: Terminal ${res.terminal || 'Norte'}.`,
+        seguridadTexto: `Vía: ${res.via_status || 'Verificada'}. Terminal: ${res.terminal || 'Norte'}.`,
         vibeScore: 98,
         nomadScore: 85,
         viaEstado: 'Despejada',
-        tiempoDesdeMedellin: res.tiempo || '2.5h',
+        tiempoDesdeMedellin: res.tiempo || '2h',
         budget: {
           busTicket: res.precio_bus || 25000,
           averageMeal: 30000
         },
-        coordenadas: { lat: 6.2442, lng: -75.5812 }, // Fixed: Added required coordinates (Medellin fallback)
-        imagen: `https://source.unsplash.com/1200x800/?antioquia,${res.imagen_keyword || res.nombre}`,
+        coordenadas: { lat: 6.2442, lng: -75.5812 },
+        imagen: `https://source.unsplash.com/1200x800/?antioquia,${res.nombre || 'town'}`,
         neighborTip: res.neighbor_tip,
         isVerified: true
       }));
       return [...results, ...mappedAi];
     }
   } catch (err) {
-    console.error("Grounding Error:", err);
+    console.error("[GEMINI-GROUNDING] Error en la llamada:", err);
   }
   return results;
 }
@@ -87,21 +71,22 @@ export const connectArrieroLive = (lang: SupportedLang, callbacks: any) => {
   const apiKey = (process.env.API_KEY || '').toString();
   if (!apiKey) return null;
   const ai = new GoogleGenAI({ apiKey });
+  console.info("[GEMINI-LIVE] Iniciando conexión WebSocket...");
   return ai.live.connect({
     model: 'gemini-2.5-flash-native-audio-preview-12-2025',
     config: {
       responseModalities: [Modality.AUDIO],
       speechConfig: { voiceConfig: { prebuiltVoiceConfig: { voiceName: 'Zephyr' } } },
-      systemInstruction: `Eres el Arriero Concierge. Hablas con jerga paisa auténtica. Tu base de datos es todo Antioquia.`
+      systemInstruction: `Eres el Arriero Concierge. Hablas con jerga paisa auténtica.`
     },
     callbacks: {
       onmessage: async (message: LiveServerMessage) => {
         const data = message.serverContent?.modelTurn?.parts?.[0]?.inlineData?.data;
         if (data) callbacks.onAudioChunk(data);
       },
-      onopen: () => console.log("Live session opened"),
-      onerror: (e) => console.error("Live session error:", e),
-      onclose: () => console.log("Live session closed")
+      onopen: () => console.info("[GEMINI-LIVE] Conexión abierta y lista."),
+      onerror: (e) => console.error("[GEMINI-LIVE] Error de sesión:", e),
+      onclose: () => console.info("[GEMINI-LIVE] Sesión cerrada.")
     }
   });
 };

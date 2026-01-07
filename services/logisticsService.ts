@@ -2,11 +2,6 @@
 import { PlaceData } from "../types";
 import { localData } from "../data";
 
-/**
- * DATOS MAESTROS (LOGÍSTICA DE ANTIOQUIA)
- * Estos datos viven en el Edge. Si necesitas cambiar un precio rápido,
- * puedes usar las variables de entorno en Vercel.
- */
 const DEFAULT_LOGISTICS: Record<string, { terminal: string, avgPrice: number, time: string }> = {
   'Oriente': { terminal: 'Norte', avgPrice: 18000, time: '1.5h' },
   'Suroeste': { terminal: 'Sur', avgPrice: 32000, time: '3h' },
@@ -19,15 +14,30 @@ const DEFAULT_LOGISTICS: Record<string, { terminal: string, avgPrice: number, ti
   'Bajo Cauca': { terminal: 'Norte', avgPrice: 65000, time: '6h' }
 };
 
+/**
+ * Intenta leer un JSON de precios desde variables de entorno de Vercel.
+ * Ej: OVERRIDE_PRICES = {"Jardín": 40000}
+ */
+function getOverridenPrice(name: string): number | null {
+  try {
+    const override = process.env.OVERRIDE_PRICES;
+    if (override) {
+      const prices = JSON.parse(override);
+      return prices[name] || null;
+    }
+  } catch (e) {
+    console.error("[LOGISTICS] Error parseando OVERRIDE_PRICES", e);
+  }
+  return null;
+}
+
 export function getQuickLogistics(region: string) {
-  // En Vercel, podrías inyectar esto vía process.env.LOGISTICS_DATA
   return DEFAULT_LOGISTICS[region] || { terminal: 'Norte', avgPrice: 25000, time: '3h' };
 }
 
 export function getLocalPlace(query: string): PlaceData | null {
   const normalized = query.toLowerCase().trim();
   
-  // Búsqueda ultra-rápida por coincidencia de nombre
   const found = Object.values(localData).find(p => 
     p.titulo.toLowerCase().includes(normalized) || 
     normalized.includes(p.titulo.toLowerCase())
@@ -35,12 +45,13 @@ export function getLocalPlace(query: string): PlaceData | null {
   
   if (found) {
     const logistics = getQuickLogistics(found.region);
+    const override = getOverridenPrice(found.titulo);
+    
     return { 
       ...found, 
       type: 'place',
-      // Fusionamos con los datos maestros más recientes
       budget: {
-        busTicket: logistics.avgPrice,
+        busTicket: override || logistics.avgPrice,
         averageMeal: found.budget?.averageMeal || 25000
       },
       terminalInfo: `Terminal del ${logistics.terminal}`
