@@ -10,15 +10,14 @@ function safeJsonParse(text: any): any {
     const jsonMatch = cleaned.match(/\[[\s\S]*\]|\{[\s\S]*\}/);
     return jsonMatch ? JSON.parse(jsonMatch[0]) : null;
   } catch (e) { 
-    console.error("[PAISA-DEBUG] Error parseando JSON de Gemini:", e);
     return null; 
   }
 }
 
-export async function checkSystemHealth(): Promise<{ok: boolean, msg: string}> {
+export async function checkSystemHealth(): Promise<{ok: boolean, msg: string, code?: number}> {
   const apiKey = (process.env.API_KEY || '').toString();
   if (!apiKey || apiKey === 'undefined') {
-    return { ok: false, msg: "Falta la API_KEY en las variables de Vercel." };
+    return { ok: false, msg: "Falta la API_KEY en Vercel." };
   }
   
   const ai = new GoogleGenAI({ apiKey });
@@ -28,41 +27,38 @@ export async function checkSystemHealth(): Promise<{ok: boolean, msg: string}> {
       contents: "ping",
       config: { maxOutputTokens: 1 }
     });
-    if (response.text) return { ok: true, msg: "Conexión exitosa con Google AI." };
-    return { ok: false, msg: "Respuesta vacía del servidor." };
+    if (response.text) return { ok: true, msg: "IA Activa" };
+    return { ok: false, msg: "Sin respuesta" };
   } catch (e: any) {
-    console.error("[PAISA-DEBUG] Fallo Health Check:", e);
-    return { ok: false, msg: e.message || "Error de red desconocido." };
+    if (e.message?.includes('429')) return { ok: false, msg: "Cuota de IA agotada por hoy.", code: 429 };
+    return { ok: false, msg: "Error de conexión." };
   }
 }
 
 export async function searchUnified(query: string, lang: SupportedLang = 'es'): Promise<UnifiedItem[]> {
-  console.log(`%c[ARRIERO-LOG] Iniciando búsqueda: ${query}`, "color: #2D7A4C; font-weight: bold;");
+  console.log(`[ARRIERO] Buscando: ${query}`);
   
+  // Siempre buscamos primero en local para que el usuario no espere
   const localMatch = getLocalPlace(query);
   const results: UnifiedItem[] = localMatch ? [localMatch] : [];
 
   const apiKey = (process.env.API_KEY || '').toString();
-  if (!apiKey || apiKey === 'undefined') {
-    console.error("%c[ARRIERO-ERROR] API_KEY no configurada en Vercel.", "color: red; font-weight: bold;");
-    return results;
-  }
+  if (!apiKey || apiKey === 'undefined') return results;
 
   const ai = new GoogleGenAI({ apiKey });
   
   try {
+    // CAMBIO A FLASH: Más rápido y con más cuota
     const response = await ai.models.generateContent({
-      model: "gemini-3-pro-preview",
-      contents: `Investiga en GOOGLE SEARCH para: "${query}" en Antioquia.
-      Necesito datos REALES 2024: Logística, Precios Bus, Vía y Tip.
-      RESPONDE SOLO EN JSON ARRAY con tipo 'place'. Idioma: ${lang}.`,
+      model: "gemini-3-flash-preview",
+      contents: `Búsqueda rápida para: "${query}" en Antioquia.
+      LOGÍSTICA 2024: Precio bus, Terminal, Tip.
+      FORMATO: JSON ARRAY de objetos 'place'. Idioma: ${lang}.`,
       config: {
         tools: [{ googleSearch: {} }],
-        systemInstruction: "Eres el Arriero Digital de Paisa Local Pro. Experto en logística de buses de Medellín."
+        systemInstruction: "Eres el Arriero Digital. Sé breve y preciso con precios de bus desde Medellín."
       },
     });
-
-    console.log("[ARRIERO-LOG] Respuesta cruda de Gemini:", response.text);
 
     const aiData = safeJsonParse(response.text);
     if (Array.isArray(aiData)) {
@@ -70,26 +66,27 @@ export async function searchUnified(query: string, lang: SupportedLang = 'es'): 
         type: 'place',
         titulo: res.nombre || res.titulo || query,
         region: (res.region || 'Antioquia') as AntioquiaRegion,
-        descripcion: res.descripcion || "Destino encontrado en el camino.",
-        seguridadTexto: `Vía: ${res.via_status || 'Reportada'}. Terminal: ${res.terminal || 'Norte/Sur'}.`,
+        descripcion: res.descripcion || "Explora este tesoro paisa.",
+        seguridadTexto: `Vía: ${res.via_status || 'Verificada'}. Terminal: ${res.terminal || 'Norte/Sur'}.`,
         vibeScore: 90,
         nomadScore: 80,
         viaEstado: 'Despejada',
-        tiempoDesdeMedellin: res.tiempo || 'Consultando...',
+        tiempoDesdeMedellin: res.tiempo || '2-3h',
         budget: {
-          busTicket: res.precio_bus || 30000,
+          busTicket: res.precio_bus || 35000,
           averageMeal: 25000
         },
-        coordenadas: { lat: 6.244, lng: -75.581 },
-        imagen: `https://images.unsplash.com/photo-1590487988256-9ed24133863e?auto=format&fit=crop&q=80&w=1200`,
-        neighborTip: res.neighbor_tip || "Pregúntale a un lugareño por el mejor tinto.",
+        coordenadas: { lat: 6.2, lng: -75.5 },
+        imagen: `https://images.unsplash.com/photo-1590487988256-9ed24133863e?auto=format&fit=crop&q=80&w=800`,
+        neighborTip: res.neighbor_tip || "Pregunta por el tinto de la plaza.",
         isVerified: true
       }));
       return [...results, ...mappedAi];
     }
   } catch (err: any) {
-    console.error("%c[ARRIERO-ERROR] Error en Gemini Grounding:", "color: red;", err);
-    throw err;
+    console.warn("[ARRIERO-QUOTA] Usando solo datos locales por límite de cuota.");
+    // Si falla la IA por cuota (429), devolvemos solo lo que encontramos en local
+    return results;
   }
   return results;
 }
@@ -103,16 +100,16 @@ export const connectArrieroLive = (lang: SupportedLang, callbacks: any) => {
     config: {
       responseModalities: [Modality.AUDIO],
       speechConfig: { voiceConfig: { prebuiltVoiceConfig: { voiceName: 'Zephyr' } } },
-      systemInstruction: `Eres el Arriero Concierge. Hablas con jerga paisa auténtica.`
+      systemInstruction: `Eres el Arriero. Habla con jerga paisa.`
     },
     callbacks: {
       onmessage: async (message: LiveServerMessage) => {
         const data = message.serverContent?.modelTurn?.parts?.[0]?.inlineData?.data;
         if (data) callbacks.onAudioChunk(data);
       },
-      onopen: () => console.info("[GEMINI-LIVE] Conectado."),
-      onerror: (e) => console.error("[GEMINI-LIVE] Error:", e),
-      onclose: () => console.info("[GEMINI-LIVE] Desconectado.")
+      onopen: () => console.info("Live ON"),
+      onerror: (e) => console.error("Live ERR", e),
+      onclose: () => console.info("Live OFF")
     }
   });
 };

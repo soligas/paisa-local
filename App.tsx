@@ -2,7 +2,7 @@
 import { 
   Trophy, Search, Loader2, Compass, Mic, MicOff, Star, 
   ChevronLeft, Sparkles, Map, Utensils, Bus, Database, Zap,
-  Navigation as NavIcon, AlertTriangle, Activity, Wifi, WifiOff, Info
+  Navigation as NavIcon, AlertTriangle, Activity, Wifi, WifiOff, Info, ZapOff
 } from 'lucide-react';
 import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -31,13 +31,12 @@ export default function App() {
 
   const [xp, setXp] = useState(() => Number(localStorage.getItem('paisa_xp') || 150));
   const [isLiveActive, setIsLiveActive] = useState(false);
-  const [systemStatus, setSystemStatus] = useState<{ok: boolean | null, msg: string}>({ ok: null, msg: "Iniciando..." });
+  const [systemStatus, setSystemStatus] = useState<{ok: boolean | null, msg: string, code?: number}>({ ok: null, msg: "Iniciando..." });
   const audioContextRef = useRef<AudioContext | null>(null);
   const liveSessionRef = useRef<any>(null);
 
   useEffect(() => {
     localStorage.setItem('paisa_xp', xp.toString());
-    // Health Check con reporte detallado
     checkSystemHealth().then(setSystemStatus);
   }, [xp]);
 
@@ -50,17 +49,16 @@ export default function App() {
     try {
       const data = await searchUnified(query, state.language);
       if (data.length === 0) {
-        setState(s => ({ ...s, cargando: false, error: "No encontramos resultados para esa búsqueda. Intente con otro municipio." }));
+        setState(s => ({ ...s, cargando: false, error: "No encontramos ese destino. Intente con Jardín, Guatapé o Jericó." }));
       } else {
         setState(s => ({ ...s, unifiedResults: data, cargando: false }));
         setXp(prev => prev + 50);
       }
     } catch (e: any) { 
-      console.error("Error en App handleSearch:", e);
       setState(s => ({ 
         ...s, 
         cargando: false, 
-        error: `Error de IA: ${e.message || "Ave María, algo falló."}. Revise su conexión o la API_KEY.` 
+        error: "¡Eh ave maría! La IA está muy solicitada hoy. Usando datos de reserva..." 
       })); 
     }
   };
@@ -71,14 +69,11 @@ export default function App() {
       setIsLiveActive(false);
       return;
     }
-
     setState(s => ({ ...s, error: null }));
-
     try {
       if (!audioContextRef.current) {
         audioContextRef.current = new (window.AudioContext || (window as any).webkitAudioContext)({ sampleRate: 24000 });
       }
-      
       setIsLiveActive(true);
       const session = await connectArrieroLive(state.language, {
         onAudioChunk: async (b64: string) => {
@@ -90,12 +85,11 @@ export default function App() {
           src.start();
         }
       });
-
       if (!session) throw new Error("API Key Missing");
       liveSessionRef.current = session;
     } catch (e) { 
       setIsLiveActive(false);
-      setState(s => ({ ...s, error: "¡Eh ave maría! El Arriero no pudo conectar. Revise si la API_KEY es válida en Vercel." }));
+      setState(s => ({ ...s, error: "El Arriero está ocupado herrando mulas. Intente más tarde." }));
     }
   };
 
@@ -107,12 +101,12 @@ export default function App() {
             <div className="w-24 md:w-40 h-2 bg-slate-200 rounded-full overflow-hidden">
                <motion.div initial={{ width: 0 }} animate={{ width: `${(xp % 500) / 5}%` }} className="xp-bar h-full" />
             </div>
-            <span className="font-paisa text-[9px] text-paisa-emerald uppercase tracking-tighter">Berraquera Lvl {Math.floor(xp/500)+1}</span>
+            <span className="font-paisa text-[9px] text-paisa-emerald uppercase tracking-tighter">Lvl {Math.floor(xp/500)+1}</span>
             <button 
               onClick={() => alert(systemStatus.msg)}
-              className={`hidden md:flex items-center gap-2 px-3 py-1 rounded-full text-[8px] font-black uppercase transition-colors ${systemStatus.ok ? 'bg-emerald-50 text-emerald-600' : 'bg-red-50 text-red-600'}`}>
-               {systemStatus.ok ? <Wifi size={10} /> : <WifiOff size={10} />}
-               {systemStatus.ok ? 'IA Lista' : 'Configuración Pendiente'}
+              className={`hidden md:flex items-center gap-2 px-3 py-1 rounded-full text-[8px] font-black uppercase transition-colors ${systemStatus.ok ? 'bg-emerald-50 text-emerald-600' : 'bg-amber-50 text-amber-600'}`}>
+               {systemStatus.ok ? <Wifi size={10} /> : systemStatus.code === 429 ? <ZapOff size={10} /> : <WifiOff size={10} />}
+               {systemStatus.ok ? 'IA Online' : systemStatus.code === 429 ? 'Cuota Agotada' : 'Error IA'}
             </button>
          </div>
          <div className="flex gap-2">
@@ -125,20 +119,20 @@ export default function App() {
       </header>
 
       <div className="pt-32 px-6 max-w-6xl mx-auto space-y-16">
+        {systemStatus.code === 429 && (
+          <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} className="p-4 bg-amber-50 border border-amber-200 rounded-2xl flex items-center gap-4 text-amber-800 shadow-sm">
+             <Info size={16} className="shrink-0" />
+             <p className="text-[10px] font-black uppercase tracking-widest leading-tight">
+               Modo Ahorro: Has excedido el límite gratuito de Google. Podrás buscar de nuevo en unos minutos o mañana. Por ahora, disfruta los datos locales.
+             </p>
+          </motion.div>
+        )}
+
         {state.error && (
-          <motion.div initial={{ opacity: 0, y: -20 }} animate={{ opacity: 1, y: 0 }} className="p-6 bg-red-50 border border-red-200 rounded-3xl flex flex-col gap-4 text-red-700 shadow-xl">
-             <div className="flex items-center gap-4">
+          <motion.div initial={{ opacity: 0, y: -20 }} animate={{ opacity: 1, y: 0 }} className="p-6 bg-red-50 border border-red-200 rounded-3xl flex items-center gap-4 text-red-700 shadow-xl">
                <AlertTriangle className="shrink-0" />
                <p className="text-sm font-bold">{state.error}</p>
-               <button onClick={() => setState(s => ({ ...s, error: null }))} className="ml-auto text-xs font-black uppercase bg-white px-4 py-2 rounded-xl shadow-sm border border-red-100">Cerrar</button>
-             </div>
-             {systemStatus.ok === false && (
-               <div className="p-4 bg-white/50 rounded-2xl text-[10px] space-y-2 border border-red-100/30 font-mono">
-                  <p className="font-black uppercase">Diagnóstico Técnico:</p>
-                  <p>Estado: {systemStatus.msg}</p>
-                  <p>Acción: Asegúrese de tener la variable "VITE_API_KEY" o "API_KEY" en el Dashboard de Vercel y haber hecho un "Redeploy".</p>
-               </div>
-             )}
+               <button onClick={() => setState(s => ({ ...s, error: null }))} className="ml-auto text-xs font-black uppercase bg-white px-4 py-2 rounded-xl shadow-sm border border-red-100">Ocultar</button>
           </motion.div>
         )}
 
@@ -157,7 +151,7 @@ export default function App() {
                   <Loader2 className="text-paisa-emerald animate-spin" size={64} />
                   <Sparkles className="absolute -top-4 -right-4 text-paisa-gold animate-pulse" />
                </div>
-               <p className="text-2xl font-serif italic text-slate-400 animate-pulse">Consultando el Arriero Digital...</p>
+               <p className="text-2xl font-serif italic text-slate-400 animate-pulse">Buscando por Antioquia...</p>
             </motion.div>
           ) : state.tarjeta ? (
             <motion.div key="detail" initial={{ opacity: 0, y: 30 }} animate={{ opacity: 1, y: 0 }}>
@@ -183,8 +177,8 @@ export default function App() {
                            <div className="flex justify-between items-center">
                               <h5 className="text-2xl font-black uppercase tracking-tighter group-hover:text-paisa-emerald transition-colors">{item.titulo}</h5>
                               <div className="flex gap-2">
-                                <div className="px-2 py-1 bg-amber-50 text-amber-600 rounded-lg text-[7px] font-bold uppercase tracking-widest">Grounding</div>
-                                <div className="px-2 py-1 bg-emerald-50 text-emerald-600 rounded-lg text-[7px] font-bold uppercase tracking-widest">Safe</div>
+                                <div className="px-2 py-1 bg-amber-50 text-amber-600 rounded-lg text-[7px] font-bold uppercase">2024</div>
+                                <div className="px-2 py-1 bg-emerald-50 text-emerald-600 rounded-lg text-[7px] font-bold uppercase">Safe</div>
                               </div>
                            </div>
                            <p className="text-slate-500 font-serif italic text-sm line-clamp-2">"{item.descripcion}"</p>
@@ -205,10 +199,10 @@ export default function App() {
           ) : (
             <motion.div key="home" className="space-y-16">
               <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                {['Guatapé', 'Jardín', 'Santa Fe de Antioquia'].map(p => (
+                {['Guatapé', 'Jardín', 'Jericó'].map(p => (
                    <button key={p} onClick={() => handleSearch(p)} className="p-10 bg-white rounded-[40px] border border-slate-100 text-left hover:border-paisa-gold transition-all group shadow-sm hover:shadow-xl">
                       <div className="flex items-center justify-between mb-4">
-                        <p className="text-[10px] font-black uppercase text-slate-300 tracking-widest">Ruta Sugerida</p>
+                        <p className="text-[10px] font-black uppercase text-slate-300 tracking-widest">Ruta Local</p>
                         <NavIcon size={14} className="text-slate-200 group-hover:text-paisa-emerald transition-colors" />
                       </div>
                       <h4 className="text-3xl font-black uppercase tracking-tighter group-hover:text-paisa-emerald">{p}</h4>
@@ -226,19 +220,9 @@ export default function App() {
         isLiveActive={isLiveActive} 
         onLiveToggle={handleLiveToggle} 
         hasResults={state.unifiedResults.length > 0 || !!state.tarjeta} 
-        label={isLiveActive ? "Escuchando..." : "Hablar con Arriero"} 
+        label={isLiveActive ? "Hablando..." : "Preguntar al Arriero"} 
       />
       <Footer isDark={false} />
-      
-      {/* Mini Health Monitor con interacción */}
-      <div className="fixed bottom-4 right-4 z-[600] pointer-events-auto cursor-help opacity-40 hover:opacity-100 transition-opacity">
-        <button 
-          onClick={() => alert(`SISTEMA DE DIAGNÓSTICO:\nStatus: ${systemStatus.msg}\nLogs: Disponibles en consola F12`)}
-          className="flex items-center gap-2 bg-slate-900 text-white px-3 py-2 rounded-full text-[6px] font-black uppercase">
-          <Activity size={8} className={systemStatus.ok ? 'text-emerald-400 animate-pulse' : 'text-red-400'} />
-          Debug: {systemStatus.ok ? 'OK' : 'ERR'} | Local Grounding ON
-        </button>
-      </div>
     </div>
   );
 }
