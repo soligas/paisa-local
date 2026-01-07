@@ -69,6 +69,18 @@ export interface ChallengeData {
   completado: boolean;
 }
 
+/**
+ * Added UGCContent to fix missing exported member error
+ */
+export interface UGCContent {
+  id: string;
+  created_at: string;
+  place_slug: string;
+  user_name: string;
+  comment: string;
+  stars: number;
+}
+
 export type UnifiedItem = PlaceData | DishData | CultureExperience;
 
 export interface AppState {
