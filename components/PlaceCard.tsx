@@ -59,10 +59,13 @@ export const PlaceCard: React.FC<PlaceCardProps> = ({
 
   return (
     <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="w-full space-y-12 pb-20">
-      {/* Hero Section */}
-      <section className="relative aspect-[4/3] md:aspect-[21/9] rounded-[56px] overflow-hidden shadow-2xl bg-slate-900 border border-slate-200">
-        <SafeImage src={data.imagen} alt={data.titulo} className="absolute inset-0 w-full h-full opacity-70" />
-        <div className="absolute inset-0 bg-gradient-to-t from-slate-950 via-slate-900/40 to-transparent" />
+      {/* Hero Section - Rediseñado para no usar imágenes de fondo reales */}
+      <section className="relative min-h-[400px] md:min-h-[500px] rounded-[56px] overflow-hidden shadow-2xl bg-slate-900 border border-slate-800 flex items-center p-12 lg:p-24">
+        {/* Fondo decorativo abstracto */}
+        <div className="absolute inset-0 opacity-20 pointer-events-none overflow-hidden">
+           <div className="absolute -top-1/2 -left-1/4 w-[150%] h-[150%] bg-[radial-gradient(circle_at_center,_#2D7A4C_0%,_transparent_70%)] blur-[100px]" />
+           <div className="absolute top-0 right-0 w-full h-full opacity-10" style={{ backgroundImage: 'repeating-linear-gradient(45deg, #D4A574 0px, #D4A574 1px, transparent 1px, transparent 10px)' }} />
+        </div>
         
         <div className="absolute top-8 right-8 z-20 flex gap-3">
           <Button 
@@ -70,7 +73,6 @@ export const PlaceCard: React.FC<PlaceCardProps> = ({
             onClick={() => onToggleVisited?.(data.titulo)}
             className="px-6 h-12 text-[9px]"
           >
-            {/* Added missing Award import to fix line 73 error */}
             {isVisited ? <CheckCircle size={14} /> : <Award className="hidden" />}
             {isVisited ? "Sello Listo" : "Sellar Pasaporte"}
           </Button>
@@ -82,13 +84,25 @@ export const PlaceCard: React.FC<PlaceCardProps> = ({
           </button>
         </div>
 
-        <div className="absolute bottom-10 left-10 right-10 z-10 space-y-4">
-           <div className="flex gap-2">
+        <div className="relative z-10 space-y-8 max-w-4xl">
+           <div className="flex flex-wrap gap-2">
              <Badge color="gold">{data.region}</Badge>
              {data.isVerified && <Badge color="emerald">Logística Verificada</Badge>}
+             <div className="px-4 py-2 bg-white/5 backdrop-blur-md rounded-full border border-white/10 text-white/40 text-[9px] font-black uppercase tracking-widest flex items-center gap-2">
+                <Sparkles size={10} className="text-paisa-gold" /> Destino Auténtico
+             </div>
            </div>
-           <h2 className="text-white text-5xl md:text-8xl font-black uppercase tracking-tighter leading-none">{data.titulo}</h2>
-           <p className="text-white/80 text-lg md:text-2xl font-serif italic max-w-3xl leading-snug">"{data.descripcion}"</p>
+           
+           <div className="space-y-4">
+             <h2 className="text-white text-6xl md:text-9xl font-black uppercase tracking-tighter leading-[0.85]">
+               {data.titulo}
+             </h2>
+             <div className="h-1 w-24 bg-paisa-gold rounded-full" />
+           </div>
+           
+           <p className="text-white/80 text-xl md:text-3xl font-serif italic max-w-2xl leading-relaxed">
+             "{data.descripcion}"
+           </p>
         </div>
       </section>
 
@@ -212,12 +226,12 @@ export const PlaceCard: React.FC<PlaceCardProps> = ({
       {/* Neighbor Tip */}
       {data.neighborTip && (
         <section className="p-12 rounded-[56px] bg-emerald-50 text-slate-900 border border-emerald-100 relative overflow-hidden group">
-           <div className="relative z-10 space-y-6">
-              <div className="flex items-center gap-3">
+           <div className="relative z-10 space-y-6 text-center max-w-4xl mx-auto">
+              <div className="flex items-center justify-center gap-3">
                  <Sparkles className="text-paisa-emerald animate-pulse" />
                  <span className="text-paisa-emerald font-black uppercase text-[10px] tracking-[0.3em]">Tip de Local</span>
               </div>
-              <p className="text-3xl md:text-4xl font-serif italic leading-relaxed max-w-4xl">
+              <p className="text-3xl md:text-5xl font-serif italic leading-tight text-emerald-900">
                  "{data.neighborTip}"
               </p>
            </div>

@@ -1,7 +1,7 @@
 
 import React, { useEffect, useRef } from 'react';
 import { motion } from 'framer-motion';
-import { MapPin, Navigation, Star, AlertCircle, Info, Utensils, Camera } from 'lucide-react';
+import { MapPin, Navigation, Star, AlertCircle, Info, Utensils, Camera, Sparkles } from 'lucide-react';
 import { SupportedLang } from '../../types';
 
 declare const L: any;
@@ -80,16 +80,18 @@ export const InteractiveMap: React.FC<InteractiveMapProps> = ({ places, onSelect
 
       const marker = L.marker([place.coords.lat, place.coords.lng], { icon: customIcon });
       
+      // Se eliminó la imagen del popupContent para cumplir con la restricción
       const popupContent = `
-        <div class="paisa-map-popup-card w-[240px] rounded-[24px] bg-white overflow-hidden shadow-2xl">
-          <div class="h-24 relative">
-             <img src="${place.img}" class="w-full h-full object-cover" />
-             <div class="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent"></div>
-             <span class="absolute bottom-2 left-3 text-[8px] font-black uppercase text-white tracking-widest">${place.titulo}</span>
+        <div class="paisa-map-popup-card w-[240px] rounded-[24px] bg-white overflow-hidden shadow-2xl border border-slate-100">
+          <div class="p-6 bg-emerald-50 border-b border-emerald-100 flex flex-col items-center gap-2">
+             <div class="p-2 rounded-full bg-white text-emerald-600 shadow-sm">
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="m12 3-1.912 5.813a2 2 0 0 1-1.275 1.275L3 12l5.813 1.912a2 2 0 0 1 1.275 1.275L12 21l1.912-5.813a2 2 0 0 1 1.275-1.275L21 12l-5.813-1.912a2 2 0 0 1-1.275-1.275L12 3Z"/></svg>
+             </div>
+             <span class="text-[10px] font-black uppercase text-emerald-800 tracking-[0.2em]">${place.titulo}</span>
           </div>
-          <div class="p-4 space-y-2">
-            <p class="text-[9px] text-slate-500 italic leading-tight">${place.info || 'Explora este destino.'}</p>
-            <button id="btn-map-${place.id}" class="w-full py-2 bg-emerald-700 text-white rounded-xl text-[8px] font-black uppercase tracking-widest cursor-pointer border-none">VER GUÍA</button>
+          <div class="p-5 space-y-4 text-center">
+            <p class="text-[11px] text-slate-500 italic leading-snug">${place.info || 'Explora este destino.'}</p>
+            <button id="btn-map-${place.id}" class="w-full py-3 bg-emerald-700 text-white rounded-2xl text-[9px] font-black uppercase tracking-[0.2em] cursor-pointer border-none shadow-lg active:scale-95 transition-all">VER GUÍA</button>
           </div>
         </div>
       `;

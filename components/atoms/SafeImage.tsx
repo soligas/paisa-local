@@ -1,8 +1,7 @@
 
-import React, { useState, useEffect } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
-
-const FALLBACK_IMG = "https://images.unsplash.com/photo-1590487988256-9ed24133863e?auto=format&fit=crop&q=80&w=1200";
+import React from 'react';
+import { motion } from 'framer-motion';
+import { Sparkles, MapPin } from 'lucide-react';
 
 interface SafeImageProps {
   src: string | null | undefined;
@@ -10,56 +9,34 @@ interface SafeImageProps {
   className?: string;
 }
 
-export const SafeImage: React.FC<SafeImageProps> = ({ src, alt, className = "" }) => {
-  const [imgSrc, setImgSrc] = useState<string>(src || FALLBACK_IMG);
-  const [loading, setLoading] = useState(true);
-  const [errorCount, setErrorCount] = useState(0);
-
-  useEffect(() => {
-    if (src) {
-      setImgSrc(src);
-      setLoading(true);
-    }
-  }, [src]);
-
+/**
+ * SafeImage ahora actúa como un contenedor decorativo sin cargar imágenes externas.
+ * Mantiene la estética "Paisa Local" con gradientes y tipografía.
+ */
+export const SafeImage: React.FC<SafeImageProps> = ({ alt, className = "" }) => {
   return (
-    <div className={`relative overflow-hidden bg-slate-100 min-h-[100px] ${className}`}>
-      <AnimatePresence>
-        {loading && (
-          <motion.div 
-            key="shimmer"
-            initial={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            className="absolute inset-0 z-10 flex items-center justify-center bg-slate-200"
-          >
-            <motion.div 
-              animate={{ opacity: [0.4, 0.7, 0.4] }}
-              transition={{ duration: 1.5, repeat: Infinity }}
-              className="w-full h-full bg-gradient-to-r from-slate-200 via-slate-100 to-slate-200 bg-[length:200%_100%] animate-shimmer"
-            />
-          </motion.div>
-        )}
-      </AnimatePresence>
-
-      <motion.img 
-        initial={{ opacity: 0, scale: 1.05 }}
-        animate={{ 
-          opacity: loading ? 0 : 1, 
-          scale: loading ? 1.05 : 1
-        }}
-        src={imgSrc} 
-        alt={alt}
-        onLoad={() => setLoading(false)}
-        onError={() => {
-          if (errorCount < 1) {
-            setImgSrc(FALLBACK_IMG);
-            setErrorCount(1);
-          } else {
-            setLoading(false);
-          }
-        }}
-        className="w-full h-full object-cover"
+    <div className={`relative overflow-hidden bg-gradient-to-br from-slate-100 to-slate-200 flex items-center justify-center border-b border-slate-100 ${className}`}>
+      {/* Patrón decorativo de fondo */}
+      <div 
+        className="absolute inset-0 opacity-[0.05] pointer-events-none" 
+        style={{ 
+          backgroundImage: 'radial-gradient(circle, #2D7A4C 1px, transparent 1px)', 
+          backgroundSize: '24px 24px' 
+        }} 
       />
+      
+      <div className="relative z-10 flex flex-col items-center gap-3 text-paisa-emerald/30 group-hover:text-paisa-emerald/50 transition-colors">
+        <div className="p-4 rounded-full bg-white/50 backdrop-blur-sm border border-white">
+          <Sparkles size={24} />
+        </div>
+        <span className="text-[10px] font-black uppercase tracking-[0.3em] text-center px-6 leading-tight">
+          {alt}
+        </span>
+      </div>
+
+      {/* Esquinas decorativas */}
+      <div className="absolute top-4 left-4 w-4 h-4 border-t-2 border-l-2 border-paisa-gold/20" />
+      <div className="absolute bottom-4 right-4 w-4 h-4 border-b-2 border-r-2 border-paisa-gold/20" />
     </div>
   );
 };
