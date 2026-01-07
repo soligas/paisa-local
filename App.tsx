@@ -2,7 +2,7 @@
 import { 
   Trophy, Search, Loader2, Compass, Mic, MicOff, Star, 
   ChevronLeft, Sparkles, Map, Utensils, Bus, Database, Zap,
-  Navigation as NavIcon, AlertTriangle, Activity, Wifi, WifiOff
+  Navigation as NavIcon, AlertTriangle, Activity, Wifi, WifiOff, Info
 } from 'lucide-react';
 import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -31,14 +31,14 @@ export default function App() {
 
   const [xp, setXp] = useState(() => Number(localStorage.getItem('paisa_xp') || 150));
   const [isLiveActive, setIsLiveActive] = useState(false);
-  const [isSystemHealthy, setIsSystemHealthy] = useState<boolean | null>(null);
+  const [systemStatus, setSystemStatus] = useState<{ok: boolean | null, msg: string}>({ ok: null, msg: "Iniciando..." });
   const audioContextRef = useRef<AudioContext | null>(null);
   const liveSessionRef = useRef<any>(null);
 
   useEffect(() => {
     localStorage.setItem('paisa_xp', xp.toString());
-    // Health Check inicial
-    checkSystemHealth().then(setIsSystemHealthy);
+    // Health Check con reporte detallado
+    checkSystemHealth().then(setSystemStatus);
   }, [xp]);
 
   const handleSearch = async (q?: string) => {
@@ -49,10 +49,19 @@ export default function App() {
     
     try {
       const data = await searchUnified(query, state.language);
-      setState(s => ({ ...s, unifiedResults: data, cargando: false }));
-      setXp(prev => prev + 50);
-    } catch (e) { 
-      setState(s => ({ ...s, cargando: false, error: "Ave María, no pudimos encontrar la ruta. Revise su conexión mijo." })); 
+      if (data.length === 0) {
+        setState(s => ({ ...s, cargando: false, error: "No encontramos resultados para esa búsqueda. Intente con otro municipio." }));
+      } else {
+        setState(s => ({ ...s, unifiedResults: data, cargando: false }));
+        setXp(prev => prev + 50);
+      }
+    } catch (e: any) { 
+      console.error("Error en App handleSearch:", e);
+      setState(s => ({ 
+        ...s, 
+        cargando: false, 
+        error: `Error de IA: ${e.message || "Ave María, algo falló."}. Revise su conexión o la API_KEY.` 
+      })); 
     }
   };
 
@@ -86,7 +95,7 @@ export default function App() {
       liveSessionRef.current = session;
     } catch (e) { 
       setIsLiveActive(false);
-      setState(s => ({ ...s, error: "¡Eh ave maría! El Arriero no pudo conectar. Revise si Vercel Authentication le está bloqueando el paso o si la API_KEY es válida." }));
+      setState(s => ({ ...s, error: "¡Eh ave maría! El Arriero no pudo conectar. Revise si la API_KEY es válida en Vercel." }));
     }
   };
 
@@ -99,10 +108,12 @@ export default function App() {
                <motion.div initial={{ width: 0 }} animate={{ width: `${(xp % 500) / 5}%` }} className="xp-bar h-full" />
             </div>
             <span className="font-paisa text-[9px] text-paisa-emerald uppercase tracking-tighter">Berraquera Lvl {Math.floor(xp/500)+1}</span>
-            <div className={`hidden md:flex items-center gap-2 px-3 py-1 rounded-full text-[8px] font-black uppercase transition-colors ${isSystemHealthy ? 'bg-emerald-50 text-emerald-600' : 'bg-red-50 text-red-600'}`}>
-               {isSystemHealthy ? <Wifi size={10} /> : <WifiOff size={10} />}
-               {isSystemHealthy ? 'IA Verificada' : 'IA Fuera de Ruta'}
-            </div>
+            <button 
+              onClick={() => alert(systemStatus.msg)}
+              className={`hidden md:flex items-center gap-2 px-3 py-1 rounded-full text-[8px] font-black uppercase transition-colors ${systemStatus.ok ? 'bg-emerald-50 text-emerald-600' : 'bg-red-50 text-red-600'}`}>
+               {systemStatus.ok ? <Wifi size={10} /> : <WifiOff size={10} />}
+               {systemStatus.ok ? 'IA Lista' : 'Configuración Pendiente'}
+            </button>
          </div>
          <div className="flex gap-2">
            {['es', 'en'].map(l => (
@@ -115,10 +126,19 @@ export default function App() {
 
       <div className="pt-32 px-6 max-w-6xl mx-auto space-y-16">
         {state.error && (
-          <motion.div initial={{ opacity: 0, y: -20 }} animate={{ opacity: 1, y: 0 }} className="p-6 bg-red-50 border border-red-100 rounded-3xl flex items-center gap-4 text-red-600 shadow-lg">
-             <AlertTriangle className="shrink-0" />
-             <p className="text-sm font-bold">{state.error}</p>
-             <button onClick={() => setState(s => ({ ...s, error: null }))} className="ml-auto text-xs font-black uppercase bg-white px-4 py-2 rounded-xl shadow-sm">Cerrar</button>
+          <motion.div initial={{ opacity: 0, y: -20 }} animate={{ opacity: 1, y: 0 }} className="p-6 bg-red-50 border border-red-200 rounded-3xl flex flex-col gap-4 text-red-700 shadow-xl">
+             <div className="flex items-center gap-4">
+               <AlertTriangle className="shrink-0" />
+               <p className="text-sm font-bold">{state.error}</p>
+               <button onClick={() => setState(s => ({ ...s, error: null }))} className="ml-auto text-xs font-black uppercase bg-white px-4 py-2 rounded-xl shadow-sm border border-red-100">Cerrar</button>
+             </div>
+             {systemStatus.ok === false && (
+               <div className="p-4 bg-white/50 rounded-2xl text-[10px] space-y-2 border border-red-100/30 font-mono">
+                  <p className="font-black uppercase">Diagnóstico Técnico:</p>
+                  <p>Estado: {systemStatus.msg}</p>
+                  <p>Acción: Asegúrese de tener la variable "VITE_API_KEY" o "API_KEY" en el Dashboard de Vercel y haber hecho un "Redeploy".</p>
+               </div>
+             )}
           </motion.div>
         )}
 
@@ -137,7 +157,7 @@ export default function App() {
                   <Loader2 className="text-paisa-emerald animate-spin" size={64} />
                   <Sparkles className="absolute -top-4 -right-4 text-paisa-gold animate-pulse" />
                </div>
-               <p className="text-2xl font-serif italic text-slate-400 animate-pulse">Consultando el Universo Paisa...</p>
+               <p className="text-2xl font-serif italic text-slate-400 animate-pulse">Consultando el Arriero Digital...</p>
             </motion.div>
           ) : state.tarjeta ? (
             <motion.div key="detail" initial={{ opacity: 0, y: 30 }} animate={{ opacity: 1, y: 0 }}>
@@ -163,8 +183,8 @@ export default function App() {
                            <div className="flex justify-between items-center">
                               <h5 className="text-2xl font-black uppercase tracking-tighter group-hover:text-paisa-emerald transition-colors">{item.titulo}</h5>
                               <div className="flex gap-2">
-                                <div className="px-2 py-1 bg-amber-50 text-amber-600 rounded-lg text-[7px] font-bold">LIVE</div>
-                                <div className="px-2 py-1 bg-emerald-50 text-emerald-600 rounded-lg text-[7px] font-bold uppercase">Safe</div>
+                                <div className="px-2 py-1 bg-amber-50 text-amber-600 rounded-lg text-[7px] font-bold uppercase tracking-widest">Grounding</div>
+                                <div className="px-2 py-1 bg-emerald-50 text-emerald-600 rounded-lg text-[7px] font-bold uppercase tracking-widest">Safe</div>
                               </div>
                            </div>
                            <p className="text-slate-500 font-serif italic text-sm line-clamp-2">"{item.descripcion}"</p>
@@ -210,12 +230,14 @@ export default function App() {
       />
       <Footer isDark={false} />
       
-      {/* Mini Health Monitor (Senior Touch) */}
-      <div className="fixed bottom-4 right-4 z-[600] pointer-events-none opacity-20 hover:opacity-100 transition-opacity">
-        <div className="flex items-center gap-2 bg-slate-900 text-white px-3 py-2 rounded-full text-[6px] font-black uppercase">
-          <Activity size={8} className={isSystemHealthy ? 'text-emerald-400 animate-pulse' : 'text-red-400'} />
-          Region: us-east-1 | Gemini v3
-        </div>
+      {/* Mini Health Monitor con interacción */}
+      <div className="fixed bottom-4 right-4 z-[600] pointer-events-auto cursor-help opacity-40 hover:opacity-100 transition-opacity">
+        <button 
+          onClick={() => alert(`SISTEMA DE DIAGNÓSTICO:\nStatus: ${systemStatus.msg}\nLogs: Disponibles en consola F12`)}
+          className="flex items-center gap-2 bg-slate-900 text-white px-3 py-2 rounded-full text-[6px] font-black uppercase">
+          <Activity size={8} className={systemStatus.ok ? 'text-emerald-400 animate-pulse' : 'text-red-400'} />
+          Debug: {systemStatus.ok ? 'OK' : 'ERR'} | Local Grounding ON
+        </button>
       </div>
     </div>
   );
