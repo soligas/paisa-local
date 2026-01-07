@@ -12,24 +12,46 @@ function safeJsonParse(text: any): any {
   } catch (e) { return null; }
 }
 
+/**
+ * Verifica si la API_KEY es válida y el servicio está arriba.
+ */
+export async function checkSystemHealth(): Promise<boolean> {
+  const apiKey = (process.env.API_KEY || '').toString();
+  if (!apiKey) return false;
+  
+  const ai = new GoogleGenAI({ apiKey });
+  try {
+    // Un simple generateContent de 1 token para validar la llave
+    await ai.models.generateContent({
+      model: "gemini-3-flash-preview",
+      contents: "ping",
+      config: { maxOutputTokens: 1 }
+    });
+    return true;
+  } catch (e) {
+    console.error("[GEMINI-HEALTH] Fallo de conectividad:", e);
+    return false;
+  }
+}
+
 export async function searchUnified(query: string, lang: SupportedLang = 'es'): Promise<UnifiedItem[]> {
   const localMatch = getLocalPlace(query);
   const results: UnifiedItem[] = localMatch ? [localMatch] : [];
 
   const apiKey = (process.env.API_KEY || '').toString();
   if (!apiKey) {
-    console.warn("[GEMINI-CONFIG] API_KEY no encontrada. Solo se mostrarán resultados locales.");
+    console.warn("[GEMINI-CONFIG] API_KEY no encontrada.");
     return results;
   }
 
   const ai = new GoogleGenAI({ apiKey });
   
   try {
-    console.info(`[GEMINI-GROUNDING] Iniciando búsqueda para: ${query}`);
+    console.info(`[GEMINI-GROUNDING] Buscando: ${query}`);
     const response = await ai.models.generateContent({
       model: "gemini-3-pro-preview",
       contents: `Investiga en GOOGLE SEARCH para: "${query}" en Antioquia.
-      Necesito datos REALES de HOY: Logística (Terminal, Precio Bus, Vía), Gastronomía y Tip de Local.
+      Necesito datos REALES 2024: Logística, Precios Bus, Vía y Tip.
       RESPONDE SOLO EN JSON ARRAY con tipo 'place'. Idioma: ${lang}.`,
       config: {
         tools: [{ googleSearch: {} }],
@@ -39,7 +61,6 @@ export async function searchUnified(query: string, lang: SupportedLang = 'es'): 
 
     const aiData = safeJsonParse(response.text);
     if (Array.isArray(aiData)) {
-      console.info(`[GEMINI-GROUNDING] Éxito. Encontrados ${aiData.length} resultados.`);
       const mappedAi = aiData.map((res: any): UnifiedItem => ({
         type: 'place',
         titulo: res.nombre || res.titulo,
@@ -55,14 +76,14 @@ export async function searchUnified(query: string, lang: SupportedLang = 'es'): 
           averageMeal: 30000
         },
         coordenadas: { lat: 6.2442, lng: -75.5812 },
-        imagen: `https://source.unsplash.com/1200x800/?antioquia,${res.nombre || 'town'}`,
+        imagen: `https://images.unsplash.com/photo-1590487988256-9ed24133863e?auto=format&fit=crop&q=80&w=1200`,
         neighborTip: res.neighbor_tip,
         isVerified: true
       }));
       return [...results, ...mappedAi];
     }
   } catch (err) {
-    console.error("[GEMINI-GROUNDING] Error en la llamada:", err);
+    console.error("[GEMINI-GROUNDING] Error:", err);
   }
   return results;
 }
@@ -71,7 +92,6 @@ export const connectArrieroLive = (lang: SupportedLang, callbacks: any) => {
   const apiKey = (process.env.API_KEY || '').toString();
   if (!apiKey) return null;
   const ai = new GoogleGenAI({ apiKey });
-  console.info("[GEMINI-LIVE] Iniciando conexión WebSocket...");
   return ai.live.connect({
     model: 'gemini-2.5-flash-native-audio-preview-12-2025',
     config: {
@@ -84,9 +104,9 @@ export const connectArrieroLive = (lang: SupportedLang, callbacks: any) => {
         const data = message.serverContent?.modelTurn?.parts?.[0]?.inlineData?.data;
         if (data) callbacks.onAudioChunk(data);
       },
-      onopen: () => console.info("[GEMINI-LIVE] Conexión abierta y lista."),
-      onerror: (e) => console.error("[GEMINI-LIVE] Error de sesión:", e),
-      onclose: () => console.info("[GEMINI-LIVE] Sesión cerrada.")
+      onopen: () => console.info("[GEMINI-LIVE] Conectado."),
+      onerror: (e) => console.error("[GEMINI-LIVE] Error:", e),
+      onclose: () => console.info("[GEMINI-LIVE] Desconectado.")
     }
   });
 };
