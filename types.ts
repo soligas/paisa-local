@@ -3,6 +3,12 @@ export type SupportedLang = 'es' | 'en' | 'pt';
 export type AppTab = 'home' | 'explore' | 'gastronomy' | 'culture';
 export type AntioquiaRegion = 'Oriente' | 'Suroeste' | 'Occidente' | 'Norte' | 'Bajo Cauca' | 'Nordeste' | 'Magdalena Medio' | 'Urabá' | 'Valle de Aburrá';
 
+export interface WeatherData {
+  temp: number;
+  condition: string;
+  icon: string;
+}
+
 export interface PlaceData {
   type: 'place';
   titulo: string;
@@ -10,24 +16,29 @@ export interface PlaceData {
   descripcion: string;
   seguridadTexto: string;
   vibeScore: number;
-  nomadScore: number;
+  nomadScore: number; // 1-100 (Wi-Fi/Cell signal)
+  wifiQuality: 'Excelente' | 'Inestable' | 'Limitada';
   viaEstado: 'Despejada' | 'Paso Restringido' | 'Cerrada';
   tiempoDesdeMedellin: string;
+  busFrequency: string; // ej: "Cada 30 min"
+  busCompanies: string[];
   budget: {
     busTicket: number;
     averageMeal: number;
   };
-  budgetRange?: '$' | '$$' | '$$$';
   coordenadas: { lat: number; lng: number };
-  imagen: string;
+  imagen: string; // Se usará como semilla para el arte generativo
   isVerified?: boolean;
   neighborTip?: string;
   trivia?: string;
-  // Nuevos campos de UX Research
-  parcheType?: 'Familiar' | 'Rumba' | 'Romántico' | 'Aventura' | 'Cultural';
-  carType?: 'Cualquier Carro' | '4x4 Recomendado' | 'Solo Campero';
   terminalInfo?: string;
-  signatureDish?: string;
+  weather?: WeatherData;
+  currentFestival?: string;
+  itinerary?: {
+    morning: string;
+    afternoon: string;
+    evening: string;
+  };
 }
 
 export interface DishData {
@@ -41,7 +52,6 @@ export interface DishData {
   precioTuristaEstimated: string;
   precioVerificado: boolean;
   economiaCircular: boolean;
-  // Added missing field for UI consistency
   productoresOrigen?: { nombre: string; finca: string }[];
 }
 
@@ -55,23 +65,22 @@ export interface CultureExperience {
   imagen: string;
   costoSugeridoCOP: string;
   horarioRecomendado: string;
-  // Added missing field for UI consistency
-  maestroOficio?: { nombre: string; especialidad: string; años: number };
+  maestroOficio?: {
+    nombre: string;
+    especialidad: string;
+    años: number;
+  };
 }
 
-// Added ChallengeData to fix import error in ChallengeCard.tsx
 export interface ChallengeData {
   id: string;
   titulo: string;
   mision: string;
-  dificultad: 'Fácil' | 'Media' | 'Arriero';
   recompensa: string;
+  dificultad: 'Fácil' | 'Media' | 'Arriero';
   completado: boolean;
 }
 
-/**
- * Added UGCContent to fix missing exported member error
- */
 export interface UGCContent {
   id: string;
   created_at: string;

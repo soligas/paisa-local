@@ -2,7 +2,9 @@
 import { 
   Trophy, Search, Loader2, Compass, Mic, MicOff, Star, 
   ChevronLeft, Sparkles, Map, Utensils, Bus, Database, Zap,
-  Navigation as NavIcon, AlertTriangle, Activity, Wifi, WifiOff, Info, ZapOff
+  Navigation as NavIcon, AlertTriangle, Activity, Wifi, WifiOff, Info, ZapOff,
+  BellRing, X, MapPin, Clock, ShieldCheck, Camera, Play, CheckCircle, Info as InfoIcon,
+  Users, HeartHandshake, Globe, Instagram
 } from 'lucide-react';
 import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -11,6 +13,7 @@ import {
   searchUnified, checkSystemHealth,
   connectArrieroLive, decodeAudioData, decode
 } from './services/geminiService';
+import { getLocalSuggestions } from './services/logisticsService';
 
 import { PaisaLogo } from './components/atoms/PaisaLogo';
 import { Navigation as MainNav } from './components/organisms/Navigation';
@@ -21,6 +24,7 @@ import { Footer } from './components/organisms/Footer';
 import { SearchBox } from './components/SearchBox';
 import { EpicAntioquiaMap } from './components/molecules/EpicAntioquiaMap';
 import { SafeImage } from './components/atoms/SafeImage';
+import { Badge } from './components/atoms/Badge';
 
 export default function App() {
   const [state, setState] = useState<AppState>({
@@ -32,6 +36,7 @@ export default function App() {
   const [xp, setXp] = useState(() => Number(localStorage.getItem('paisa_xp') || 150));
   const [isLiveActive, setIsLiveActive] = useState(false);
   const [systemStatus, setSystemStatus] = useState<{ok: boolean | null, msg: string, code?: number}>({ ok: null, msg: "Iniciando..." });
+  const [showAlert, setShowAlert] = useState(true);
   const audioContextRef = useRef<AudioContext | null>(null);
   const liveSessionRef = useRef<any>(null);
 
@@ -40,11 +45,20 @@ export default function App() {
     checkSystemHealth().then(setSystemStatus);
   }, [xp]);
 
+  useEffect(() => {
+    if (state.busqueda.length >= 2) {
+      const suggestions = getLocalSuggestions(state.busqueda);
+      setState(s => ({ ...s, sugerencias: suggestions }));
+    } else {
+      setState(s => ({ ...s, sugerencias: [] }));
+    }
+  }, [state.busqueda]);
+
   const handleSearch = async (q?: string) => {
     const query = q || state.busqueda;
     if (!query) return;
     
-    setState(s => ({ ...s, busqueda: query, cargando: true, error: null, tarjeta: null }));
+    setState(s => ({ ...s, busqueda: query, cargando: true, error: null, tarjeta: null, sugerencias: [] }));
     
     try {
       const data = await searchUnified(query, state.language);
@@ -58,7 +72,7 @@ export default function App() {
       setState(s => ({ 
         ...s, 
         cargando: false, 
-        error: "¡Eh ave maría! La IA está muy solicitada hoy. Usando datos de reserva..." 
+        error: "¡Eh ave maría! Hubo un problema buscando. Intente de nuevo." 
       })); 
     }
   };
@@ -95,6 +109,27 @@ export default function App() {
 
   return (
     <div className="min-h-screen bg-slate-50 text-slate-900 font-sans pb-40 overflow-x-hidden">
+      <AnimatePresence>
+        {showAlert && (
+          <motion.div 
+            initial={{ height: 0, opacity: 0 }} 
+            animate={{ height: 'auto', opacity: 1 }} 
+            exit={{ height: 0, opacity: 0 }}
+            className="bg-paisa-emerald text-white px-6 py-3 flex items-center justify-between z-[600] relative overflow-hidden"
+          >
+            <div className="flex items-center gap-3">
+              <BellRing size={16} className="animate-bounce" />
+              <p className="text-[10px] font-black uppercase tracking-widest">
+                Alerta Arriera: Vía a Guatapé fluyendo normal. ¡Disfrute el charco!
+              </p>
+            </div>
+            <button onClick={() => setShowAlert(false)} className="p-1 hover:bg-white/20 rounded-full transition-colors">
+              <X size={14} />
+            </button>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
       <header className="fixed top-0 inset-x-0 z-[500] px-6 py-4 glass border-b border-slate-100 flex items-center justify-between">
          <div className="flex items-center gap-4">
             <Trophy size={18} className="text-paisa-gold" />
@@ -102,12 +137,6 @@ export default function App() {
                <motion.div initial={{ width: 0 }} animate={{ width: `${(xp % 500) / 5}%` }} className="xp-bar h-full" />
             </div>
             <span className="font-paisa text-[9px] text-paisa-emerald uppercase tracking-tighter">Lvl {Math.floor(xp/500)+1}</span>
-            <button 
-              onClick={() => alert(systemStatus.msg)}
-              className={`hidden md:flex items-center gap-2 px-3 py-1 rounded-full text-[8px] font-black uppercase transition-colors ${systemStatus.ok ? 'bg-emerald-50 text-emerald-600' : 'bg-amber-50 text-amber-600'}`}>
-               {systemStatus.ok ? <Wifi size={10} /> : systemStatus.code === 429 ? <ZapOff size={10} /> : <WifiOff size={10} />}
-               {systemStatus.ok ? 'IA Online' : systemStatus.code === 429 ? 'Cuota Agotada' : 'Error IA'}
-            </button>
          </div>
          <div className="flex gap-2">
            {['es', 'en'].map(l => (
@@ -119,15 +148,6 @@ export default function App() {
       </header>
 
       <div className="pt-32 px-6 max-w-6xl mx-auto space-y-16">
-        {systemStatus.code === 429 && (
-          <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} className="p-4 bg-amber-50 border border-amber-200 rounded-2xl flex items-center gap-4 text-amber-800 shadow-sm">
-             <Info size={16} className="shrink-0" />
-             <p className="text-[10px] font-black uppercase tracking-widest leading-tight">
-               Modo Ahorro: Has excedido el límite gratuito de Google. Podrás buscar de nuevo en unos minutos o mañana. Por ahora, disfruta los datos locales.
-             </p>
-          </motion.div>
-        )}
-
         {state.error && (
           <motion.div initial={{ opacity: 0, y: -20 }} animate={{ opacity: 1, y: 0 }} className="p-6 bg-red-50 border border-red-200 rounded-3xl flex items-center gap-4 text-red-700 shadow-xl">
                <AlertTriangle className="shrink-0" />
@@ -139,8 +159,11 @@ export default function App() {
         <div className="flex flex-col items-center text-center gap-10">
           <PaisaLogo onClick={() => setState(s => ({...s, unifiedResults: [], tarjeta: null, error: null}))} className="scale-125 cursor-pointer" />
           <SearchBox 
-            value={state.busqueda} onChange={(v) => setState(s => ({...s, busqueda: v}))} 
-            onSearch={handleSearch} placeholder="¿A qué pueblo o terminal vamos mijo?" 
+            value={state.busqueda} 
+            onChange={(v) => setState(s => ({...s, busqueda: v}))} 
+            onSearch={handleSearch} 
+            suggestions={state.sugerencias}
+            placeholder="¿A qué pueblo o terminal vamos mijo?" 
           />
         </div>
 
@@ -151,7 +174,7 @@ export default function App() {
                   <Loader2 className="text-paisa-emerald animate-spin" size={64} />
                   <Sparkles className="absolute -top-4 -right-4 text-paisa-gold animate-pulse" />
                </div>
-               <p className="text-2xl font-serif italic text-slate-400 animate-pulse">Buscando por Antioquia...</p>
+               <p className="text-2xl font-serif italic text-slate-400 animate-pulse">Consultando el mapa...</p>
             </motion.div>
           ) : state.tarjeta ? (
             <motion.div key="detail" initial={{ opacity: 0, y: 30 }} animate={{ opacity: 1, y: 0 }}>
@@ -168,23 +191,59 @@ export default function App() {
                    initial={{ opacity: 0, y: 20 }}
                    animate={{ opacity: 1, y: 0 }}
                    transition={{ delay: i * 0.1 }}
-                   onClick={() => item.type === 'place' && setState(s => ({...s, tarjeta: item}))}
+                   className="flex flex-col h-full"
                  >
                     {item.type === 'place' ? (
-                      <div className="bg-white rounded-[40px] overflow-hidden shadow-xl border border-slate-100 cursor-pointer hover:-translate-y-2 transition-all group">
-                        <SafeImage src={item.imagen} alt={item.titulo} className="aspect-video" />
-                        <div className="p-8 space-y-4">
-                           <div className="flex justify-between items-center">
+                      <div className="bg-white rounded-[40px] overflow-hidden shadow-xl border border-slate-100 flex flex-col h-full group">
+                        <div className="h-48 cursor-pointer overflow-hidden" onClick={() => setState(s => ({...s, tarjeta: item}))}>
+                           <SafeImage alt={item.titulo} region={item.region} className="w-full h-full group-hover:scale-110 transition-transform duration-700" />
+                        </div>
+                        <div className="p-8 space-y-4 flex-1 flex flex-col">
+                           <div className="flex justify-between items-center cursor-pointer" onClick={() => setState(s => ({...s, tarjeta: item}))}>
                               <h5 className="text-2xl font-black uppercase tracking-tighter group-hover:text-paisa-emerald transition-colors">{item.titulo}</h5>
-                              <div className="flex gap-2">
-                                <div className="px-2 py-1 bg-amber-50 text-amber-600 rounded-lg text-[7px] font-bold uppercase">2024</div>
-                                <div className="px-2 py-1 bg-emerald-50 text-emerald-600 rounded-lg text-[7px] font-bold uppercase">Safe</div>
+                              <Badge color="gold">{item.region}</Badge>
+                           </div>
+                           
+                           <div className="grid grid-cols-2 gap-4 text-slate-500">
+                              <div className="flex items-center gap-2">
+                                 <Bus size={12} className="text-paisa-emerald" />
+                                 <span className="text-[10px] font-black">${item.budget.busTicket.toLocaleString()}</span>
+                              </div>
+                              <div className="flex items-center gap-2">
+                                 <Clock size={12} className="text-paisa-emerald" />
+                                 <span className="text-[10px] font-black">{item.tiempoDesdeMedellin}</span>
+                              </div>
+                              <div className="flex items-center gap-2">
+                                 <Wifi size={12} className="text-paisa-emerald" />
+                                 <span className="text-[10px] font-black">{item.wifiQuality}</span>
+                              </div>
+                              <div className="flex items-center gap-2">
+                                 <ShieldCheck size={12} className="text-paisa-emerald" />
+                                 <span className="text-[10px] font-black">{item.viaEstado}</span>
                               </div>
                            </div>
-                           <p className="text-slate-500 font-serif italic text-sm line-clamp-2">"{item.descripcion}"</p>
-                           <div className="pt-4 border-t flex items-center justify-between text-[10px] font-black uppercase text-paisa-emerald">
-                              <span className="flex items-center gap-1"><Bus size={12}/> Bus: ${item.budget.busTicket.toLocaleString()}</span>
-                              <span className="text-slate-300">{item.region}</span>
+
+                           <div className="pt-6 mt-auto border-t border-slate-50 flex flex-wrap gap-2">
+                              <a 
+                                href={`https://www.google.com/search?q=${item.titulo}+Antioquia+turismo+fotos&tbm=isch`} 
+                                target="_blank" 
+                                className="flex items-center gap-2 px-3 py-2 rounded-xl bg-slate-50 text-[9px] font-black uppercase tracking-widest text-slate-400 hover:text-paisa-emerald hover:bg-emerald-50 transition-all"
+                              >
+                                <Camera size={12} /> Fotos
+                              </a>
+                              <a 
+                                href={`https://www.youtube.com/results?search_query=${item.titulo}+Antioquia+vlog+viaje`} 
+                                target="_blank" 
+                                className="flex items-center gap-2 px-3 py-2 rounded-xl bg-slate-50 text-[9px] font-black uppercase tracking-widest text-slate-400 hover:text-red-500 hover:bg-red-50 transition-all"
+                              >
+                                <Play size={12} /> Videos
+                              </a>
+                              <button 
+                                onClick={() => setState(s => ({...s, tarjeta: item}))}
+                                className="flex items-center gap-2 px-3 py-2 rounded-xl bg-emerald-600 text-[9px] font-black uppercase tracking-widest text-white hover:bg-emerald-700 transition-all ml-auto"
+                              >
+                                <CheckCircle size={12} /> Verificar
+                              </button>
                            </div>
                         </div>
                       </div>
@@ -197,30 +256,83 @@ export default function App() {
                ))}
             </div>
           ) : (
-            <motion.div key="home" className="space-y-16">
+            <motion.div key="home" className="space-y-24">
+              {/* Sección Explicativa: Nuestra Propuesta */}
+              <section className="space-y-12">
+                <div className="text-center space-y-4 max-w-2xl mx-auto">
+                   <h2 className="text-4xl md:text-6xl font-black uppercase tracking-tighter">Tu Brújula en <span className="text-paisa-emerald">Antioquia</span></h2>
+                   <p className="text-lg text-slate-500 font-serif italic">Somos la inteligencia colectiva de las montañas llevada a tu bolsillo. Turismo táctico para el viajero moderno.</p>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+                   <motion.div whileHover={{ y: -10 }} className="p-10 bg-white rounded-[48px] border border-slate-100 shadow-xl space-y-6 text-center">
+                      <div className="w-20 h-20 mx-auto rounded-3xl bg-emerald-50 text-paisa-emerald flex items-center justify-center">
+                         <Globe size={40} />
+                      </div>
+                      <h4 className="text-xl font-black uppercase tracking-tight">Acceso Total</h4>
+                      <p className="text-sm text-slate-500 leading-relaxed font-serif">Explora los 125 municipios. Desde el mar de Urabá hasta los páramos del Norte, con datos técnicos de transporte y seguridad verificados.</p>
+                   </motion.div>
+
+                   <motion.div whileHover={{ y: -10 }} className="p-10 bg-white rounded-[48px] border border-slate-100 shadow-xl space-y-6 text-center">
+                      <div className="w-20 h-20 mx-auto rounded-3xl bg-gold-50 text-paisa-gold flex items-center justify-center">
+                         <HeartHandshake size={40} />
+                      </div>
+                      <h4 className="text-xl font-black uppercase tracking-tight">Impacto Local</h4>
+                      <p className="text-sm text-slate-500 leading-relaxed font-serif">Promovemos el turismo regenerativo. Conectamos viajeros con maestros de oficio, fincas cafeteras y gastronomía de origen auténtico.</p>
+                   </motion.div>
+
+                   <motion.div whileHover={{ y: -10 }} className="p-10 bg-white rounded-[48px] border border-slate-100 shadow-xl space-y-6 text-center">
+                      <div className="w-20 h-20 mx-auto rounded-3xl bg-emerald-50 text-paisa-emerald flex items-center justify-center">
+                         <Zap size={40} />
+                      </div>
+                      <h4 className="text-xl font-black uppercase tracking-tight">Datos en Vivo</h4>
+                      <p className="text-sm text-slate-500 leading-relaxed font-serif">Precios de buses actualizados, calidad de internet para nómadas y estado de vías reportado por la comunidad arriera en tiempo real.</p>
+                   </motion.div>
+                </div>
+              </section>
+
+              {/* Destinos Populares */}
               <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                 {['Guatapé', 'Jardín', 'Jericó'].map(p => (
                    <button key={p} onClick={() => handleSearch(p)} className="p-10 bg-white rounded-[40px] border border-slate-100 text-left hover:border-paisa-gold transition-all group shadow-sm hover:shadow-xl">
                       <div className="flex items-center justify-between mb-4">
-                        <p className="text-[10px] font-black uppercase text-slate-300 tracking-widest">Ruta Local</p>
+                        <p className="text-[10px] font-black uppercase text-slate-300 tracking-widest">Destino Top</p>
                         <NavIcon size={14} className="text-slate-200 group-hover:text-paisa-emerald transition-colors" />
                       </div>
                       <h4 className="text-3xl font-black uppercase tracking-tighter group-hover:text-paisa-emerald">{p}</h4>
                    </button>
                 ))}
               </div>
+              
               <EpicAntioquiaMap onSelectRegion={(r) => handleSearch(r)} lang={state.language} />
+              
+              {/* Sección Social de Instagram */}
+              <section className="bg-slate-900 rounded-[56px] p-12 lg:p-20 text-white relative overflow-hidden text-center space-y-10 border border-white/5">
+                 <div className="absolute top-0 left-0 w-full h-full opacity-5 pointer-events-none">
+                    <svg width="100%" height="100%"><defs><pattern id="grid" width="40" height="40" patternUnits="userSpaceOnUse"><path d="M 40 0 L 0 0 0 40" fill="none" stroke="white" strokeWidth="1"/></pattern></defs><rect width="100%" height="100%" fill="url(#grid)" /></svg>
+                 </div>
+                 <div className="relative z-10 space-y-4 max-w-3xl mx-auto">
+                    <Badge color="gold" className="mb-4">Instagram Live</Badge>
+                    <h3 className="text-4xl md:text-7xl font-black uppercase tracking-tighter leading-none">Unite a la Comunidad <span className="text-paisa-gold">Arriera</span></h3>
+                    <p className="text-xl text-white/50 font-serif italic">Compartí tus aventuras, reportá el estado de los charcos y ayudanos a mapear los tesoros ocultos de nuestra tierra.</p>
+                 </div>
+                 <div className="flex flex-col md:flex-row justify-center items-center gap-6 relative z-10">
+                    <a href="https://instagram.com/paisalocal.pro" target="_blank" rel="noopener noreferrer" className="flex items-center gap-4 px-10 py-5 bg-white text-slate-900 rounded-full font-black uppercase text-[12px] tracking-widest hover:bg-paisa-gold hover:scale-105 transition-all shadow-2xl">
+                       <Instagram size={20} className="text-paisa-emerald" /> Seguinos en @paisalocal.pro
+                    </a>
+                 </div>
+              </section>
             </motion.div>
           )}
         </AnimatePresence>
       </div>
 
       <MainNav 
-        onReset={() => setState(s => ({...s, unifiedResults: [], tarjeta: null, busqueda: '', error: null}))} 
+        onReset={() => setState(s => ({...s, unifiedResults: [], tarjeta: null, busqueda: '', error: null, sugerencias: []}))} 
         isLiveActive={isLiveActive} 
         onLiveToggle={handleLiveToggle} 
         hasResults={state.unifiedResults.length > 0 || !!state.tarjeta} 
-        label={isLiveActive ? "Hablando..." : "Preguntar al Arriero"} 
+        label={isLiveActive ? "Hablando..." : "Arriero Live"} 
       />
       <Footer isDark={false} />
     </div>

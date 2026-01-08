@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { motion } from 'framer-motion';
-import { Heart, MapPin, Sparkles, Users, Calendar, ArrowUpRight, Award } from 'lucide-react';
+import { Heart, MapPin, Sparkles, Users, Calendar, ArrowUpRight, Award, Camera, Play, Search } from 'lucide-react';
 import { CultureExperience } from '../../types';
 import { SafeImage } from '../atoms/SafeImage';
 import { Badge } from '../atoms/Badge';
@@ -16,74 +16,57 @@ interface ExperienceCardProps {
 export const ExperienceCard: React.FC<ExperienceCardProps> = ({ experience, isFavorite, onToggleFavorite, onClick }) => {
   return (
     <motion.div 
-      whileHover={{ y: -16, shadow: "0 25px 50px -12px rgba(0, 0, 0, 0.5)" }}
-      className="bg-slate-950 rounded-[56px] overflow-hidden group flex flex-col h-full border border-white/5 cursor-pointer"
+      whileHover={{ y: -8 }}
+      className="bg-slate-900 rounded-[40px] overflow-hidden group flex flex-col h-full border border-white/5 cursor-pointer shadow-2xl"
       onClick={onClick}
     >
-      <div className="relative aspect-[16/10] overflow-hidden">
-        <SafeImage src={`${experience.imagen}?auto=format&fit=crop&q=80&w=1200`} alt={experience.titulo} className="w-full h-full opacity-60 group-hover:opacity-100 transition-all duration-1000 group-hover:scale-105" />
-        <div className="absolute inset-0 bg-gradient-to-t from-slate-950 via-slate-950/20 to-transparent pointer-events-none" />
-        
+      <div className="relative h-48">
+        <SafeImage alt={experience.titulo} type="experience" className="w-full h-full opacity-80 group-hover:scale-110 transition-transform duration-700" />
         <button 
           onClick={(e) => { e.stopPropagation(); onToggleFavorite(experience.titulo); }}
-          className={`absolute top-8 right-8 p-5 rounded-full backdrop-blur-xl border transition-all duration-500 ${isFavorite ? 'bg-red-500 text-white border-red-400 shadow-2xl scale-110' : 'bg-white/10 border-white/20 text-white hover:bg-white/30'}`}
+          className={`absolute top-6 right-6 p-4 rounded-full backdrop-blur-md border transition-all ${isFavorite ? 'bg-red-500 text-white border-red-400' : 'bg-white/10 border-white/20 text-white'}`}
         >
-          <Heart size={20} fill={isFavorite ? "currentColor" : "none"} />
+          <Heart size={18} fill={isFavorite ? "currentColor" : "none"} />
         </button>
-
-        <div className="absolute bottom-8 left-10 flex items-center gap-2">
-           <Badge color="gold" className="shadow-2xl">{experience.categoria}</Badge>
-           <div className="px-4 py-2 bg-white/10 backdrop-blur-md rounded-full border border-white/20 text-white text-[9px] font-black uppercase tracking-widest flex items-center gap-2">
-              <Sparkles size={10} className="text-paisa-gold" /> Experiencia Real
-           </div>
-        </div>
       </div>
 
-      <div className="p-12 flex-1 flex flex-col justify-between space-y-10">
-        <div className="space-y-6">
-          <div className="flex justify-between items-start">
-            <h4 className="text-white text-4xl md:text-5xl font-black uppercase tracking-tighter leading-[0.9] group-hover:text-paisa-gold transition-colors duration-500">{experience.titulo}</h4>
-            <div className="p-4 rounded-full bg-white/5 text-white/40 group-hover:text-paisa-gold group-hover:bg-paisa-gold/10 transition-all">
-              <ArrowUpRight size={24} />
-            </div>
-          </div>
-          <p className="text-white/50 text-base italic leading-relaxed font-serif">"{experience.descripcion}"</p>
-
-          {/* NUEVA SECCIÓN: MAESTRO DE OFICIO */}
-          {experience.maestroOficio && (
-            <div className="mt-8 flex items-center gap-5 p-6 bg-white/5 rounded-[32px] border border-white/10">
-               <div className="w-14 h-14 rounded-full border-2 border-paisa-gold/50 flex items-center justify-center bg-paisa-gold/10 text-paisa-gold">
-                  <Award size={28} />
-               </div>
-               <div>
-                  <p className="text-paisa-gold text-[10px] font-black uppercase tracking-widest mb-1">Maestro de Oficio</p>
-                  <p className="text-white font-black text-lg leading-none uppercase">{experience.maestroOficio.nombre}</p>
-                  <p className="text-white/40 text-[9px] font-bold uppercase tracking-wider mt-1">
-                    {experience.maestroOficio.especialidad} • {experience.maestroOficio.años} Años de Legado
-                  </p>
-               </div>
-            </div>
-          )}
+      <div className="p-8 flex-1 flex flex-col justify-between">
+        <div className="space-y-4">
+          <Badge color="gold">{experience.categoria}</Badge>
+          <h4 className="text-2xl font-black uppercase tracking-tight text-white group-hover:text-paisa-gold transition-colors">{experience.titulo}</h4>
+          <p className="text-sm italic text-white/40 font-serif line-clamp-2">"{experience.descripcion}"</p>
         </div>
 
-        <div className="space-y-6 pt-10 border-t border-white/10">
-          <div className="flex items-center gap-4 text-paisa-gold">
-            <div className="w-10 h-10 rounded-2xl bg-paisa-gold/10 flex items-center justify-center animate-pulse">
-               <Users size={20} />
-            </div>
-            <div className="flex flex-col">
-               <span className="text-[10px] font-black uppercase opacity-40 tracking-widest">Impacto Social</span>
-               <span className="text-xs font-black uppercase tracking-widest">{experience.impactoSocial}</span>
-            </div>
+        <div className="mt-8 space-y-4 pt-6 border-t border-white/10">
+          <div className="flex items-center gap-3 text-paisa-gold">
+            <Users size={16} />
+            <span className="text-[10px] font-black uppercase tracking-widest">{experience.impactoSocial}</span>
           </div>
           
-          <div className="flex items-center justify-between text-white/30 bg-white/5 p-6 rounded-[32px]">
-            <div className="flex items-center gap-3 text-[10px] font-black uppercase tracking-widest">
-              <MapPin size={14} className="text-white/20" /> {experience.ubicacion}
+          <div className="flex flex-wrap gap-2 pt-2">
+             <a 
+                href={`https://www.google.com/search?q=${experience.titulo}+${experience.ubicacion}+Antioquia+fotos&tbm=isch`} 
+                target="_blank"
+                onClick={(e) => e.stopPropagation()}
+                className="flex items-center gap-2 px-3 py-2 rounded-xl bg-white/5 text-[9px] font-black uppercase tracking-widest text-white/40 hover:text-white hover:bg-white/10 transition-all border border-white/5"
+              >
+                <Camera size={12} /> Fotos
+              </a>
+              <a 
+                href={`https://www.youtube.com/results?search_query=${experience.titulo}+${experience.ubicacion}+Antioquia`} 
+                target="_blank"
+                onClick={(e) => e.stopPropagation()}
+                className="flex items-center gap-2 px-3 py-2 rounded-xl bg-white/5 text-[9px] font-black uppercase tracking-widest text-white/40 hover:text-red-400 hover:bg-red-400/10 transition-all border border-white/5"
+              >
+                <Play size={12} /> Videos
+              </a>
+          </div>
+
+          <div className="flex justify-between items-center text-white/30 pt-4">
+            <div className="flex items-center gap-2 text-[10px] font-bold">
+              <MapPin size={12} /> {experience.ubicacion}
             </div>
-            <div className="flex items-center gap-3 text-[10px] font-black uppercase tracking-widest">
-              <Calendar size={14} className="text-white/20" /> {experience.horarioRecomendado || 'Agendar cita'}
-            </div>
+            <ArrowUpRight size={16} />
           </div>
         </div>
       </div>
