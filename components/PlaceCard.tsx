@@ -5,7 +5,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { 
   MapPin, Clock, Heart, Users, Star, CheckCircle, Bus, Wallet, Shield, Sparkles, Send, 
   MessageSquare, User, Award, Sun, Cloud, CloudRain, Zap, Wifi, Signal, AlertCircle, Info, Navigation,
-  Coffee, Camera, Play, ExternalLink, ShieldCheck
+  Coffee, Camera, Play, ExternalLink, ShieldCheck, Share2, Accessibility, ShieldAlert, Phone
 } from 'lucide-react';
 import { PlaceData, SupportedLang } from '../types';
 import { Badge } from './atoms/Badge';
@@ -47,6 +47,22 @@ export const PlaceCard: React.FC<PlaceCardProps> = ({
     setLoadingItinerary(false);
   };
 
+  const handleShare = async () => {
+    const shareData = {
+      title: `Paisa Local Pro: ${data.titulo}`,
+      text: `¡Mijo! Mirá este itinerario táctico para ${data.titulo}, Antioquia. ${data.descripcion}`,
+      url: window.location.href,
+    };
+    try {
+      if (navigator.share) {
+        await navigator.share(shareData);
+      } else {
+        await navigator.clipboard.writeText(window.location.href);
+        alert('Enlace copiado al portapapeles mijo.');
+      }
+    } catch (err) { console.error('Error sharing:', err); }
+  };
+
   const handleSubmitReview = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!newReview.name || !newReview.comment) return;
@@ -72,6 +88,24 @@ export const PlaceCard: React.FC<PlaceCardProps> = ({
   return (
     <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="w-full space-y-10 pb-20">
       
+      {/* Alerta de Seguridad Prioritaria (Gap 5.2 Seguridad y Confianza) */}
+      {data.security && (
+        <div className={`p-4 rounded-3xl flex items-center justify-between ${data.security.status === 'Seguro' ? 'bg-emerald-50 text-emerald-700' : 'bg-amber-50 text-amber-700'} border border-current/10 shadow-sm`}>
+          <div className="flex items-center gap-3">
+             <ShieldCheck size={20} />
+             <div>
+                <p className="text-[10px] font-black uppercase tracking-widest">Estado de Seguridad: {data.security.status}</p>
+                <p className="text-[9px] opacity-70">Última verificación por comunidad: {data.security.lastReported}</p>
+             </div>
+          </div>
+          <div className="flex gap-2">
+            <a href={`tel:${data.security.emergencyNumber}`} className="flex items-center gap-2 px-4 py-2 bg-white rounded-xl shadow-sm text-[10px] font-black uppercase hover:bg-white/80 transition-all">
+               <Phone size={14} /> Policía Turismo
+            </a>
+          </div>
+        </div>
+      )}
+
       {/* Hero Generativo de Subregión */}
       <section className="relative min-h-[500px] rounded-[56px] overflow-hidden shadow-2xl border border-slate-100 flex flex-col md:flex-row">
         <SafeImage alt={data.titulo} region={data.region} className="w-full md:w-1/2 min-h-[300px] md:min-h-full" />
@@ -80,6 +114,9 @@ export const PlaceCard: React.FC<PlaceCardProps> = ({
            <div className="flex justify-between items-start">
               <Badge color="gold">{data.region}</Badge>
               <div className="flex gap-2">
+                <button onClick={handleShare} className="p-3 rounded-full border border-slate-100 bg-slate-50 text-slate-400 hover:text-paisa-emerald transition-all">
+                  <Share2 size={18} />
+                </button>
                 {data.weather && (
                   <div className="bg-slate-50 border border-slate-100 rounded-2xl px-4 py-2 flex items-center gap-3 text-slate-600">
                      <WeatherIcon condition={data.weather.condition} />
@@ -97,12 +134,19 @@ export const PlaceCard: React.FC<PlaceCardProps> = ({
               <p className="text-slate-500 text-lg md:text-xl font-serif italic max-w-2xl leading-relaxed">"{data.descripcion}"</p>
            </div>
 
+           {/* Grid de Logística y Accesibilidad (Vacío 5.1 Personas con Discapacidad / Adultos Mayores) */}
            <div className="grid grid-cols-2 gap-4">
               <div className="p-5 rounded-3xl bg-emerald-50 border border-emerald-100">
-                 <div className="flex items-center gap-2 text-emerald-700 mb-1">
-                    <Wifi size={14} /> <span className="text-[10px] font-black uppercase tracking-widest">Digital Nomad</span>
+                 <div className="flex items-center gap-2 text-emerald-700 mb-2">
+                    <Accessibility size={14} /> <span className="text-[10px] font-black uppercase tracking-widest">Inclusión Física</span>
                  </div>
-                 <p className="text-sm font-bold text-emerald-900">{data.wifiQuality || 'Excelente'} (Score: {data.nomadScore || 85}/100)</p>
+                 <div className="flex flex-col gap-1">
+                    <p className="text-sm font-bold text-emerald-900">{data.accessibility?.score || 85}% Accesible</p>
+                    <div className="flex gap-1">
+                      {data.accessibility?.wheelchairFriendly && <div className="w-5 h-5 rounded-lg bg-emerald-200 flex items-center justify-center text-[10px] font-black" title="Silla de Ruedas OK">♿</div>}
+                      {data.accessibility?.elderlyApproved && <div className="w-5 h-5 rounded-lg bg-emerald-200 flex items-center justify-center text-[10px] font-black" title="Adulto Mayor OK">👴</div>}
+                    </div>
+                 </div>
               </div>
               <div className="p-5 rounded-3xl bg-blue-50 border border-blue-100">
                  <div className="flex items-center gap-2 text-blue-700 mb-1">
@@ -115,7 +159,7 @@ export const PlaceCard: React.FC<PlaceCardProps> = ({
            <div className="flex flex-wrap gap-4 pt-4">
              <Button variant="primary" onClick={handleGenerateItinerary} disabled={loadingItinerary} className="h-14 px-8">
                 {loadingItinerary ? <Zap className="animate-spin" size={18} /> : <Sparkles size={18} />}
-                {itinerary ? "Refrescar Itinerario" : "Generar Plan IA"}
+                {itinerary ? "Refrescar Plan IA" : "Generar Itinerario Táctico"}
              </Button>
              <Button variant="ghost" onClick={() => onToggleVisited?.(data.titulo)} className="h-14 px-8 border border-slate-100">
                 {isVisited ? <CheckCircle size={18} className="text-paisa-emerald" /> : <Award size={18} />}
@@ -123,7 +167,7 @@ export const PlaceCard: React.FC<PlaceCardProps> = ({
              </Button>
            </div>
            
-           {/* Enlaces de Verificación Táctica */}
+           {/* Enlaces de Verificación de Confianza (Gap 5.1/5.2) */}
            <div className="flex flex-wrap gap-6 pt-6 border-t border-slate-50">
               <a 
                 href={`https://www.google.com/search?q=${data.titulo}+Antioquia+fotos+turismo&tbm=isch`} 
@@ -144,13 +188,13 @@ export const PlaceCard: React.FC<PlaceCardProps> = ({
                 target="_blank" 
                 className="flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-slate-400 hover:text-blue-500 transition-all"
               >
-                <MapPin size={14} /> Ubicar en Google Maps
+                <MapPin size={14} /> Abrir Mapa
               </a>
            </div>
         </div>
       </section>
 
-      {/* Itinerario Generado por IA */}
+      {/* Itinerario Generado por IA (Modo Inclusivo) */}
       <AnimatePresence>
         {itinerary && (
           <motion.section initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="grid grid-cols-1 md:grid-cols-3 gap-6">
@@ -179,7 +223,7 @@ export const PlaceCard: React.FC<PlaceCardProps> = ({
              <div className="space-y-2">
                 <p className="text-slate-700 font-bold">{data.terminalInfo || "Terminal del Norte"}</p>
                 <div className="flex items-center gap-2 text-slate-400 text-xs">
-                   <Clock size={12} /> <span>Sale: {data.busFrequency || 'Frecuente'}</span>
+                   <Clock size={12} /> <span>Frecuencia: {data.busFrequency || 'Cada hora'}</span>
                 </div>
                 {data.busCompanies && (
                   <div className="flex flex-wrap gap-2 pt-2">
@@ -199,14 +243,14 @@ export const PlaceCard: React.FC<PlaceCardProps> = ({
              </div>
              <div className="space-y-1">
                 <div className="flex justify-between items-center">
-                   <span className="text-xs text-slate-400 font-medium">Pasaje:</span>
+                   <span className="text-xs text-slate-400 font-medium">Pasaje Bus:</span>
                    <span className="font-black text-slate-900">${data.budget.busTicket.toLocaleString()}</span>
                 </div>
                 <div className="flex justify-between items-center">
-                   <span className="text-xs text-slate-400 font-medium">Almuerzo:</span>
+                   <span className="text-xs text-slate-400 font-medium">Almuerzo Prom:</span>
                    <span className="font-black text-slate-900">${data.budget.averageMeal.toLocaleString()}</span>
                 </div>
-                <p className="text-[9px] text-paisa-gold font-black uppercase mt-3">* Precios estimados 2024</p>
+                <p className="text-[9px] text-paisa-gold font-black uppercase mt-3">* Precios estimados temporada 2024</p>
              </div>
           </div>
 
@@ -222,7 +266,7 @@ export const PlaceCard: React.FC<PlaceCardProps> = ({
                 <div className={`w-3 h-3 rounded-full animate-pulse ${data.viaEstado === 'Despejada' ? 'bg-emerald-500' : 'bg-amber-500'}`} />
                 <p className="text-slate-700 font-bold text-lg">{data.viaEstado || 'Despejada'}</p>
              </div>
-             <p className="text-xs text-slate-400 leading-snug">{data.seguridadTexto || 'Vía monitoreada. Viaje tranquilo.'}</p>
+             <p className="text-xs text-slate-400 leading-snug">{data.seguridadTexto || 'Vía monitoreada por la comunidad arriera.'}</p>
           </div>
       </section>
 
@@ -237,19 +281,19 @@ export const PlaceCard: React.FC<PlaceCardProps> = ({
                  <User size={32} />
               </div>
               <div className="space-y-2 text-center md:text-left">
-                 <h5 className="text-[10px] font-black uppercase tracking-[0.4em] text-paisa-gold">Tip del Arriero</h5>
+                 <h5 className="text-[10px] font-black uppercase tracking-[0.4em] text-paisa-gold">Tip del Arriero Local</h5>
                  <p className="text-2xl font-serif italic leading-relaxed">"{data.neighborTip}"</p>
               </div>
            </div>
         </section>
       )}
 
-      {/* Muro de la Comunidad */}
+      {/* Muro de la Comunidad e Información IA */}
       <section className="grid grid-cols-1 lg:grid-cols-2 gap-8">
         <div className="bg-white p-10 rounded-[48px] border border-slate-100 shadow-xl space-y-6">
            <div className="flex items-center gap-3">
               <MessageSquare className="text-paisa-emerald" size={24} />
-              <h3 className="text-xl font-black uppercase tracking-tight">Comentarios de Vecinos</h3>
+              <h3 className="text-xl font-black uppercase tracking-tight">Reportes de la Comunidad</h3>
            </div>
            <div className="space-y-4 max-h-[400px] overflow-y-auto no-scrollbar pr-2">
               {reviews.length > 0 ? reviews.map((rev) => (
@@ -270,7 +314,7 @@ export const PlaceCard: React.FC<PlaceCardProps> = ({
               )) : (
                 <div className="flex flex-col items-center justify-center py-20 text-center gap-4 opacity-20">
                    <Users size={48} />
-                   <p className="font-serif italic">Todavía no hay reseñas en este pueblo.</p>
+                   <p className="font-serif italic">Se el primero en reportar este pueblo.</p>
                 </div>
               )}
            </div>
@@ -282,7 +326,7 @@ export const PlaceCard: React.FC<PlaceCardProps> = ({
            </div>
            <div className="space-y-2">
               <h3 className="text-2xl font-black uppercase tracking-tight">¿Pasaste por aquí?</h3>
-              <p className="text-white/40 text-sm">Ayudá a otros arrieros reportando cómo está la vuelta hoy.</p>
+              <p className="text-white/40 text-sm">Ayudá a otros arrieros reportando precios, internet o seguridad.</p>
            </div>
            <form onSubmit={handleSubmitReview} className="space-y-4 relative z-10">
               <div className="grid grid-cols-2 gap-4">
@@ -293,8 +337,8 @@ export const PlaceCard: React.FC<PlaceCardProps> = ({
                     <option value="3" className="bg-slate-900">⭐⭐⭐</option>
                  </select>
               </div>
-              <textarea value={newReview.comment} onChange={e => setNewReview(prev => ({...prev, comment: e.target.value}))} placeholder="Contanos qué tal el parche, el internet o la vía..." rows={4} className="w-full bg-white/5 border border-white/10 rounded-[32px] p-6 text-white outline-none focus:border-paisa-gold resize-none transition-all" />
-              <Button disabled={isSubmitting} type="submit" variant="accent" className="w-full h-14 uppercase tracking-[0.3em]">Enviar Reporte</Button>
+              <textarea value={newReview.comment} onChange={e => setNewReview(prev => ({...prev, comment: e.target.value}))} placeholder="Contanos qué tal el parche..." rows={4} className="w-full bg-white/5 border border-white/10 rounded-[32px] p-6 text-white outline-none focus:border-paisa-gold resize-none transition-all" />
+              <Button disabled={isSubmitting} type="submit" variant="accent" className="w-full h-14 uppercase tracking-[0.3em]">Enviar Reporte Táctico</Button>
            </form>
         </div>
       </section>

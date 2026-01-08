@@ -3,6 +3,28 @@ export type SupportedLang = 'es' | 'en' | 'pt';
 export type AppTab = 'home' | 'explore' | 'gastronomy' | 'culture';
 export type AntioquiaRegion = 'Oriente' | 'Suroeste' | 'Occidente' | 'Norte' | 'Bajo Cauca' | 'Nordeste' | 'Magdalena Medio' | 'Urabá' | 'Valle de Aburrá';
 
+export interface GroundingLink {
+  title: string;
+  uri: string;
+  type: 'video' | 'official' | 'news' | 'photo' | 'other';
+}
+
+export interface AccessibilityData {
+  wheelchairFriendly: boolean;
+  elderlyApproved: boolean;
+  brailleAvailable: boolean;
+  sensoryFriendly: boolean;
+  score: number; // 0-100
+  notes: string;
+}
+
+export interface SecurityData {
+  status: 'Seguro' | 'Precaución' | 'Crítico';
+  lastReported: string;
+  emergencyNumber: string;
+  touristPoliceLink: string;
+}
+
 export interface WeatherData {
   temp: number;
   condition: string;
@@ -15,30 +37,27 @@ export interface PlaceData {
   region: AntioquiaRegion;
   descripcion: string;
   seguridadTexto: string;
+  security?: SecurityData;
+  accessibility?: AccessibilityData;
+  groundingLinks?: GroundingLink[];
   vibeScore: number;
-  nomadScore: number; // 1-100 (Wi-Fi/Cell signal)
+  nomadScore: number; 
   wifiQuality: 'Excelente' | 'Inestable' | 'Limitada';
   viaEstado: 'Despejada' | 'Paso Restringido' | 'Cerrada';
   tiempoDesdeMedellin: string;
-  busFrequency: string; // ej: "Cada 30 min"
+  busFrequency: string; 
   busCompanies: string[];
   budget: {
     busTicket: number;
     averageMeal: number;
   };
   coordenadas: { lat: number; lng: number };
-  imagen: string; // Se usará como semilla para el arte generativo
+  imagen: string; 
   isVerified?: boolean;
   neighborTip?: string;
   trivia?: string;
   terminalInfo?: string;
   weather?: WeatherData;
-  currentFestival?: string;
-  itinerary?: {
-    morning: string;
-    afternoon: string;
-    evening: string;
-  };
 }
 
 export interface DishData {
@@ -49,10 +68,8 @@ export interface DishData {
   categoria: string;
   imagen: string;
   precioLocalEstimated: string;
-  precioTuristaEstimated: string;
   precioVerificado: boolean;
   economiaCircular: boolean;
-  productoresOrigen?: { nombre: string; finca: string }[];
 }
 
 export interface CultureExperience {
@@ -65,20 +82,6 @@ export interface CultureExperience {
   imagen: string;
   costoSugeridoCOP: string;
   horarioRecomendado: string;
-  maestroOficio?: {
-    nombre: string;
-    especialidad: string;
-    años: number;
-  };
-}
-
-export interface ChallengeData {
-  id: string;
-  titulo: string;
-  mision: string;
-  recompensa: string;
-  dificultad: 'Fácil' | 'Media' | 'Arriero';
-  completado: boolean;
 }
 
 export interface UGCContent {
@@ -88,6 +91,15 @@ export interface UGCContent {
   user_name: string;
   comment: string;
   stars: number;
+}
+
+export interface ChallengeData {
+  id: string;
+  titulo: string;
+  mision: string;
+  recompensa: string;
+  dificultad: 'Fácil' | 'Media' | 'Arriero';
+  completado: boolean;
 }
 
 export type UnifiedItem = PlaceData | DishData | CultureExperience;
@@ -107,4 +119,5 @@ export interface AppState {
   cultureFavorites: string[];
   visitedTowns: string[];
   transcription: string;
+  accessibilityMode: boolean; 
 }
