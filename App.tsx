@@ -1,6 +1,6 @@
 
 import React, { useState, useEffect } from 'react';
-import { Search, Loader2, Accessibility, ArrowLeft, Radio, TrendingUp, Sparkles, Heart, Compass, Trophy, MessageSquare, Map as MapIcon, Info, ShieldCheck, Bus, Target, Globe, HeartHandshake, Eye } from 'lucide-react';
+import { Search, Loader2, Accessibility, ArrowLeft, Radio, TrendingUp, Sparkles, Heart, Compass, Trophy, MessageSquare, Map as MapIcon, Info, ShieldCheck, Bus, Target, Globe, HeartHandshake, Eye, Code2, Cpu } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { AppState, PlaceData, ChallengeData } from './types';
 import { searchUnified } from './services/geminiService';
@@ -230,7 +230,8 @@ export default function App() {
                       <p className="text-xl text-slate-500 font-serif italic leading-relaxed">
                         Paisa Local Pro nació como un proyecto de impacto social. No somos una agencia de viajes; somos una herramienta tecnológica que conecta la sabiduría arriera con el poder de la Inteligencia Artificial.
                       </p>
-                      <div className="grid grid-cols-2 gap-4">
+                      
+                      <div className="grid grid-cols-2 gap-4 pt-4">
                          <div className="p-6 rounded-3xl bg-slate-50 border border-slate-100">
                             <p className="text-4xl font-black text-paisa-emerald">125</p>
                             <p className="text-[10px] font-black uppercase tracking-widest text-slate-400">Pueblos Indexados</p>

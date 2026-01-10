@@ -6,7 +6,7 @@ import {
   MapPin, Clock, Heart, Users, Star, CheckCircle, Bus, Wallet, Shield, Sparkles, Send, 
   MessageSquare, User, Award, Sun, Cloud, CloudRain, Zap, Wifi, Signal, AlertCircle, Info, Navigation,
   Coffee, Camera, Play, ExternalLink, ShieldCheck, Share2, Accessibility, ShieldAlert, Phone,
-  AlertTriangle, Search, Activity, BookOpen
+  AlertTriangle, Search, Activity, BookOpen, Share
 } from 'lucide-react';
 import { PlaceData, SupportedLang } from '../types';
 import { Badge } from './atoms/Badge';
@@ -106,133 +106,135 @@ export const PlaceCard: React.FC<PlaceCardProps> = ({
   return (
     <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="w-full space-y-10 pb-20">
       
-      {/* Alerta de Seguridad Prioritaria (Gap 5.2 Seguridad y Confianza) */}
-      {data.security && (
-        <div className={`p-4 rounded-3xl flex items-center justify-between ${data.security?.status === 'Seguro' ? 'bg-emerald-50 text-emerald-700' : 'bg-amber-50 text-amber-700'} border border-current/10 shadow-sm`}>
-          <div className="flex items-center gap-3">
-             <ShieldCheck size={20} />
-             <div>
-                <p className="text-[10px] font-black uppercase tracking-widest">Estado de Seguridad: {data.security?.status || 'No reportado'}</p>
-                <p className="text-[9px] opacity-70">Última verificación por comunidad: {data.security?.lastReported || 'Hoy'}</p>
-             </div>
-          </div>
-          <div className="flex gap-2">
-            {data.security?.emergencyNumber && (
-              <a href={`tel:${data.security.emergencyNumber}`} className="flex items-center gap-2 px-4 py-2 bg-white rounded-xl shadow-sm text-[10px] font-black uppercase hover:bg-white/80 transition-all">
-                <Phone size={14} /> Policía Turismo
-              </a>
-            )}
-          </div>
-        </div>
-      )}
-
-      {/* Hero Generativo de Subregión */}
-      <section className="relative min-h-[500px] rounded-[56px] overflow-hidden shadow-2xl border border-slate-100 flex flex-col md:flex-row">
-        <SafeImage alt={data.titulo} region={data.region} className="w-full md:w-1/2 min-h-[300px] md:min-h-full" />
+      {/* Hero Card Split Layout (Matching jerico/montebello screenshots) */}
+      <section className="relative min-h-[500px] rounded-[56px] overflow-hidden shadow-2xl border border-slate-100 flex flex-col md:flex-row bg-white">
         
-        <div className="flex-1 p-10 lg:p-20 bg-white flex flex-col justify-center gap-8">
-           <div className="flex justify-between items-start">
-              <Badge color="gold">{data.region}</Badge>
-              <div className="flex gap-2">
-                <button onClick={handleShare} title="Compartir aventura" className="p-3 rounded-full border border-slate-100 bg-slate-50 text-slate-400 hover:text-paisa-emerald transition-all active:scale-90">
-                  <Share2 size={18} />
+        {/* Left Side: Patterned Placeholder (Sin Imágenes) */}
+        <div className="md:w-5/12 min-h-[350px] relative bg-slate-50 flex flex-col items-center justify-center p-8">
+           <SafeImage 
+              alt={data.titulo} 
+              region={data.region} 
+              className="absolute inset-0 w-full h-full opacity-15" 
+           />
+           {/* Decorative Central Badge and Text Overlay (Faded) */}
+           <div className="relative z-10 flex flex-col items-center gap-6">
+              <div className="w-28 h-28 rounded-[36px] bg-white shadow-2xl flex items-center justify-center border border-slate-100/50">
+                 <Coffee size={48} className="text-slate-900" />
+              </div>
+              <div className="text-center space-y-1">
+                <span className="block text-[10px] font-black uppercase tracking-[0.4em] text-slate-900/40">
+                  {data.region}
+                </span>
+                <h3 className="text-3xl font-black uppercase tracking-widest text-slate-900/60 leading-none">
+                  {data.titulo}
+                </h3>
+              </div>
+           </div>
+        </div>
+
+        {/* Right Side: Content Area */}
+        <div className="flex-1 p-10 lg:p-20 bg-white flex flex-col justify-center gap-8 relative">
+           
+           {/* Subregion Badge & Action Icons Row */}
+           <div className="flex justify-between items-center mb-2">
+              <div className="bg-[#D4A574]/15 px-6 py-2 rounded-full border border-[#D4A574]/10">
+                 <span className="text-[10px] font-black uppercase tracking-[0.3em] text-[#A67C52]">{data.region}</span>
+              </div>
+              <div className="flex gap-4">
+                <button onClick={handleShare} className="p-3 rounded-full text-slate-300 hover:text-slate-900 transition-all active:scale-90 border border-slate-50">
+                  <Share size={20} />
                 </button>
-                {data.weather && (
-                  <div className="bg-slate-50 border border-slate-100 rounded-2xl px-4 py-2 flex items-center gap-3 text-slate-600">
-                     <WeatherIcon condition={data.weather.condition} />
-                     <span className="text-lg font-black">{data.weather.temp}°C</span>
-                  </div>
-                )}
-                <button onClick={() => onToggleFavorite(data.titulo)} className={`p-3 rounded-full border transition-all ${isFavorite ? 'bg-red-500 text-white border-red-500 shadow-lg shadow-red-200' : 'bg-slate-50 text-slate-300 border-slate-100 hover:text-paisa-emerald'}`}>
-                  <Heart size={20} fill={isFavorite ? 'white' : 'none'} />
+                <button onClick={() => onToggleFavorite(data.titulo)} className={`p-3 rounded-full transition-all active:scale-90 border border-slate-50 ${isFavorite ? 'text-red-500' : 'text-slate-300'}`}>
+                  <Heart size={20} fill={isFavorite ? 'currentColor' : 'none'} />
                 </button>
               </div>
            </div>
 
+           {/* Title & Description (Styled for jerico/montebello style) */}
            <div className="space-y-4">
-              <h2 className="text-slate-900 text-5xl md:text-7xl font-black uppercase tracking-tighter leading-[0.85]">{data.titulo}</h2>
-              <p className="text-slate-500 text-lg md:text-xl font-serif italic max-w-2xl leading-relaxed">"{data.descripcion}"</p>
+              <h2 className="text-slate-900 text-6xl md:text-8xl font-black uppercase tracking-tighter leading-[0.85]">{data.titulo}</h2>
+              <p className="text-slate-400 text-2xl md:text-3xl font-serif italic max-w-2xl leading-relaxed">"{data.descripcion}"</p>
            </div>
 
-           {/* Grid de Logística y Accesibilidad */}
-           <div className="grid grid-cols-2 gap-4">
-              <div className="p-5 rounded-3xl bg-emerald-50 border border-emerald-100">
-                 <div className="flex items-center gap-2 text-emerald-700 mb-2">
-                    <Accessibility size={14} /> <span className="text-[10px] font-black uppercase tracking-widest">Inclusión Física</span>
+           {/* Grid de Datos (Matching jerico/montebello screenshots: Mint & Light Blue) */}
+           <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+              <div className="p-8 rounded-[36px] bg-[#EEF9F1] border border-emerald-100/30 flex flex-col justify-center">
+                 <div className="flex items-center gap-3 text-[#2D7A4C] mb-2">
+                    <Accessibility size={18} /> 
+                    <span className="text-[10px] font-black uppercase tracking-widest leading-none">Inclusión Física</span>
                  </div>
-                 <div className="flex flex-col gap-1">
-                    <p className="text-sm font-bold text-emerald-900">{data.accessibility?.score || 85}% Accesible</p>
-                    <div className="flex gap-1">
-                      {data.accessibility?.wheelchairFriendly && <div className="w-5 h-5 rounded-lg bg-emerald-200 flex items-center justify-center text-[10px] font-black" title="Silla de Ruedas OK">♿</div>}
-                      {data.accessibility?.elderlyApproved && <div className="w-5 h-5 rounded-lg bg-emerald-200 flex items-center justify-center text-[10px] font-black" title="Adulto Mayor OK">👴</div>}
-                    </div>
-                 </div>
+                 <p className="text-xl font-bold text-[#1A4731]">{data.accessibility?.score || 85}% Accesible</p>
               </div>
-              <div className="p-5 rounded-3xl bg-blue-50 border border-blue-100">
-                 <div className="flex items-center gap-2 text-blue-700 mb-1">
-                    <Navigation size={14} /> <span className="text-[10px] font-black uppercase tracking-widest">Logística Vía</span>
+              <div className="p-8 rounded-[36px] bg-[#F0F7FF] border border-blue-100/30 flex flex-col justify-center">
+                 <div className="flex items-center gap-3 text-[#2563EB] mb-2">
+                    <Navigation size={18} /> 
+                    <span className="text-[10px] font-black uppercase tracking-widest leading-none">Logística Vía</span>
                  </div>
-                 <p className="text-sm font-bold text-blue-900">{data.viaEstado || 'Despejada'}</p>
+                 <p className="text-xl font-bold text-[#1E3A8A]">{data.viaEstado || 'Despejada'}</p>
               </div>
            </div>
 
-           <div className="flex flex-col sm:flex-row gap-4 pt-4">
-             <Button variant="primary" onClick={handleGenerateItinerary} disabled={loadingItinerary} className="h-14 px-8 flex-1">
-                {loadingItinerary ? <Zap className="animate-spin" size={18} /> : <Sparkles size={18} />}
-                {itinerary ? "Refrescar Plan IA" : "Generar Itinerario Táctico"}
-             </Button>
-             
-             {/* Cambiado de "Sellar Pasaporte" a "Seguridad & SOS" como pidió el usuario */}
-             <Button 
-               variant="ghost" 
-               onClick={() => setShowSecurityAlert(!showSecurityAlert)} 
-               className={`h-14 px-8 border flex-1 ${showSecurityAlert ? 'bg-red-50 border-red-200 text-red-600' : 'border-slate-100'}`}
+           {/* Primary Action Buttons (Pill shape, precisely matching jerico screenshot) */}
+           <div className="flex flex-col sm:flex-row gap-4 pt-6">
+             <button 
+               onClick={handleGenerateItinerary} 
+               disabled={loadingItinerary} 
+               className="h-16 px-10 rounded-full bg-[#2D7A4C] text-white flex items-center justify-center gap-4 text-[11px] font-black uppercase tracking-widest hover:brightness-110 active:scale-95 transition-all shadow-xl shadow-emerald-900/10 flex-1"
              >
-                <ShieldAlert size={18} className={showSecurityAlert ? 'text-red-600' : 'text-slate-400'} />
+                {loadingItinerary ? <Zap className="animate-spin" size={20} /> : <div className="w-1.5 h-1.5 rounded-full bg-white/40" />}
+                {itinerary ? "Refrescar Plan IA" : "Generar Itinerario Táctico"}
+             </button>
+             
+             <button 
+               onClick={() => setShowSecurityAlert(!showSecurityAlert)} 
+               className={`h-16 px-10 rounded-full flex items-center justify-center gap-4 text-[11px] font-black uppercase tracking-widest transition-all active:scale-95 flex-1 shadow-sm
+                 ${showSecurityAlert ? 'bg-red-50 text-red-600' : 'bg-[#E5E7EB]/50 text-slate-500 hover:bg-[#E5E7EB]'}`}
+             >
+                <ShieldAlert size={20} />
                 {showSecurityAlert ? "Reportes Activos" : "Seguridad & SOS"}
-             </Button>
+             </button>
            </div>
            
            <AnimatePresence>
              {showSecurityAlert && (
-               <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: 'auto' }} exit={{ opacity: 0, height: 0 }} className="p-6 bg-red-50 border border-red-100 rounded-[32px] space-y-3">
-                 <div className="flex items-center gap-3 text-red-700 font-black uppercase text-[10px] tracking-widest">
-                   <Activity size={16} /> Estado en tiempo real
+               <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: 'auto' }} exit={{ opacity: 0, height: 0 }} className="p-8 bg-red-50 border border-red-100 rounded-[40px] space-y-4">
+                 <div className="flex items-center gap-3 text-red-700 font-black uppercase text-[12px] tracking-widest">
+                   <Activity size={18} /> Alerta en Tiempo Real
                  </div>
-                 <p className="text-xs text-red-600 italic">"Mijo, el último reporte indica que la vía está {data.viaEstado || 'Despejada'}. Si tienes una emergencia llama al {data.security?.emergencyNumber || '123'} inmediatamente."</p>
-                 <a href={`tel:${data.security?.emergencyNumber || '123'}`} className="block w-full py-3 bg-red-600 text-white text-center rounded-2xl text-[10px] font-black uppercase tracking-widest">Llamar Ahora</a>
+                 <p className="text-sm text-red-600 font-medium leading-relaxed">"Mijo, reporte de la comunidad: vía {data.viaEstado || 'Despejada'}. Si necesitás algo urgente, llamá al {data.security?.emergencyNumber || '123'}."</p>
+                 <a href={`tel:${data.security?.emergencyNumber || '123'}`} className="block w-full py-4 bg-red-600 text-white text-center rounded-2xl text-[10px] font-black uppercase tracking-widest hover:bg-red-700 transition-colors">Llamar Ahora</a>
                </motion.div>
              )}
            </AnimatePresence>
            
-           {/* Enlaces con colores según solicitud (Fotos: Emerald, Videos: Red, Mapa: Blue) */}
-           <div className="flex flex-wrap gap-6 pt-6 border-t border-slate-50">
+           {/* Colored Grounding Links Row */}
+           <div className="flex flex-wrap gap-8 pt-8 border-t border-slate-50">
               <a 
                 href={`https://www.google.com/search?q=${data.titulo}+Antioquia+fotos+turismo&tbm=isch`} 
                 target="_blank" 
-                className="flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-emerald-600 hover:text-emerald-700 transition-all"
+                className="flex items-center gap-3 text-[10px] font-black uppercase tracking-widest text-emerald-600 hover:text-emerald-700 group"
               >
-                <Camera size={14} className="text-emerald-500" /> Ver Fotos Reales
+                <Camera size={18} className="text-emerald-500 group-hover:scale-110 transition-transform" /> Ver Fotos Reales
               </a>
               <a 
                 href={`https://www.youtube.com/results?search_query=${data.titulo}+Antioquia+guia+viaje`} 
                 target="_blank" 
-                className="flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-red-600 hover:text-red-700 transition-all"
+                className="flex items-center gap-3 text-[10px] font-black uppercase tracking-widest text-red-600 hover:text-red-700 group"
               >
-                <Play size={14} className="text-red-500" /> Videos de Viajeros
+                <Play size={18} className="text-red-500 group-hover:scale-110 transition-transform" /> Videos de Viajeros
               </a>
               <a 
                 href={`https://www.google.com/maps/search/${data.titulo}+Antioquia+pueblo`} 
                 target="_blank" 
-                className="flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-blue-600 hover:text-blue-700 transition-all"
+                className="flex items-center gap-3 text-[10px] font-black uppercase tracking-widest text-blue-600 hover:text-blue-700 group"
               >
-                <MapPin size={14} className="text-blue-500" /> Abrir Mapa
+                <MapPin size={18} className="text-blue-500 group-hover:scale-110 transition-transform" /> Abrir Mapa
               </a>
            </div>
         </div>
       </section>
 
-      {/* Itinerario Generado por IA */}
+      {/* Generated Itinerary Section */}
       <AnimatePresence>
         {itinerary && (
           <motion.section initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="grid grid-cols-1 md:grid-cols-3 gap-6">
@@ -249,8 +251,9 @@ export const PlaceCard: React.FC<PlaceCardProps> = ({
         )}
       </AnimatePresence>
 
+      {/* Logistics Breakdown Section */}
       <section className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          <div className="bg-white p-8 rounded-[40px] border border-slate-100 shadow-lg space-y-4">
+          <div className="bg-white p-8 rounded-[48px] border border-slate-100 shadow-lg space-y-4">
              <div className="flex items-center justify-between text-paisa-emerald">
                 <div className="flex items-center gap-3">
                    <Bus size={24} />
@@ -263,15 +266,10 @@ export const PlaceCard: React.FC<PlaceCardProps> = ({
                 <div className="flex items-center gap-2 text-slate-400 text-xs">
                    <Clock size={12} /> <span>Frecuencia: {data.busFrequency || 'Cada hora'}</span>
                 </div>
-                {data.busCompanies && (
-                  <div className="flex flex-wrap gap-2 pt-2">
-                    {data.busCompanies.map(c => <span key={c} className="px-2 py-1 bg-slate-50 rounded-lg text-[8px] font-black uppercase text-slate-400">{c}</span>)}
-                  </div>
-                )}
              </div>
           </div>
           
-          <div className="bg-white p-8 rounded-[40px] border border-slate-100 shadow-lg space-y-4">
+          <div className="bg-white p-8 rounded-[48px] border border-slate-100 shadow-lg space-y-4">
              <div className="flex items-center justify-between text-paisa-gold">
                 <div className="flex items-center gap-3">
                    <Wallet size={24} />
@@ -288,12 +286,11 @@ export const PlaceCard: React.FC<PlaceCardProps> = ({
                    <span className="text-xs text-slate-400 font-medium">Almuerzo Prom:</span>
                    <span className="font-black text-slate-900">${data.budget?.averageMeal?.toLocaleString() || 0}</span>
                 </div>
-                {/* Eliminado el año según solicitud del usuario */}
                 <p className="text-[9px] text-paisa-gold font-black uppercase mt-3">* Precios estimados en el índice</p>
              </div>
           </div>
 
-          <div className="bg-white p-8 rounded-[40px] border border-slate-100 shadow-lg space-y-4">
+          <div className="bg-white p-8 rounded-[48px] border border-slate-100 shadow-lg space-y-4">
              <div className="flex items-center justify-between text-blue-600">
                 <div className="flex items-center gap-3">
                    <ShieldCheck size={24} />
@@ -305,40 +302,39 @@ export const PlaceCard: React.FC<PlaceCardProps> = ({
                 <div className={`w-3 h-3 rounded-full animate-pulse ${data.viaEstado === 'Despejada' ? 'bg-emerald-500' : 'bg-amber-500'}`} />
                 <p className="text-slate-700 font-bold text-lg">{data.viaEstado || 'Despejada'}</p>
              </div>
-             <p className="text-xs text-slate-400 leading-snug">{data.seguridadTexto || 'Vía monitoreada por la comunidad arriera.'}</p>
+             <p className="text-xs text-slate-400 leading-snug">Vía monitoreada por la comunidad arriera.</p>
           </div>
       </section>
 
-      {/* Sugerencias de Local "Neighbor Tips" Expandidas con Iconos */}
+      {/* Neighbor Tips (Enhanced with specific categories and icons) */}
       {data.neighborTip && (
-        <section className="bg-paisa-emerald rounded-[40px] p-10 text-white relative overflow-hidden shadow-2xl">
-           <div className="absolute top-0 right-0 p-12 opacity-10 rotate-12">
-              <Coffee size={120} />
+        <section className="bg-paisa-emerald rounded-[56px] p-12 text-white relative overflow-hidden shadow-2xl">
+           <div className="absolute top-0 right-0 p-16 opacity-10 rotate-12">
+              <Coffee size={140} />
            </div>
-           <div className="relative z-10 space-y-8">
-              <div className="flex flex-col md:flex-row items-center gap-8">
-                 <div className="w-20 h-20 rounded-full bg-white/20 backdrop-blur-md flex items-center justify-center border border-white/20 shrink-0">
-                    <User size={32} />
+           <div className="relative z-10 space-y-10">
+              <div className="flex flex-col md:flex-row items-center gap-10">
+                 <div className="w-24 h-24 rounded-full bg-white/20 backdrop-blur-md flex items-center justify-center border border-white/20 shrink-0">
+                    <User size={40} />
                  </div>
-                 <div className="space-y-2 text-center md:text-left">
-                    <h5 className="text-[10px] font-black uppercase tracking-[0.4em] text-paisa-gold">Guía del Arriero Local</h5>
-                    <p className="text-2xl font-serif italic leading-relaxed">"{data.neighborTip}"</p>
+                 <div className="space-y-3 text-center md:text-left">
+                    <h5 className="text-[11px] font-black uppercase tracking-[0.5em] text-paisa-gold">Guía del Arriero Local</h5>
+                    <p className="text-3xl md:text-4xl font-serif italic leading-tight">"{data.neighborTip}"</p>
                  </div>
               </div>
               
-              {/* Nueva sección de tips detallados con iconos específicos solicitados */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
                 {[
-                  { icon: Coffee, label: 'Comida', text: 'Probá los platos típicos de la región, ¡la sazón es única!' },
-                  { icon: BookOpen, label: 'Cultura', text: 'Saludá siempre con un "Buenas", el respeto es sagrado.' },
-                  { icon: Clock, label: 'Horarios', text: 'El comercio suele madrugar mucho, ¡no te quedés dormido!' },
+                  { icon: Coffee, label: 'Comida', text: 'Probá los platos típicos, ¡la sazón de pueblo es única!' },
+                  { icon: BookOpen, label: 'Cultura', text: 'Saludá con un "Buenas", el respeto abre todas las puertas.' },
+                  { icon: Clock, label: 'Horarios', text: 'El comercio madruga mucho, ¡aprovechá el día mijo!' },
                   { icon: Users, label: 'Personas', text: 'Los locales son los mejores guías, no dudés en preguntar.' }
                 ].map((tip, i) => (
-                  <div key={i} className="bg-white/10 backdrop-blur-md p-6 rounded-[24px] border border-white/10 flex flex-col gap-3 group hover:bg-white/20 transition-all">
-                    <tip.icon size={20} className="text-paisa-gold group-hover:scale-110 transition-transform" />
+                  <div key={i} className="bg-white/10 backdrop-blur-md p-8 rounded-[32px] border border-white/10 flex flex-col gap-4 group hover:bg-white/20 transition-all">
+                    <tip.icon size={24} className="text-paisa-gold group-hover:scale-110 transition-transform" />
                     <div>
-                      <p className="text-[8px] font-black uppercase tracking-widest text-white/50">{tip.label}</p>
-                      <p className="text-xs font-medium leading-relaxed mt-1">{tip.text}</p>
+                      <p className="text-[9px] font-black uppercase tracking-widest text-white/60 mb-1">{tip.label}</p>
+                      <p className="text-sm font-medium leading-relaxed">{tip.text}</p>
                     </div>
                   </div>
                 ))}
@@ -347,57 +343,61 @@ export const PlaceCard: React.FC<PlaceCardProps> = ({
         </section>
       )}
 
-      {/* Muro de la Comunidad */}
+      {/* Community Wall & Reporting Section */}
       <section className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-        <div className="bg-white p-10 rounded-[48px] border border-slate-100 shadow-xl space-y-6">
+        <div className="bg-white p-12 rounded-[56px] border border-slate-100 shadow-xl space-y-8">
            <div className="flex items-center gap-3">
-              <MessageSquare className="text-paisa-emerald" size={24} />
-              <h3 className="text-xl font-black uppercase tracking-tight">Reportes de la Comunidad</h3>
+              <MessageSquare className="text-paisa-emerald" size={28} />
+              <h3 className="text-2xl font-black uppercase tracking-tight">Reportes de la Comunidad</h3>
            </div>
-           <div className="space-y-4 max-h-[400px] overflow-y-auto no-scrollbar pr-2">
+           <div className="space-y-6 max-h-[450px] overflow-y-auto no-scrollbar pr-4">
               {reviews.length > 0 ? reviews.map((rev) => (
-                <div key={rev.id} className="p-6 bg-slate-50 rounded-[32px] border border-slate-100 space-y-3 transition-all hover:bg-white hover:shadow-md">
+                <div key={rev.id} className="p-8 bg-slate-50 rounded-[40px] border border-slate-100 space-y-4 transition-all hover:bg-white hover:shadow-md">
                   <div className="flex justify-between items-center">
-                    <div className="flex items-center gap-3">
-                       <div className="w-8 h-8 rounded-full bg-paisa-gold/20 text-paisa-gold flex items-center justify-center font-black text-[10px]">
+                    <div className="flex items-center gap-4">
+                       <div className="w-10 h-10 rounded-full bg-paisa-gold/20 text-paisa-gold flex items-center justify-center font-black text-xs">
                           {rev.user_name.charAt(0).toUpperCase()}
                        </div>
-                       <span className="text-[10px] font-black uppercase text-slate-900">{rev.user_name}</span>
+                       <span className="text-[11px] font-black uppercase text-slate-900 tracking-wider">{rev.user_name}</span>
                     </div>
-                    <div className="flex text-paisa-gold">
-                       {[...Array(5)].map((_, i) => <Star key={i} size={10} fill={i < rev.stars ? "currentColor" : "none"} />)}
+                    <div className="flex text-paisa-gold gap-0.5">
+                       {[...Array(5)].map((_, i) => <Star key={i} size={12} fill={i < rev.stars ? "currentColor" : "none"} />)}
                     </div>
                   </div>
-                  <p className="text-sm italic text-slate-600 leading-relaxed">"{rev.comment}"</p>
+                  <p className="text-base italic text-slate-600 leading-relaxed font-serif">"{rev.comment}"</p>
                 </div>
               )) : (
-                <div className="flex flex-col items-center justify-center py-20 text-center gap-4 opacity-20">
-                   <Users size={48} />
-                   <p className="font-serif italic">Se el primero en reportar este pueblo.</p>
+                <div className="flex flex-col items-center justify-center py-24 text-center gap-6 opacity-20">
+                   <Users size={64} />
+                   <p className="text-xl font-serif italic">Se el primero en reportar este pueblo.</p>
                 </div>
               )}
            </div>
         </div>
 
-        <div className="bg-slate-900 p-10 rounded-[48px] text-white space-y-8 relative overflow-hidden">
-           <div className="absolute -bottom-10 -right-10 opacity-5">
-              <Sparkles size={200} />
+        <div className="bg-slate-900 p-12 rounded-[56px] text-white space-y-10 relative overflow-hidden shadow-2xl">
+           <div className="absolute -bottom-12 -right-12 opacity-5">
+              <Sparkles size={250} />
            </div>
-           <div className="space-y-2">
-              <h3 className="text-2xl font-black uppercase tracking-tight">¿Pasaste por aquí?</h3>
-              <p className="text-white/40 text-sm">Ayudá a otros arrieros reportando precios, internet o seguridad.</p>
+           <div className="space-y-3 relative z-10">
+              <h3 className="text-3xl font-black uppercase tracking-tight">¿Pasaste por aquí?</h3>
+              <p className="text-white/50 text-base font-serif italic">Tu reporte ayuda a que el índice táctico sea 100% confiable para el próximo arriero.</p>
            </div>
-           <form onSubmit={handleSubmitReview} className="space-y-4 relative z-10">
-              <div className="grid grid-cols-2 gap-4">
-                 <input type="text" value={newReview.name} onChange={e => setNewReview(prev => ({...prev, name: e.target.value}))} placeholder="Tu nombre" className="w-full bg-white/5 border border-white/10 rounded-[20px] p-4 text-white outline-none focus:border-paisa-gold transition-all" />
-                 <select value={newReview.stars} onChange={e => setNewReview(prev => ({...prev, stars: parseInt(e.target.value)}))} className="w-full bg-white/5 border border-white/10 rounded-[20px] p-4 text-white outline-none focus:border-paisa-gold appearance-none">
-                    <option value="5" className="bg-slate-900">⭐⭐⭐⭐⭐</option>
-                    <option value="4" className="bg-slate-900">⭐⭐⭐⭐</option>
-                    <option value="3" className="bg-slate-900">⭐⭐⭐</option>
-                 </select>
+           <form onSubmit={handleSubmitReview} className="space-y-6 relative z-10">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                 <input type="text" value={newReview.name} onChange={e => setNewReview(prev => ({...prev, name: e.target.value}))} placeholder="Tu nombre" className="w-full bg-white/5 border border-white/10 rounded-[24px] p-5 text-white outline-none focus:border-paisa-gold transition-all text-sm font-medium" />
+                 <div className="relative">
+                   <select value={newReview.stars} onChange={e => setNewReview(prev => ({...prev, stars: parseInt(e.target.value)}))} className="w-full bg-white/5 border border-white/10 rounded-[24px] p-5 text-white outline-none focus:border-paisa-gold appearance-none text-sm cursor-pointer">
+                      <option value="5" className="bg-slate-900">⭐⭐⭐⭐⭐ (Excelente)</option>
+                      <option value="4" className="bg-slate-900">⭐⭐⭐⭐ (Muy Bueno)</option>
+                      <option value="3" className="bg-slate-900">⭐⭐⭐ (Normal)</option>
+                   </select>
+                 </div>
               </div>
-              <textarea value={newReview.comment} onChange={e => setNewReview(prev => ({...prev, comment: e.target.value}))} placeholder="Contanos qué tal el parche..." rows={4} className="w-full bg-white/5 border border-white/10 rounded-[32px] p-6 text-white outline-none focus:border-paisa-gold resize-none transition-all" />
-              <Button disabled={isSubmitting} type="submit" variant="accent" className="w-full h-14 uppercase tracking-[0.3em]">Enviar Reporte Táctico</Button>
+              <textarea value={newReview.comment} onChange={e => setNewReview(prev => ({...prev, comment: e.target.value}))} placeholder="Contanos qué tal el parche, precios, internet o seguridad..." rows={5} className="w-full bg-white/5 border border-white/10 rounded-[32px] p-8 text-white outline-none focus:border-paisa-gold resize-none transition-all text-base font-serif" />
+              <button disabled={isSubmitting} type="submit" className="w-full h-16 bg-paisa-gold text-slate-900 rounded-full text-[11px] font-black uppercase tracking-[0.4em] hover:brightness-110 active:scale-95 transition-all shadow-xl shadow-amber-900/20 disabled:opacity-50">
+                 {isSubmitting ? 'Enviando...' : 'Enviar Reporte Táctico'}
+              </button>
            </form>
         </div>
       </section>

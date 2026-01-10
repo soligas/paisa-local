@@ -41,16 +41,16 @@ export const SafeImage: React.FC<SafeImageProps> = ({ alt, className = "", regio
   return (
     <div className={`relative overflow-hidden flex items-center justify-center transition-all duration-700 bg-slate-50 ${className}`}>
       
-      {/* Fondo con Patrón SVG */}
-      <svg className="absolute inset-0 w-full h-full opacity-[0.12]" xmlns="http://www.w3.org/2000/svg">
+      {/* Fondo con Patrón SVG - Mejorado con Rombos y mayor escala */}
+      <svg className="absolute inset-0 w-full h-full opacity-[0.08]" xmlns="http://www.w3.org/2000/svg">
         <defs>
-          <pattern id={`pattern-${region}-${type}`} x="0" y="0" width="40" height="40" patternUnits="userSpaceOnUse">
-            {config.pattern === 'zócalo' && <rect x="10" y="10" width="20" height="20" transform="rotate(45 20 20)" fill={config.color} />}
-            {config.pattern === 'montaña' && <path d="M0 40 L20 10 L40 40 Z" fill={config.color} />}
-            {config.pattern === 'mar' && <path d="M0 20 Q 10 10, 20 20 T 40 20" stroke={config.color} fill="none" strokeWidth="2" />}
-            {config.pattern === 'gastronomy' && <circle cx="20" cy="20" r="4" fill={config.color} />}
-            {config.pattern === 'culture' && <path d="M10 10 L30 30 M30 10 L10 30" stroke={config.color} strokeWidth="1" />}
-            {config.pattern === 'grid' && <rect width="2" height="2" fill={config.color} />}
+          <pattern id={`pattern-${region}-${type}`} x="0" y="0" width="60" height="60" patternUnits="userSpaceOnUse">
+            {config.pattern === 'zócalo' && <rect x="20" y="20" width="20" height="20" transform="rotate(45 30 30)" fill={config.color} />}
+            {config.pattern === 'montaña' && <path d="M0 60 L30 10 L60 60 Z" fill={config.color} />}
+            {config.pattern === 'mar' && <path d="M0 30 Q 15 10, 30 30 T 60 30" stroke={config.color} fill="none" strokeWidth="2" />}
+            {config.pattern === 'gastronomy' && <circle cx="30" cy="30" r="6" fill={config.color} />}
+            {config.pattern === 'culture' && <path d="M15 15 L45 45 M45 15 L15 45" stroke={config.color} strokeWidth="1" />}
+            {config.pattern === 'grid' && <rect x="25" y="25" width="10" height="10" fill={config.color} opacity="0.5" />}
           </pattern>
         </defs>
         <rect width="100%" height="100%" fill={`url(#pattern-${region}-${type})`} />
