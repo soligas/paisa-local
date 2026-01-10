@@ -5,7 +5,7 @@ import { PaisaLogo } from '../atoms/PaisaLogo';
 
 export const Footer = ({ isDark }: { isDark?: boolean }) => {
   return (
-    <footer className={`mt-32 border-t py-24 px-6 md:px-12 transition-colors duration-1000 ${isDark ? 'bg-[#0A0E12] border-white/5 text-white/40' : 'bg-white border-slate-100 text-slate-400'}`}>
+    <footer className={`mt-16 border-t py-16 px-6 md:px-12 transition-colors duration-1000 ${isDark ? 'bg-[#0A0E12] border-white/5 text-white/40' : 'bg-white border-slate-100 text-slate-400'}`}>
       <div className="layout-container flex flex-col items-center text-center space-y-16">
         <div className="space-y-6">
           <PaisaLogo isDark={isDark} className="scale-125 mb-4 justify-center" />

@@ -149,7 +149,7 @@ export default function App() {
         </div>
       </header>
 
-      <main className="flex-1 max-w-7xl mx-auto w-full px-6 pt-4 pb-12">
+      <main className="flex-1 max-w-7xl mx-auto w-full px-6 pt-4">
         <AnimatePresence mode="wait">
           {!displayedResults.length && !state.cargando ? (
             <motion.div 
@@ -157,7 +157,7 @@ export default function App() {
               initial={{ opacity: 0, y: 20 }} 
               animate={{ opacity: 1, y: 0 }} 
               exit={{ opacity: 0, y: -20 }}
-              className="space-y-24 py-12"
+              className="space-y-16 py-8"
             >
               {/* Hero Search Section - Título Inspirador */}
               <div className="text-center space-y-10">
@@ -171,7 +171,7 @@ export default function App() {
                     <p className="text-xl md:text-2xl font-serif italic text-slate-500 leading-relaxed">
                       "Indexamos en tiempo real los 125 municipios de Antioquia para que explorés con datos reales, itinerarios con IA y la sabiduría de los locales."
                     </p>
-                    <div className="flex flex-wrap justify-center gap-6 pt-4 opacity-60">
+                    <div className="flex flex-wrap justify-center gap-6 pt-2 opacity-60">
                       <div className="flex items-center gap-2 text-[10px] font-black uppercase tracking-widest"><Bus size={14} className="text-paisa-emerald" /> Precios de Bus</div>
                       <div className="flex items-center gap-2 text-[10px] font-black uppercase tracking-widest"><ShieldCheck size={14} className="text-paisa-emerald" /> Estado de Vías</div>
                       <div className="flex items-center gap-2 text-[10px] font-black uppercase tracking-widest"><Sparkles size={14} className="text-paisa-emerald" /> Itinerarios IA</div>
@@ -214,12 +214,12 @@ export default function App() {
 
               {/* Nueva Sección: Quiénes Somos y Por Qué Confiar */}
               <section className="px-4 md:px-0">
-                <div className="bg-white rounded-[64px] p-10 md:p-20 border border-slate-100 shadow-2xl relative overflow-hidden">
+                <div className="bg-white rounded-[64px] p-10 md:p-16 border border-slate-100 shadow-2xl relative overflow-hidden">
                   <div className="absolute top-0 right-0 p-20 opacity-5 -rotate-12">
                      <Eye size={200} />
                   </div>
-                  <div className="relative z-10 grid grid-cols-1 lg:grid-cols-2 gap-16 items-center">
-                    <div className="space-y-8">
+                  <div className="relative z-10 grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
+                    <div className="space-y-6">
                       <div className="flex items-center gap-3">
                          <Info size={24} className="text-paisa-emerald" />
                          <span className="text-[11px] font-black uppercase tracking-[0.4em] text-paisa-emerald">Transparencia Total</span>
@@ -231,7 +231,7 @@ export default function App() {
                         Paisa Local Pro nació como un proyecto de impacto social. No somos una agencia de viajes; somos una herramienta tecnológica que conecta la sabiduría arriera con el poder de la Inteligencia Artificial.
                       </p>
                       
-                      <div className="grid grid-cols-2 gap-4 pt-4">
+                      <div className="grid grid-cols-2 gap-4 pt-2">
                          <div className="p-6 rounded-3xl bg-slate-50 border border-slate-100">
                             <p className="text-4xl font-black text-paisa-emerald">125</p>
                             <p className="text-[10px] font-black uppercase tracking-widest text-slate-400">Pueblos Indexados</p>
@@ -264,7 +264,7 @@ export default function App() {
               </section>
 
               {/* Discovery Section */}
-              <section className="space-y-10">
+              <section className="space-y-8">
                 <SectionHeader 
                   title="Explorar" 
                   subtitle="Descubre Antioquia por subregiones y tesoros locales." 
@@ -284,7 +284,7 @@ export default function App() {
               </section>
 
               {/* Map Section */}
-              <section className="space-y-10">
+              <section className="space-y-8">
                 <EpicAntioquiaMap 
                   lang={state.language} 
                   onSelectRegion={(name) => { setState(s => ({...s, busqueda: name})); handleSearch(name); }} 
@@ -292,7 +292,7 @@ export default function App() {
               </section>
 
               {/* Culture Section */}
-              <section className="space-y-10">
+              <section className="space-y-8">
                 <SectionHeader 
                   title="Dichos" 
                   subtitle="Aprende a hablar como un arriero auténtico." 
@@ -306,7 +306,7 @@ export default function App() {
               </section>
 
               {/* Challenges Section */}
-              <section className="space-y-10 pb-12">
+              <section className="space-y-8">
                 <SectionHeader 
                   title="Misiones" 
                   subtitle="Completa retos, gana berraquera y sube de nivel." 
@@ -325,7 +325,7 @@ export default function App() {
               key="results-view"
               initial={{ opacity: 0 }} 
               animate={{ opacity: 1 }} 
-              className="space-y-12"
+              className="space-y-12 pb-12"
             >
                {displayedResults.map((item, i) => (
                  <PlaceCard 
