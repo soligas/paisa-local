@@ -1,89 +1,23 @@
 
 export type SupportedLang = 'es' | 'en' | 'pt';
-export type AppTab = 'home' | 'explore' | 'gastronomy' | 'culture';
+export type AppTab = 'home' | 'explore' | 'social_pulse';
 export type AntioquiaRegion = 'Oriente' | 'Suroeste' | 'Occidente' | 'Norte' | 'Bajo Cauca' | 'Nordeste' | 'Magdalena Medio' | 'Urabá' | 'Valle de Aburrá';
 
 export interface GroundingLink {
   title: string;
   uri: string;
-  type: 'video' | 'official' | 'news' | 'photo' | 'other';
+  type: 'video' | 'official' | 'social' | 'news';
 }
 
-export interface AccessibilityData {
-  wheelchairFriendly: boolean;
-  elderlyApproved: boolean;
-  brailleAvailable: boolean;
-  sensoryFriendly: boolean;
-  score: number; // 0-100
-  notes: string;
+export interface SocialPulse {
+  trendingScore: number; // 0-100
+  platform: 'TikTok' | 'Instagram' | 'YouTube';
+  sentiment: 'Positivo' | 'Neutral' | 'Crítico';
+  recentMentions: number;
+  lastUpdate: string;
 }
 
-export interface SecurityData {
-  status: 'Seguro' | 'Precaución' | 'Crítico';
-  lastReported: string;
-  emergencyNumber: string;
-  touristPoliceLink: string;
-}
-
-export interface WeatherData {
-  temp: number;
-  condition: string;
-  icon: string;
-}
-
-export interface PlaceData {
-  type: 'place';
-  titulo: string;
-  region: AntioquiaRegion;
-  descripcion: string;
-  seguridadTexto: string;
-  security?: SecurityData;
-  accessibility?: AccessibilityData;
-  groundingLinks?: GroundingLink[];
-  vibeScore: number;
-  nomadScore: number; 
-  wifiQuality: 'Excelente' | 'Inestable' | 'Limitada';
-  viaEstado: 'Despejada' | 'Paso Restringido' | 'Cerrada';
-  tiempoDesdeMedellin: string;
-  busFrequency: string; 
-  busCompanies: string[];
-  budget: {
-    busTicket: number;
-    averageMeal: number;
-  };
-  coordenadas: { lat: number; lng: number };
-  imagen: string; 
-  isVerified?: boolean;
-  neighborTip?: string;
-  trivia?: string;
-  terminalInfo?: string;
-  weather?: WeatherData;
-}
-
-export interface DishData {
-  type: 'dish';
-  nombre: string;
-  descripcion: string;
-  dondeProbar: string;
-  categoria: string;
-  imagen: string;
-  precioLocalEstimated: string;
-  precioVerificado: boolean;
-  economiaCircular: boolean;
-}
-
-export interface CultureExperience {
-  type: 'experience';
-  titulo: string;
-  descripcion: string;
-  ubicacion: string;
-  categoria: string;
-  impactoSocial: string;
-  imagen: string;
-  costoSugeridoCOP: string;
-  horarioRecomendado: string;
-}
-
+// Added UGCContent interface
 export interface UGCContent {
   id: string;
   created_at: string;
@@ -93,31 +27,81 @@ export interface UGCContent {
   stars: number;
 }
 
+// Added ChallengeData interface
 export interface ChallengeData {
-  id: string;
   titulo: string;
   mision: string;
-  recompensa: string;
   dificultad: 'Fácil' | 'Media' | 'Arriero';
+  recompensa: string;
   completado: boolean;
 }
 
-export type UnifiedItem = PlaceData | DishData | CultureExperience;
+// Added DishData interface
+export interface DishData {
+  nombre: string;
+  categoria: string;
+  descripcion: string;
+  precioLocalEstimated: number;
+  precioVerificado: boolean;
+  economiaCircular: boolean;
+}
+
+// Added CultureExperience interface
+export interface CultureExperience {
+  titulo: string;
+  categoria: string;
+  descripcion: string;
+  impactoSocial: string;
+  ubicacion: string;
+}
+
+export interface PlaceData {
+  type: 'place';
+  titulo: string;
+  region: AntioquiaRegion;
+  descripcion: string;
+  budget: {
+    busTicket: number;
+    averageMeal: number;
+  };
+  accessibility: {
+    score: number;
+    wheelchairFriendly: boolean;
+    elderlyApproved: boolean;
+    notes: string;
+  };
+  security: {
+    status: 'Seguro' | 'Precaución' | 'Crítico';
+    lastReported: string;
+    emergencyNumber: string;
+  };
+  socialPulse?: SocialPulse;
+  groundingLinks?: GroundingLink[];
+  viaEstado: string;
+  tiempoDesdeMedellin: string;
+  imagen: string;
+  coordenadas: { lat: number; lng: number };
+  // Added missing optional fields used in PlaceCard
+  weather?: {
+    condition: string;
+    temp: number;
+  };
+  neighborTip?: string;
+  terminalInfo?: string;
+  busFrequency?: string;
+  busCompanies?: string[];
+  seguridadTexto?: string;
+}
+
+export type UnifiedItem = PlaceData;
 
 export interface AppState {
   busqueda: string;
-  sugerencias: string[];
   cargando: boolean;
-  buscandoSugerencias: boolean;
   error: string | null;
   tarjeta: PlaceData | null;
   unifiedResults: UnifiedItem[];
   language: SupportedLang;
   activeTab: AppTab;
-  favorites: string[];
-  foodFavorites: string[];
-  cultureFavorites: string[];
-  visitedTowns: string[];
-  transcription: string;
-  accessibilityMode: boolean; 
+  accessibilityMode: boolean;
 }
