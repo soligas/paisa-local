@@ -1,6 +1,6 @@
 
 import React, { useState, useEffect } from 'react';
-import { Search, Loader2, Accessibility, ArrowLeft, Radio, TrendingUp, Sparkles, Heart, Compass, Trophy, MessageSquare, Map as MapIcon } from 'lucide-react';
+import { Search, Loader2, Accessibility, ArrowLeft, Radio, TrendingUp, Sparkles, Heart, Compass, Trophy, MessageSquare, Map as MapIcon, Info, ShieldCheck, Bus, Target, Globe, HeartHandshake, Eye } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { AppState, PlaceData, ChallengeData } from './types';
 import { searchUnified } from './services/geminiService';
@@ -33,6 +33,30 @@ const DISCOVERY_ITEMS = [
   { title: "Oriente", subtitle: "Aguas y Zócalos", image: "https://images.unsplash.com/photo-1591143831388-75095d3a958a" },
   { title: "Occidente", subtitle: "Historia y Sol", image: "https://images.unsplash.com/photo-1590487988256-9ed24133863e" },
   { title: "Norte", subtitle: "Ruta de la Leche", image: "https://images.unsplash.com/photo-1582298538104-fe2e74c27f59" }
+];
+
+const TRUST_CARDS = [
+  { 
+    icon: Target, 
+    title: "Misión Táctica", 
+    text: "Descentralizamos el turismo para que el dinero llegue a los pueblos que nadie visita.",
+    color: "text-emerald-600",
+    bg: "bg-emerald-50"
+  },
+  { 
+    icon: Globe, 
+    title: "Indexación Real", 
+    text: "No usamos folletos viejos. Nuestra IA cruza reportes de redes y tránsito en vivo.",
+    color: "text-blue-600",
+    bg: "bg-blue-50"
+  },
+  { 
+    icon: HeartHandshake, 
+    title: "Comunidad Viva", 
+    text: "Somos un equipo de arrieros digitales comprometidos con el desarrollo local.",
+    color: "text-paisa-gold",
+    bg: "bg-amber-50"
+  }
 ];
 
 export default function App() {
@@ -105,8 +129,8 @@ export default function App() {
            
            <button 
              onClick={() => setShowFavorites(!showFavorites)}
-             className={`relative p-3 rounded-full border transition-all ${showFavorites ? 'bg-red-500 text-white border-red-500' : 'bg-white border-slate-100 text-slate-400'}`}
-             title="Ver Favoritos"
+             className={`relative p-3 rounded-full border transition-all ${showFavorites ? 'bg-red-500 text-white border-red-500 shadow-lg shadow-red-200' : 'bg-white border-slate-100 text-slate-400'}`}
+             title="Mis Favoritos"
            >
              <Heart size={20} fill={showFavorites ? "white" : "none"} />
              {state.favorites.length > 0 && !showFavorites && (
@@ -135,17 +159,27 @@ export default function App() {
               exit={{ opacity: 0, y: -20 }}
               className="space-y-24 py-12"
             >
-              {/* Hero Search Section */}
-              <div className="text-center space-y-12">
-                <div className="space-y-4">
+              {/* Hero Search Section - Título Inspirador */}
+              <div className="text-center space-y-10">
+                <div className="space-y-6">
                   <h1 className={`text-6xl md:text-8xl font-black uppercase tracking-tighter leading-[0.85] ${state.accessibilityMode ? 'text-white' : 'text-slate-900'}`}>
-                    Buscador <br /> <span className={state.accessibilityMode ? 'text-paisa-gold' : 'text-paisa-emerald'}>Táctico 2025</span>
+                    Antioquia <br /> <span className={state.accessibilityMode ? 'text-paisa-gold' : 'text-paisa-emerald'}>Te Espera</span>
                   </h1>
-                  <p className="text-xl font-serif italic opacity-60">
-                    {showFavorites ? "No tienes favoritos guardados todavía." : "Datos reales indexados para viajeros que no comen cuento."}
-                  </p>
+                  
+                  {/* Explicación de lo que hacemos */}
+                  <div className="max-w-2xl mx-auto space-y-4">
+                    <p className="text-xl md:text-2xl font-serif italic text-slate-500 leading-relaxed">
+                      "Indexamos en tiempo real los 125 municipios de Antioquia para que explorés con datos reales, itinerarios con IA y la sabiduría de los locales."
+                    </p>
+                    <div className="flex flex-wrap justify-center gap-6 pt-4 opacity-60">
+                      <div className="flex items-center gap-2 text-[10px] font-black uppercase tracking-widest"><Bus size={14} className="text-paisa-emerald" /> Precios de Bus</div>
+                      <div className="flex items-center gap-2 text-[10px] font-black uppercase tracking-widest"><ShieldCheck size={14} className="text-paisa-emerald" /> Estado de Vías</div>
+                      <div className="flex items-center gap-2 text-[10px] font-black uppercase tracking-widest"><Sparkles size={14} className="text-paisa-emerald" /> Itinerarios IA</div>
+                    </div>
+                  </div>
+                  
                   {showFavorites && (
-                    <button onClick={() => setShowFavorites(false)} className="text-xs font-black uppercase tracking-[0.2em] text-paisa-emerald hover:underline">Volver a buscar</button>
+                    <button onClick={() => setShowFavorites(false)} className="text-xs font-black uppercase tracking-[0.2em] text-paisa-emerald hover:underline">Volver a explorar</button>
                   )}
                 </div>
 
@@ -177,6 +211,56 @@ export default function App() {
                   ))}
                 </div>
               </div>
+
+              {/* Nueva Sección: Quiénes Somos y Por Qué Confiar */}
+              <section className="px-4 md:px-0">
+                <div className="bg-white rounded-[64px] p-10 md:p-20 border border-slate-100 shadow-2xl relative overflow-hidden">
+                  <div className="absolute top-0 right-0 p-20 opacity-5 -rotate-12">
+                     <Eye size={200} />
+                  </div>
+                  <div className="relative z-10 grid grid-cols-1 lg:grid-cols-2 gap-16 items-center">
+                    <div className="space-y-8">
+                      <div className="flex items-center gap-3">
+                         <Info size={24} className="text-paisa-emerald" />
+                         <span className="text-[11px] font-black uppercase tracking-[0.4em] text-paisa-emerald">Transparencia Total</span>
+                      </div>
+                      <h2 className="text-5xl md:text-6xl font-black uppercase tracking-tighter leading-[0.9] text-slate-900">
+                        Tecnología para <br /> <span className="text-paisa-gold">Viajeros Conscientes</span>
+                      </h2>
+                      <p className="text-xl text-slate-500 font-serif italic leading-relaxed">
+                        Paisa Local Pro nació como un proyecto de impacto social. No somos una agencia de viajes; somos una herramienta tecnológica que conecta la sabiduría arriera con el poder de la Inteligencia Artificial.
+                      </p>
+                      <div className="grid grid-cols-2 gap-4">
+                         <div className="p-6 rounded-3xl bg-slate-50 border border-slate-100">
+                            <p className="text-4xl font-black text-paisa-emerald">125</p>
+                            <p className="text-[10px] font-black uppercase tracking-widest text-slate-400">Pueblos Indexados</p>
+                         </div>
+                         <div className="p-6 rounded-3xl bg-slate-50 border border-slate-100">
+                            <p className="text-4xl font-black text-paisa-emerald">100%</p>
+                            <p className="text-[10px] font-black uppercase tracking-widest text-slate-400">Datos Verificados</p>
+                         </div>
+                      </div>
+                    </div>
+                    <div className="grid grid-cols-1 gap-4">
+                       {TRUST_CARDS.map((card, i) => (
+                         <motion.div 
+                           key={i}
+                           whileHover={{ x: 10 }}
+                           className={`p-8 rounded-[40px] ${card.bg} border border-current/5 flex items-start gap-6`}
+                         >
+                           <div className={`p-4 rounded-2xl bg-white shadow-sm ${card.color}`}>
+                              <card.icon size={24} />
+                           </div>
+                           <div className="space-y-2">
+                              <h4 className={`text-lg font-black uppercase tracking-tight ${card.color}`}>{card.title}</h4>
+                              <p className="text-sm font-medium text-slate-600 leading-relaxed">{card.text}</p>
+                           </div>
+                         </motion.div>
+                       ))}
+                    </div>
+                  </div>
+                </div>
+              </section>
 
               {/* Discovery Section */}
               <section className="space-y-10">

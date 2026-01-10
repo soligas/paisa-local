@@ -6,7 +6,7 @@ import {
   MapPin, Clock, Heart, Users, Star, CheckCircle, Bus, Wallet, Shield, Sparkles, Send, 
   MessageSquare, User, Award, Sun, Cloud, CloudRain, Zap, Wifi, Signal, AlertCircle, Info, Navigation,
   Coffee, Camera, Play, ExternalLink, ShieldCheck, Share2, Accessibility, ShieldAlert, Phone,
-  AlertTriangle, Search, Activity
+  AlertTriangle, Search, Activity, BookOpen
 } from 'lucide-react';
 import { PlaceData, SupportedLang } from '../types';
 import { Badge } from './atoms/Badge';
@@ -154,7 +154,7 @@ export const PlaceCard: React.FC<PlaceCardProps> = ({
               <p className="text-slate-500 text-lg md:text-xl font-serif italic max-w-2xl leading-relaxed">"{data.descripcion}"</p>
            </div>
 
-           {/* Grid de Logística y Accesibilidad (Vacío 5.1 Personas con Discapacidad / Adultos Mayores) */}
+           {/* Grid de Logística y Accesibilidad */}
            <div className="grid grid-cols-2 gap-4">
               <div className="p-5 rounded-3xl bg-emerald-50 border border-emerald-100">
                  <div className="flex items-center gap-2 text-emerald-700 mb-2">
@@ -309,7 +309,7 @@ export const PlaceCard: React.FC<PlaceCardProps> = ({
           </div>
       </section>
 
-      {/* Sugerencias de Local "Neighbor Tips" Expandidas */}
+      {/* Sugerencias de Local "Neighbor Tips" Expandidas con Iconos */}
       {data.neighborTip && (
         <section className="bg-paisa-emerald rounded-[40px] p-10 text-white relative overflow-hidden shadow-2xl">
            <div className="absolute top-0 right-0 p-12 opacity-10 rotate-12">
@@ -326,19 +326,19 @@ export const PlaceCard: React.FC<PlaceCardProps> = ({
                  </div>
               </div>
               
-              {/* Nueva sección de tips detallados según solicitud */}
+              {/* Nueva sección de tips detallados con iconos específicos solicitados */}
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
                 {[
-                  { icon: Coffee, label: 'Comida', text: 'Busca los "fondas" de vereda para el sabor real.' },
-                  { icon: Info, label: 'Cultura', text: 'El saludo es sagrado: "Buenas mijo/a".' },
-                  { icon: Clock, label: 'Horarios', text: 'El comercio cierra temprano, ¡madrugá!' },
-                  { icon: Users, label: 'Personas', text: 'Gente amable, no dudes en preguntar rutas.' }
+                  { icon: Coffee, label: 'Comida', text: 'Probá los platos típicos de la región, ¡la sazón es única!' },
+                  { icon: BookOpen, label: 'Cultura', text: 'Saludá siempre con un "Buenas", el respeto es sagrado.' },
+                  { icon: Clock, label: 'Horarios', text: 'El comercio suele madrugar mucho, ¡no te quedés dormido!' },
+                  { icon: Users, label: 'Personas', text: 'Los locales son los mejores guías, no dudés en preguntar.' }
                 ].map((tip, i) => (
-                  <div key={i} className="bg-white/10 backdrop-blur-md p-6 rounded-[24px] border border-white/10 flex flex-col gap-3">
-                    <tip.icon size={18} className="text-paisa-gold" />
+                  <div key={i} className="bg-white/10 backdrop-blur-md p-6 rounded-[24px] border border-white/10 flex flex-col gap-3 group hover:bg-white/20 transition-all">
+                    <tip.icon size={20} className="text-paisa-gold group-hover:scale-110 transition-transform" />
                     <div>
-                      <p className="text-[8px] font-black uppercase tracking-widest text-white/40">{tip.label}</p>
-                      <p className="text-xs font-medium leading-relaxed">{tip.text}</p>
+                      <p className="text-[8px] font-black uppercase tracking-widest text-white/50">{tip.label}</p>
+                      <p className="text-xs font-medium leading-relaxed mt-1">{tip.text}</p>
                     </div>
                   </div>
                 ))}

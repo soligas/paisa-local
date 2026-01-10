@@ -5,17 +5,38 @@ import { getLocalPlace } from "./logisticsService";
 
 const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
 
+/**
+ * Motor de parsing ultra-robusto para respuestas de IA
+ */
 function safeJsonParse(text: string) {
+  if (!text) return null;
   try {
-    const cleaned = text.replace(/```json/g, '').replace(/```/g, '').trim();
-    const startIdx = Math.min(
-      cleaned.indexOf('[') === -1 ? Infinity : cleaned.indexOf('['),
-      cleaned.indexOf('{') === -1 ? Infinity : cleaned.indexOf('{')
-    );
-    if (startIdx === Infinity) return null;
-    return JSON.parse(cleaned.substring(startIdx));
+    let cleaned = text.trim();
+    
+    // 1. Eliminar bloques de código markdown si existen
+    cleaned = cleaned.replace(/```json/g, '').replace(/```/g, '').trim();
+    
+    // 2. Localizar el inicio real del JSON ([ o {)
+    const startIdx = cleaned.search(/[\{\[]/);
+    if (startIdx === -1) return null;
+    
+    // 3. Localizar el final real del JSON (último ] o })
+    const lastBracket = cleaned.lastIndexOf(']');
+    const lastBrace = cleaned.lastIndexOf('}');
+    const endIdx = Math.max(lastBracket, lastBrace);
+    
+    if (endIdx === -1 || endIdx < startIdx) return null;
+    
+    cleaned = cleaned.substring(startIdx, endIdx + 1);
+
+    // 4. Limpieza de errores comunes de la IA (Comas finales y saltos de línea ilegales en strings)
+    // Eliminar comas antes de cerrar llaves o corchetes: ,} -> } o ,] -> ]
+    cleaned = cleaned.replace(/,\s*([\]\}])/g, '$1');
+    
+    return JSON.parse(cleaned);
   } catch (e) {
-    console.error("JSON Parse Error", e);
+    console.error("Error crítico de parsing JSON:", e);
+    // Intento desesperado: si es un error de posición, loguear contexto
     return null;
   }
 }
@@ -29,21 +50,31 @@ export async function searchUnified(query: string, lang: SupportedLang = 'es'): 
   try {
     const response = await ai.models.generateContent({
       model: "gemini-3-pro-preview",
-      contents: `ACTÚA COMO UN PIPELINE DE INDEXACIÓN TURÍSTICA PARA ANTIOQUIA. 
-      Investiga "${query}" para el año 2025.
+      contents: `INVESTIGACIÓN TURÍSTICA TÁCTICA PARA: "${query}".
       
-      IMPORTANTE: El campo 'neighborTip' debe ser una recomendación holística que cubra cultura, comida típica recomendada, horarios del comercio y cómo tratar con la gente local.
+      INSTRUCCIONES DE SALIDA:
+      - Responde ÚNICAMENTE con un JSON ARRAY válido.
+      - No incluyas texto explicativo antes o después del JSON.
+      - Asegúrate de escapar comillas dobles dentro de los textos.
+      - El campo 'neighborTip' debe ser un objeto con: {food, culture, schedule, people}.
       
-      REQUERIDO:
-      - Precios de bus y comida actualizados (2025).
-      - Estado de seguridad (status: 'Seguro', 'Precaución' o 'Crítico').
-      - Accesibilidad (score 0-100).
-      - neighborTip: Incluye cultura, comida y tips de comportamiento.
-      
-      Responde estrictamente un JSON ARRAY con un objeto compatible con el tipo PlaceData.`,
+      ESQUEMA REQUERIDO POR OBJETO:
+      {
+        "titulo": "Nombre del lugar",
+        "region": "Subregión válida de Antioquia",
+        "descripcion": "Descripción corta",
+        "imagen": "URL de imagen real",
+        "viaEstado": "Estado vial 2025",
+        "budget": {"busTicket": 0, "averageMeal": 0},
+        "accessibility": {"score": 85, "wheelchairFriendly": true, "elderlyApproved": true},
+        "security": {"status": "Seguro", "lastReported": "Hoy", "emergencyNumber": "123"},
+        "neighborTip": "Resumen de tips locales"
+      }`,
       config: {
         tools: [{ googleSearch: {} }],
-        systemInstruction: "Genera datos turísticos precisos. Prioriza la veracidad sobre los precios de transporte y seguridad vial."
+        // Forzamos el tipo de respuesta si el modelo lo soporta con estas herramientas
+        responseMimeType: "application/json",
+        systemInstruction: "Eres un indexador de datos turísticos precisos. No inventes precios, búscalos o estima basado en el mercado actual de 2025."
       },
     });
 
@@ -91,7 +122,7 @@ export async function searchUnified(query: string, lang: SupportedLang = 'es'): 
         },
         socialPulse: data.socialPulse,
         groundingLinks: groundingLinks.slice(0, 4),
-        neighborTip: data.neighborTip || "Saluda siempre con 'Buenas', madruga para el mejor café y prueba la trucha local.",
+        neighborTip: typeof data.neighborTip === 'string' ? data.neighborTip : "Saluda siempre con 'Buenas', madruga para el mejor café y prueba la trucha local.",
         terminalInfo: data.terminalInfo || "Terminal del Norte"
       };
       return [place];
@@ -107,11 +138,18 @@ export async function generateSmartItinerary(pueblo: string) {
   try {
     const response = await ai.models.generateContent({
       model: 'gemini-3-flash-preview',
-      contents: `Crea un itinerario de 1 día para ${pueblo}, Antioquia. Responde JSON: {morning, afternoon, evening}.`,
-      config: { responseMimeType: "application/json" }
+      contents: `Crea un itinerario de 1 día para ${pueblo}, Antioquia. 
+      Responde EXCLUSIVAMENTE un JSON con: { "morning": "...", "afternoon": "...", "evening": "..." }. 
+      No añadas markdown ni comentarios.`,
+      config: { 
+        responseMimeType: "application/json" 
+      }
     });
     return safeJsonParse(response.text);
-  } catch (e) { return null; }
+  } catch (e) { 
+    console.error("Itinerary Generation Error:", e);
+    return null; 
+  }
 }
 
 export async function checkSystemHealth(): Promise<boolean> {
