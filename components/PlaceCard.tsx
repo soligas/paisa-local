@@ -8,7 +8,7 @@ import {
   Coffee, Camera, Play, ExternalLink, ShieldCheck, Share2, Accessibility, ShieldAlert, Phone,
   AlertTriangle, Search, Activity, BookOpen, Share, Minimize2, Maximize2, MoreHorizontal,
   Moon, Sunrise, Sunset, Ticket, TrendingUp, Languages, Volume2, Utensils, Link as LinkIcon, Smile,
-  Loader2
+  Loader2, Map as MapIcon, Youtube
 } from 'lucide-react';
 import { PlaceData, SupportedLang } from '../types';
 import { Badge } from './atoms/Badge';
@@ -30,7 +30,6 @@ interface PlaceCardProps {
 export const PlaceCard: React.FC<PlaceCardProps> = ({ 
   data, lang, i18n, isFavorite, isVisited, onToggleFavorite, onToggleVisited 
 }) => {
-  // Cambio estratégico: Las tarjetas inician colapsadas para mostrar múltiples resultados
   const [isExpanded, setIsExpanded] = useState(false);
   const [reviews, setReviews] = useState<UGCContent[]>([]);
   const [newReview, setNewReview] = useState({ name: '', comment: '', stars: 5 });
@@ -85,22 +84,6 @@ export const PlaceCard: React.FC<PlaceCardProps> = ({
     }
   };
 
-  const handleSubmitReview = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!newReview.name || !newReview.comment) return;
-    setIsSubmitting(true);
-    try {
-      await insertUGC({
-        place_slug: data.titulo,
-        user_name: newReview.name,
-        comment: newReview.comment,
-        stars: newReview.stars
-      });
-      setNewReview({ name: '', comment: '', stars: 5 });
-      await loadUGC();
-    } finally { setIsSubmitting(false); }
-  };
-
   const getRegionTheme = (region: string) => {
     const themes: Record<string, { main: string, bg: string, border: string, text: string }> = {
       'Suroeste': { main: '#4B3621', bg: 'bg-[#4B3621]/5', border: 'border-[#4B3621]/20', text: 'text-[#4B3621]' },
@@ -124,7 +107,6 @@ export const PlaceCard: React.FC<PlaceCardProps> = ({
     >
       <AnimatePresence mode="wait">
         {!isExpanded ? (
-          /* VISTA COMPACTA */
           <motion.div 
             key="compact"
             initial={{ opacity: 0, scale: 0.95 }}
@@ -133,7 +115,7 @@ export const PlaceCard: React.FC<PlaceCardProps> = ({
             className={`flex flex-col sm:flex-row items-center gap-8 p-8 md:p-10 rounded-[48px] border shadow-xl hover:shadow-2xl transition-all group ${theme.bg} ${theme.border}`}
           >
             <div className="w-24 h-24 rounded-3xl overflow-hidden shrink-0 shadow-lg border-4 border-white">
-              <SafeImage src={data.imagen} alt={data.titulo} className="w-full h-full object-cover" />
+              <SafeImage src={data.imagen} alt={data.titulo} region={data.region} className="w-full h-full object-cover" />
             </div>
             
             <div className="flex-1 text-center sm:text-left space-y-2">
@@ -165,7 +147,6 @@ export const PlaceCard: React.FC<PlaceCardProps> = ({
             </div>
           </motion.div>
         ) : (
-          /* VISTA COMPLETA */
           <motion.div 
             key="full"
             initial={{ opacity: 0, y: 20 }}
@@ -173,10 +154,7 @@ export const PlaceCard: React.FC<PlaceCardProps> = ({
             exit={{ opacity: 0, y: 20 }}
             className="space-y-12"
           >
-            {/* Hero Card Split Layout */}
             <section className="relative min-h-[550px] rounded-[64px] overflow-hidden shadow-2xl border border-slate-100 flex flex-col md:flex-row bg-white">
-              
-              {/* Left Side: Photo Area */}
               <div className="md:w-5/12 min-h-[450px] relative bg-slate-50 overflow-hidden">
                  <SafeImage 
                     src={data.imagen}
@@ -186,7 +164,6 @@ export const PlaceCard: React.FC<PlaceCardProps> = ({
                  />
               </div>
 
-              {/* Right Side: Content Area */}
               <div className="flex-1 p-12 lg:p-24 bg-white flex flex-col justify-center gap-6 relative">
                  <div className="flex justify-between items-start mb-4">
                     <div className="space-y-4">
@@ -262,12 +239,42 @@ export const PlaceCard: React.FC<PlaceCardProps> = ({
                       <span>{showSecurityAlert ? i18n.reportsSOS : i18n.securitySOS}</span>
                    </button>
                  </div>
+
+                 {/* TACTICAL SHORTCUT BUTTONS - Actualizados según solicitud de usuario */}
+                 <div className="grid grid-cols-2 md:grid-cols-4 gap-4 pt-4">
+                    <button 
+                      onClick={() => window.open(`https://www.google.com/maps/search/${encodeURIComponent(data.titulo)}+Antioquia`, '_blank')}
+                      className="flex flex-col items-center justify-center gap-3 p-6 rounded-[32px] bg-white border border-slate-100 shadow-sm hover:border-paisa-emerald hover:text-paisa-emerald transition-all group"
+                    >
+                      <MapIcon size={24} className="text-slate-300 group-hover:text-paisa-emerald" />
+                      <span className="text-[9px] font-black uppercase tracking-widest">Mapa Real</span>
+                    </button>
+                    <button 
+                      onClick={() => window.open(`https://www.youtube.com/results?search_query=viajar+a+${encodeURIComponent(data.titulo)}+Antioquia+en+bus+experiencia`, '_blank')}
+                      className="flex flex-col items-center justify-center gap-3 p-6 rounded-[32px] bg-white border border-slate-100 shadow-sm hover:border-red-600 hover:text-red-600 transition-all group"
+                    >
+                      <Bus size={24} className="text-slate-300 group-hover:text-red-600" />
+                      <span className="text-[9px] font-black uppercase tracking-widest">Ruta Bus</span>
+                    </button>
+                    <button 
+                      onClick={() => window.open(`https://www.google.com/search?q=donde+comer+mejor+en+${encodeURIComponent(data.titulo)}+Antioquia`, '_blank')}
+                      className="flex flex-col items-center justify-center gap-3 p-6 rounded-[32px] bg-white border border-slate-100 shadow-sm hover:border-amber-500 hover:text-amber-500 transition-all group"
+                    >
+                      <Utensils size={24} className="text-slate-300 group-hover:text-amber-500" />
+                      <span className="text-[9px] font-black uppercase tracking-widest">Comida</span>
+                    </button>
+                    <button 
+                      onClick={() => window.open(`https://www.instagram.com/explore/tags/${encodeURIComponent(data.titulo.toLowerCase().replace(/\s/g, ''))}antioquia/`, '_blank')}
+                      className="flex flex-col items-center justify-center gap-3 p-6 rounded-[32px] bg-white border border-slate-100 shadow-sm hover:border-pink-500 hover:text-pink-500 transition-all group"
+                    >
+                      <BookOpen size={24} className="text-slate-300 group-hover:text-pink-500" />
+                      <span className="text-[9px] font-black uppercase tracking-widest">Cultura</span>
+                    </button>
+                 </div>
               </div>
             </section>
 
-            {/* FICHA TÉCNICA DEL VIAJE */}
             <section className="grid grid-cols-1 md:grid-cols-3 gap-8">
-              {/* Presupuesto */}
               <div className="p-12 rounded-[56px] bg-[#FFFAF0] border border-amber-100/50 flex flex-col gap-8 shadow-sm group hover:bg-amber-100/40 transition-all">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-4 text-amber-700">
@@ -281,7 +288,6 @@ export const PlaceCard: React.FC<PlaceCardProps> = ({
                     <span className="text-[10px] font-black uppercase text-amber-500 block mb-1">{i18n.busTicket}</span>
                     <div className="flex items-baseline gap-2">
                       <p className="text-5xl font-black text-slate-900 leading-none">${data.budget?.busTicket?.toLocaleString() || '---'}</p>
-                      {/* Moneda más visible y con mayor peso */}
                       <span className="text-sm font-black text-slate-500 tracking-widest opacity-80">{i18n.currency}</span>
                     </div>
                     <span className="text-[9px] font-bold text-slate-400 mt-2 block uppercase tracking-widest">{i18n.indexedToday}</span>
@@ -297,8 +303,7 @@ export const PlaceCard: React.FC<PlaceCardProps> = ({
                 </div>
               </div>
 
-              {/* Logística */}
-              <div className="p-12 rounded-[56px] bg-[#F0F7FF] border border-blue-100/50 flex flex-col gap-8 shadow-sm group hover:bg-blue-100/40 transition-all">
+              <div id="logistica-arriera" className="p-12 rounded-[56px] bg-[#F0F7FF] border border-blue-100/50 flex flex-col gap-8 shadow-sm group hover:bg-blue-100/40 transition-all">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-4 text-blue-700">
                     <Bus size={24} />
@@ -321,7 +326,6 @@ export const PlaceCard: React.FC<PlaceCardProps> = ({
                 </div>
               </div>
 
-              {/* Seguridad */}
               <div className={`p-12 rounded-[56px] border flex flex-col gap-8 shadow-sm transition-all group ${data.security?.status === 'Seguro' ? 'bg-[#F0FFF4] border-emerald-100/50 hover:bg-emerald-100/40' : 'bg-[#FFF5F5] border-red-100/50 hover:bg-red-100/40'}`}>
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-4 text-slate-900">
@@ -343,7 +347,6 @@ export const PlaceCard: React.FC<PlaceCardProps> = ({
               </div>
             </section>
 
-            {/* GUÍA DEL ARRIERO LOCAL */}
             <motion.section 
               initial={{ opacity: 0, y: 30 }}
               whileInView={{ opacity: 1, y: 0 }}
@@ -398,7 +401,6 @@ export const PlaceCard: React.FC<PlaceCardProps> = ({
               </div>
             </motion.section>
 
-            {/* ITINERARIO IA */}
             <AnimatePresence>
               {itinerary && (
                 <motion.section 
@@ -440,7 +442,6 @@ export const PlaceCard: React.FC<PlaceCardProps> = ({
               )}
             </AnimatePresence>
 
-            {/* GROUNDING LINKS */}
             {data.groundingLinks && data.groundingLinks.length > 0 && (
               <section className="bg-white/50 backdrop-blur-sm p-12 rounded-[48px] border border-slate-100 space-y-8">
                  <div className="flex items-center gap-3">

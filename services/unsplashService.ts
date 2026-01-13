@@ -1,50 +1,31 @@
 
 /**
- * Servicio Táctico de Unsplash v2.2
- * Optimizado según la documentación oficial: https://unsplash.com/documentation#search-photos
+ * Servicio Táctico de Unsplash v2.3
  */
-
 export async function getUnsplashImage(query: string): Promise<string | null> {
   const accessKey = (process.env.UNSPLASH_API_KEY || '').trim();
 
-  if (!accessKey || accessKey === 'undefined' || accessKey === '') {
-    console.warn("Unsplash API Key: Mijo, falta la llave en las variables de entorno.");
-    return null;
-  }
+  if (!accessKey) return null;
 
-  // Estrategia de búsqueda: Municipio + Descriptores para evitar resultados genéricos
   const fetchImage = async (q: string) => {
     try {
-      const searchQuery = encodeURIComponent(q);
-      // Según la documentación, se puede pasar el client_id como parámetro de consulta
-      const url = `https://api.unsplash.com/search/photos?query=${searchQuery}&per_page=1&orientation=landscape&client_id=${accessKey}`;
-      
+      const url = `https://api.unsplash.com/search/photos?query=${encodeURIComponent(q)}&per_page=1&orientation=landscape&client_id=${accessKey}`;
       const response = await fetch(url);
       if (!response.ok) return null;
-      
       const data = await response.json();
-      if (data.results && data.results.length > 0) {
-        // Retornamos la versión 'regular' que es óptima para web
-        return data.results[0].urls.regular;
-      }
-      return null;
+      return data.results?.[0]?.urls?.regular || null;
     } catch (e) {
       return null;
     }
   };
 
-  // 1. Intento específico: Pueblo + Antioquia + Paisaje
-  let imageUrl = await fetchImage(`${query} Antioquia Colombia paisaje`);
+  // 1. Intento con la palabra clave optimizada de la IA
+  let img = await fetchImage(query);
   
-  // 2. Fallback 1: Solo el Pueblo + Colombia
-  if (!imageUrl) {
-    imageUrl = await fetchImage(`${query} Colombia`);
+  // 2. Fallback: Si no hay resultados, buscar Antioquia general
+  if (!img) {
+    img = await fetchImage("Antioquia Colombia mountains");
   }
 
-  // 3. Fallback final: Si nada funciona, una imagen genérica pero hermosa de Antioquia
-  if (!imageUrl && query !== "Antioquia") {
-    imageUrl = await fetchImage("Antioquia Colombia mountains");
-  }
-
-  return imageUrl;
+  return img;
 }

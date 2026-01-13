@@ -3,7 +3,7 @@ import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
   Sparkles, Coffee, Mountain, Waves, Trees, 
-  Compass, Loader2
+  Compass, Loader2, Image as ImageIcon
 } from 'lucide-react';
 import { AntioquiaRegion } from '../../types';
 
@@ -25,45 +25,45 @@ export const SafeImage: React.FC<SafeImageProps> = ({ src, alt, className = "", 
       setLoading(true);
     } else {
       setLoading(false);
+      setError(true);
     }
-  }, [src, alt]);
+  }, [src]);
 
-  const getConfig = () => {
-    const regionStyles: Record<string, { color: string, Icon: any }> = {
-      'Suroeste': { color: '#4B3621', Icon: Coffee },
-      'Oriente': { color: '#2D7A4C', Icon: Mountain },
-      'Urabá': { color: '#1E40AF', Icon: Waves },
-      'Norte': { color: '#166534', Icon: Trees },
-      'Occidente': { color: '#D97706', Icon: Compass },
-      'Valle de Aburrá': { color: '#059669', Icon: Sparkles },
-    };
-    return regionStyles[region as string] || regionStyles['Valle de Aburrá'];
-  };
-
-  const config = getConfig();
+  const config = {
+    'Suroeste': { color: '#4B3621', Icon: Coffee },
+    'Oriente': { color: '#2D7A4C', Icon: Mountain },
+    'Urabá': { color: '#1E40AF', Icon: Waves },
+    'Norte': { color: '#166534', Icon: Trees },
+    'Occidente': { color: '#D97706', Icon: Compass },
+    'Valle de Aburrá': { color: '#059669', Icon: Sparkles },
+  }[region as string] || { color: '#2D7A4C', Icon: ImageIcon };
 
   return (
     <div className={`relative overflow-hidden flex items-center justify-center bg-slate-100 ${className}`}>
-      {/* Estado de Carga / Shimmer */}
-      {loading && !error && (
-        <div className="absolute inset-0 z-10 bg-slate-200 animate-pulse flex flex-col items-center justify-center gap-3">
-           <Loader2 className="animate-spin text-slate-400" size={24} />
-           <span className="text-[9px] font-black uppercase tracking-widest text-slate-400">Revelando Paisaje...</span>
-        </div>
-      )}
-
       <AnimatePresence mode="wait">
+        {loading && !error && (
+          <motion.div 
+            key="loading"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="absolute inset-0 z-20 bg-slate-100 flex flex-col items-center justify-center gap-2"
+          >
+             <Loader2 className="animate-spin text-slate-300" size={24} />
+             <span className="text-[8px] font-black uppercase tracking-widest text-slate-300">Cargando Postal...</span>
+          </motion.div>
+        )}
+
         {!error && src ? (
           <motion.img
             key={src}
             src={src}
             alt={alt}
-            initial={{ opacity: 0, scale: 1.1, filter: 'blur(20px)' }}
+            initial={{ opacity: 0, scale: 1.1 }}
             animate={{ 
-              opacity: 1, 
-              scale: 1, 
-              filter: loading ? 'blur(20px)' : 'blur(0px)',
-              transition: { duration: 0.8, ease: "easeOut" }
+              opacity: loading ? 0 : 1, 
+              scale: loading ? 1.1 : 1,
+              transition: { duration: 0.6 }
             }}
             onLoad={() => setLoading(false)}
             onError={() => {
@@ -77,15 +77,13 @@ export const SafeImage: React.FC<SafeImageProps> = ({ src, alt, className = "", 
             key="placeholder"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
-            className="absolute inset-0 w-full h-full flex flex-col items-center justify-center bg-slate-50"
+            className="absolute inset-0 w-full h-full flex flex-col items-center justify-center bg-slate-50 p-6"
           >
-            <div className="p-8 rounded-[40px] bg-white shadow-xl border border-slate-100 flex flex-col items-center gap-4 text-center">
-              <div className="p-4 rounded-2xl bg-slate-50" style={{ color: config.color }}>
-                <config.Icon size={32} />
-              </div>
+            <div className="flex flex-col items-center gap-3 text-center opacity-30">
+              <config.Icon size={32} style={{ color: config.color }} />
               <div>
-                <span className="block text-[10px] font-black uppercase tracking-widest opacity-40 mb-1">{region}</span>
-                <h4 className="text-xl font-paisa tracking-tighter" style={{ color: config.color }}>{alt}</h4>
+                <span className="block text-[8px] font-black uppercase tracking-[0.2em] mb-1">{region}</span>
+                <h4 className="text-xs font-bold uppercase tracking-tighter">{alt}</h4>
               </div>
             </div>
           </motion.div>
