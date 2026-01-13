@@ -29,25 +29,24 @@ function safeJsonParse(text: string) {
 export async function searchUnified(query: string, lang: SupportedLang = 'es'): Promise<UnifiedItem[]> {
   // 1. INTENTO CACHE LOCAL
   const localMatch = getLocalPlace(query);
-  if (localMatch && localMatch.imagen) {
+  if (localMatch && localMatch.imagen && query.length > 3) {
+    // Si es una búsqueda muy específica y tenemos local, priorizamos
     return [localMatch];
-  }
-
-  // 2. PIPELINE DE IMÁGENES MULTI-FUENTE (Unsplash -> Pexels)
-  let photo = await getUnsplashImage(query);
-  if (!photo) {
-    photo = await getPexelsImage(query);
   }
 
   try {
     const response = await ai.models.generateContent({
       model: "gemini-3-pro-preview",
       contents: `INVESTIGACIÓN TURÍSTICA TÁCTICA: "${query}, Antioquia". 
-      Devuelve un JSON con datos de transporte, presupuesto y cultura.`,
+      Genera una lista de hasta 5 destinos o parches relacionados en Antioquia. 
+      Devuelve un JSON ARRAY de objetos con datos de transporte, presupuesto y cultura. 
+      Responde obligatoriamente en el idioma del código: ${lang}.`,
       config: {
         tools: [{ googleSearch: {} }],
         responseMimeType: "application/json",
-        systemInstruction: "Eres un experto en geografía antioqueña. Devuelve datos precisos de terminales (Norte/Sur) y precios actuales de bus."
+        systemInstruction: `Eres un experto en geografía antioqueña. Responde en el idioma ${lang}. 
+        Para cada destino, devuelve datos precisos de terminales (Norte/Sur) y precios actuales de bus en COP. 
+        Si el usuario busca un municipio específico, incluye destinos cercanos o similares para enriquecer la búsqueda.`
       },
     });
 
@@ -66,12 +65,18 @@ export async function searchUnified(query: string, lang: SupportedLang = 'es'): 
     }
 
     const rawData = safeJsonParse(response.text);
-    const data = Array.isArray(rawData) ? rawData[0] : rawData;
+    const resultsArray = Array.isArray(rawData) ? rawData : (rawData ? [rawData] : []);
 
-    if (data) {
-      const place: PlaceData = {
+    const places: PlaceData[] = await Promise.all(resultsArray.map(async (data: any) => {
+      // Intentar obtener imagen para cada resultado
+      let photo = await getUnsplashImage(data.titulo || data.nombre || query);
+      if (!photo) {
+        photo = await getPexelsImage(data.titulo || data.nombre || query);
+      }
+
+      return {
         type: 'place',
-        titulo: data.titulo || data.nombre || query,
+        titulo: data.titulo || data.nombre || "Destino Desconocido",
         region: (data.region || 'Suroeste') as AntioquiaRegion,
         descripcion: data.descripcion || "Destino indexado mediante inteligencia artificial.",
         imagen: photo || data.imagen || "https://images.unsplash.com/photo-1588698944122-0a27196013a2",
@@ -97,19 +102,26 @@ export async function searchUnified(query: string, lang: SupportedLang = 'es'): 
         terminalInfo: data.terminalInfo || "Terminal del Norte",
         groundingLinks: groundingLinks.length > 0 ? groundingLinks : undefined
       };
-      return [place];
+    }));
+
+    // Mezclar con localMatch si existe y no está repetido
+    if (localMatch) {
+      const exists = places.some(p => p.titulo.toLowerCase() === localMatch.titulo.toLowerCase());
+      if (!exists) places.unshift(localMatch);
     }
+
+    return places;
   } catch (e) {
     if (localMatch) return [localMatch];
   }
-  return localMatch ? [{...localMatch, imagen: photo || localMatch.imagen}] : [];
+  return localMatch ? [localMatch] : [];
 }
 
-export async function generateSmartItinerary(pueblo: string) {
+export async function generateSmartItinerary(pueblo: string, lang: SupportedLang = 'es') {
   try {
     const response = await ai.models.generateContent({
       model: 'gemini-3-flash-preview',
-      contents: `Crea un itinerario de 1 día para ${pueblo}, Antioquia. Responde JSON: { "morning": "...", "afternoon": "...", "evening": "..." }.`,
+      contents: `Crea un itinerario de 1 día para ${pueblo}, Antioquia. Responde JSON: { "morning": "...", "afternoon": "...", "evening": "..." }. Idioma: ${lang}.`,
       config: { responseMimeType: "application/json" }
     });
     return safeJsonParse(response.text);

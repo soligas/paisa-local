@@ -32,7 +32,7 @@ export const Navigation: React.FC<NavigationProps> = ({
               <motion.div 
                 initial={{ scale: 0 }}
                 animate={{ scale: 1 }}
-                className="absolute -top-1 -right-1 w-3 h-3 bg-paisa-gold rounded-full border-2 border-[#121A21]"
+                className="absolute -top-1 -right-1 w-3.5 h-3.5 bg-paisa-gold rounded-full border-2 border-[#121A21]"
               />
             )}
           </AnimatePresence>
@@ -44,14 +44,14 @@ export const Navigation: React.FC<NavigationProps> = ({
         <button 
           onClick={onLiveToggle} 
           aria-label={label}
-          className={`relative h-14 rounded-full flex items-center gap-3 px-6 transition-all duration-500 overflow-hidden active:scale-95
+          className={`relative h-14 rounded-full flex items-center gap-4 px-8 transition-all duration-500 overflow-hidden active:scale-95
             ${isLiveActive 
               ? 'bg-red-500 shadow-[0_0_30px_rgba(239,68,68,0.5)]' 
               : 'bg-[#2D7A4C] hover:bg-[#3d9c63] shadow-lg shadow-emerald-900/20'}`}
         >
           <div className="relative z-10 flex items-center gap-3">
             {isLiveActive ? <MicOff size={20} className="text-white" /> : <Mic size={20} className="text-white" />}
-            <span className="text-[10px] font-black uppercase tracking-[0.25em] text-white whitespace-nowrap">
+            <span className="text-[11px] font-black uppercase tracking-[0.25em] text-white whitespace-nowrap">
               {label}
             </span>
           </div>

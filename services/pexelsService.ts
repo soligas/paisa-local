@@ -1,13 +1,14 @@
 
 /**
- * Servicio Táctico de Pexels v1.0
+ * Servicio Táctico de Pexels v1.1
  * Objetivo: Backup de alta fidelidad para postales de Antioquia.
  */
 
-const PEXELS_API_KEY = process.env.PEXELS_API_KEY;
-
 export async function getPexelsImage(query: string): Promise<string | null> {
-  if (!PEXELS_API_KEY || PEXELS_API_KEY === 'undefined' || PEXELS_API_KEY.trim() === '') {
+  const apiKey = (process.env.PEXELS_API_KEY || '').trim();
+
+  if (!apiKey || apiKey === 'undefined') {
+    console.warn("Pexels API Key no detectada en el entorno.");
     return null;
   }
 
@@ -18,14 +19,16 @@ export async function getPexelsImage(query: string): Promise<string | null> {
     
     const response = await fetch(url, {
       headers: {
-        'Authorization': PEXELS_API_KEY.trim()
+        'Authorization': apiKey
       }
     });
     
-    if (!response.ok) return null;
+    if (!response.ok) {
+      console.error("Error en Pexels API:", response.statusText);
+      return null;
+    }
     
     const data = await response.json();
-    // Priorizamos 'large' para buena resolución sin sacrificar performance
     return data.photos?.[0]?.src?.large || null;
   } catch (error) {
     console.error("Pipeline Pexels Offline:", error);
