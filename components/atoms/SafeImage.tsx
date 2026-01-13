@@ -1,9 +1,9 @@
 
-import React from 'react';
-import { motion } from 'framer-motion';
+import React, { useState, useEffect } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
 import { 
-  Sparkles, MapPin, Coffee, Mountain, Waves, Trees, 
-  Utensils, ChefHat, HandMetal, Heart, Compass
+  Sparkles, Coffee, Mountain, Waves, Trees, 
+  Compass, Loader2
 } from 'lucide-react';
 import { AntioquiaRegion } from '../../types';
 
@@ -15,67 +15,82 @@ interface SafeImageProps {
   type?: 'place' | 'dish' | 'experience';
 }
 
-export const SafeImage: React.FC<SafeImageProps> = ({ alt, className = "", region = "Valle de Aburrá", type = 'place' }) => {
-  
+export const SafeImage: React.FC<SafeImageProps> = ({ src, alt, className = "", region = "Valle de Aburrá", type = 'place' }) => {
+  const [error, setError] = useState(false);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    if (src) {
+      setError(false);
+      setLoading(true);
+    } else {
+      setLoading(false);
+    }
+  }, [src, alt]);
+
   const getConfig = () => {
-    // Configuración por región para lugares
-    const regionStyles: Record<string, { color: string, Icon: any, pattern: string }> = {
-      'Suroeste': { color: '#4B3621', Icon: Coffee, pattern: 'zócalo' },
-      'Oriente': { color: '#2D7A4C', Icon: Mountain, pattern: 'flores' },
-      'Urabá': { color: '#1E40AF', Icon: Waves, pattern: 'mar' },
-      'Norte': { color: '#166534', Icon: Trees, pattern: 'montaña' },
-      'Occidente': { color: '#D97706', Icon: Compass, pattern: 'sol' },
-      'Valle de Aburrá': { color: '#059669', Icon: Sparkles, pattern: 'grid' },
+    const regionStyles: Record<string, { color: string, Icon: any }> = {
+      'Suroeste': { color: '#4B3621', Icon: Coffee },
+      'Oriente': { color: '#2D7A4C', Icon: Mountain },
+      'Urabá': { color: '#1E40AF', Icon: Waves },
+      'Norte': { color: '#166534', Icon: Trees },
+      'Occidente': { color: '#D97706', Icon: Compass },
+      'Valle de Aburrá': { color: '#059669', Icon: Sparkles },
     };
-
-    // Configuración por tipo para platos/experiencias
-    if (type === 'dish') return { color: '#EA580C', Icon: Utensils, pattern: 'gastronomy' };
-    if (type === 'experience') return { color: '#7C3AED', Icon: HandMetal, pattern: 'culture' };
-
     return regionStyles[region as string] || regionStyles['Valle de Aburrá'];
   };
 
   const config = getConfig();
-  const Icon = config.Icon;
 
   return (
-    <div className={`relative overflow-hidden flex items-center justify-center transition-all duration-700 bg-slate-50 ${className}`}>
-      
-      {/* Fondo con Patrón SVG - Mejorado con Rombos y mayor escala */}
-      <svg className="absolute inset-0 w-full h-full opacity-[0.08]" xmlns="http://www.w3.org/2000/svg">
-        <defs>
-          <pattern id={`pattern-${region}-${type}`} x="0" y="0" width="60" height="60" patternUnits="userSpaceOnUse">
-            {config.pattern === 'zócalo' && <rect x="20" y="20" width="20" height="20" transform="rotate(45 30 30)" fill={config.color} />}
-            {config.pattern === 'montaña' && <path d="M0 60 L30 10 L60 60 Z" fill={config.color} />}
-            {config.pattern === 'mar' && <path d="M0 30 Q 15 10, 30 30 T 60 30" stroke={config.color} fill="none" strokeWidth="2" />}
-            {config.pattern === 'gastronomy' && <circle cx="30" cy="30" r="6" fill={config.color} />}
-            {config.pattern === 'culture' && <path d="M15 15 L45 45 M45 15 L15 45" stroke={config.color} strokeWidth="1" />}
-            {config.pattern === 'grid' && <rect x="25" y="25" width="10" height="10" fill={config.color} opacity="0.5" />}
-          </pattern>
-        </defs>
-        <rect width="100%" height="100%" fill={`url(#pattern-${region}-${type})`} />
-      </svg>
-      
-      {/* Overlay de gradiente suave */}
-      <div className="absolute inset-0 bg-gradient-to-b from-white/20 to-transparent pointer-events-none" />
+    <div className={`relative overflow-hidden flex items-center justify-center bg-slate-100 ${className}`}>
+      {/* Estado de Carga / Shimmer */}
+      {loading && !error && (
+        <div className="absolute inset-0 z-10 bg-slate-200 animate-pulse flex flex-col items-center justify-center gap-3">
+           <Loader2 className="animate-spin text-slate-400" size={24} />
+           <span className="text-[9px] font-black uppercase tracking-widest text-slate-400">Revelando Paisaje...</span>
+        </div>
+      )}
 
-      <motion.div 
-        initial={{ scale: 0.8, opacity: 0 }}
-        animate={{ scale: 1, opacity: 1 }}
-        className="relative z-10 flex flex-col items-center gap-3 text-center px-6"
-      >
-        <div className="p-4 rounded-3xl bg-white shadow-lg border border-slate-100 text-slate-800" style={{ color: config.color }}>
-          <Icon size={28} strokeWidth={1.5} />
-        </div>
-        <div className="space-y-1">
-          <span className="block text-[8px] font-black uppercase tracking-[0.4em] opacity-40 leading-none">
-            {type === 'place' ? region : type}
-          </span>
-          <h4 className="text-lg font-paisa tracking-tighter leading-tight" style={{ color: config.color }}>
-            {alt}
-          </h4>
-        </div>
-      </motion.div>
+      <AnimatePresence mode="wait">
+        {!error && src ? (
+          <motion.img
+            key={src}
+            src={src}
+            alt={alt}
+            initial={{ opacity: 0, scale: 1.1, filter: 'blur(20px)' }}
+            animate={{ 
+              opacity: 1, 
+              scale: 1, 
+              filter: loading ? 'blur(20px)' : 'blur(0px)',
+              transition: { duration: 0.8, ease: "easeOut" }
+            }}
+            onLoad={() => setLoading(false)}
+            onError={() => {
+              setError(true);
+              setLoading(false);
+            }}
+            className="absolute inset-0 w-full h-full object-cover"
+          />
+        ) : (
+          <motion.div 
+            key="placeholder"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            className="absolute inset-0 w-full h-full flex flex-col items-center justify-center bg-slate-50"
+          >
+            <div className="p-8 rounded-[40px] bg-white shadow-xl border border-slate-100 flex flex-col items-center gap-4 text-center">
+              <div className="p-4 rounded-2xl bg-slate-50" style={{ color: config.color }}>
+                <config.Icon size={32} />
+              </div>
+              <div>
+                <span className="block text-[10px] font-black uppercase tracking-widest opacity-40 mb-1">{region}</span>
+                <h4 className="text-xl font-paisa tracking-tighter" style={{ color: config.color }}>{alt}</h4>
+              </div>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 };
