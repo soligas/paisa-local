@@ -8,7 +8,7 @@ import {
   Coffee, Camera, Play, ExternalLink, ShieldCheck, Share2, Accessibility, ShieldAlert, Phone,
   AlertTriangle, Search, Activity, BookOpen, Share, Minimize2, Maximize2, MoreHorizontal,
   Moon, Sunrise, Sunset, Ticket, TrendingUp, Languages, Volume2, Utensils, Link as LinkIcon, Smile,
-  Loader2, Map as MapIcon, Youtube
+  Loader2, Map as MapIcon, Youtube, Instagram
 } from 'lucide-react';
 import { PlaceData, SupportedLang } from '../types';
 import { Badge } from './atoms/Badge';
@@ -240,7 +240,7 @@ export const PlaceCard: React.FC<PlaceCardProps> = ({
                    </button>
                  </div>
 
-                 {/* TACTICAL SHORTCUT BUTTONS - Actualizados según solicitud de usuario */}
+                 {/* TACTICAL SHORTCUT BUTTONS - Actualizados con iconos y etiquetas para Video y Red Social */}
                  <div className="grid grid-cols-2 md:grid-cols-4 gap-4 pt-4">
                     <button 
                       onClick={() => window.open(`https://www.google.com/maps/search/${encodeURIComponent(data.titulo)}+Antioquia`, '_blank')}
@@ -253,8 +253,8 @@ export const PlaceCard: React.FC<PlaceCardProps> = ({
                       onClick={() => window.open(`https://www.youtube.com/results?search_query=viajar+a+${encodeURIComponent(data.titulo)}+Antioquia+en+bus+experiencia`, '_blank')}
                       className="flex flex-col items-center justify-center gap-3 p-6 rounded-[32px] bg-white border border-slate-100 shadow-sm hover:border-red-600 hover:text-red-600 transition-all group"
                     >
-                      <Bus size={24} className="text-slate-300 group-hover:text-red-600" />
-                      <span className="text-[9px] font-black uppercase tracking-widest">Ruta Bus</span>
+                      <Youtube size={24} className="text-slate-300 group-hover:text-red-600" />
+                      <span className="text-[9px] font-black uppercase tracking-widest">Video Guía</span>
                     </button>
                     <button 
                       onClick={() => window.open(`https://www.google.com/search?q=donde+comer+mejor+en+${encodeURIComponent(data.titulo)}+Antioquia`, '_blank')}
@@ -267,8 +267,8 @@ export const PlaceCard: React.FC<PlaceCardProps> = ({
                       onClick={() => window.open(`https://www.instagram.com/explore/tags/${encodeURIComponent(data.titulo.toLowerCase().replace(/\s/g, ''))}antioquia/`, '_blank')}
                       className="flex flex-col items-center justify-center gap-3 p-6 rounded-[32px] bg-white border border-slate-100 shadow-sm hover:border-pink-500 hover:text-pink-500 transition-all group"
                     >
-                      <BookOpen size={24} className="text-slate-300 group-hover:text-pink-500" />
-                      <span className="text-[9px] font-black uppercase tracking-widest">Cultura</span>
+                      <Instagram size={24} className="text-slate-300 group-hover:text-pink-500" />
+                      <span className="text-[9px] font-black uppercase tracking-widest">Red Social</span>
                     </button>
                  </div>
               </div>

@@ -4,16 +4,9 @@ import { SupportedLang, UnifiedItem, PlaceData, AntioquiaRegion, GroundingLink }
 import { getLocalPlace } from "./logisticsService";
 import { getUnsplashImage } from "./unsplashService";
 import { getPexelsImage } from "./pexelsService";
+import { uploadToVercelBlob } from "./blobService";
 
 const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
-
-const ANTIOQUIA_LANDSCAPES = [
-  "https://images.unsplash.com/photo-1591605417688-6c0b3b320791", // Medellin
-  "https://images.unsplash.com/photo-1599140849279-101442488c2f", // Guatape
-  "https://images.unsplash.com/photo-1590487988256-9ed24133863e", // Santa Fe
-  "https://images.unsplash.com/photo-1582298538104-fe2e74c27f59", // Jerico
-  "https://images.unsplash.com/photo-1596570073289-535359b85642"  // Jardin
-];
 
 function safeJsonParse(text: string) {
   if (!text) return null;
@@ -34,6 +27,27 @@ function safeJsonParse(text: string) {
   }
 }
 
+async function generateAIPostal(pueblo: string, descripcion: string): Promise<string | null> {
+  try {
+    const aiGen = new GoogleGenAI({ apiKey: process.env.API_KEY });
+    const prompt = `Professional high-end travel photography of ${pueblo}, Antioquia, Colombia. Beautiful colonial architecture with bright colors, lush green mountains in background, morning sunlight. Style: National Geographic. 16:9 aspect ratio.`;
+    
+    const response = await aiGen.models.generateContent({
+      model: 'gemini-2.5-flash-image',
+      contents: [{ parts: [{ text: prompt }] }],
+      config: { imageConfig: { aspectRatio: "16:9" } }
+    });
+
+    const part = response.candidates?.[0]?.content?.parts?.find(p => p.inlineData);
+    if (part?.inlineData?.data) {
+      return `data:image/png;base64,${part.inlineData.data}`;
+    }
+    return null;
+  } catch (e) {
+    return null;
+  }
+}
+
 export async function searchUnified(query: string, lang: SupportedLang = 'es'): Promise<UnifiedItem[]> {
   const localMatch = getLocalPlace(query);
   
@@ -41,26 +55,12 @@ export async function searchUnified(query: string, lang: SupportedLang = 'es'): 
     const response = await ai.models.generateContent({
       model: "gemini-3-pro-preview",
       contents: `INVESTIGACIÓN TURÍSTICA TÁCTICA: "${query}, Antioquia". 
-      Genera un JSON ARRAY de hasta 5 destinos relacionados.
-      Cada objeto debe seguir este esquema exacto:
-      {
-        "titulo": "Nombre del municipio",
-        "region": "Subregión de Antioquia",
-        "descripcion": "Descripción corta y atractiva",
-        "imgKeyword": "Palabra clave en INGLES para buscar fotos muy descriptiva (ej: 'colonial architecture Yolombo Antioquia')",
-        "viaEstado": "Estado de la vía (ej: Pavimentada)",
-        "tiempoDesdeMedellin": "Tiempo estimado",
-        "budget": { "busTicket": 0, "averageMeal": 0 },
-        "neighborTip": "Dicho o consejo local"
-      }
-      Idioma de respuesta: ${lang}.`,
+      Genera un JSON ARRAY de hasta 3 destinos relacionados en Antioquia.
+      Esquema: { "titulo": "...", "region": "...", "descripcion": "...", "imgKeyword": "...", "viaEstado": "...", "budget": {"busTicket": 0, "averageMeal": 0} }`,
       config: {
         tools: [{ googleSearch: {} }],
         responseMimeType: "application/json",
-        systemInstruction: `Eres el Arriero Pro, experto en los 125 municipios de Antioquia. 
-        Tu misión es dar datos reales de transporte y cultura. 
-        Si el usuario busca un pueblo, incluye otros 4 similares de la misma subregión.
-        Para imgKeyword sé muy específico: incluye el nombre del pueblo y 'Antioquia Colombia architecture landscape'.`
+        systemInstruction: `Eres el Arriero Pro. Da datos reales de transporte y cultura.`
       },
     });
 
@@ -68,55 +68,43 @@ export async function searchUnified(query: string, lang: SupportedLang = 'es'): 
     const chunks = response.candidates?.[0]?.groundingMetadata?.groundingChunks;
     if (chunks) {
       chunks.forEach((chunk: any) => {
-        if (chunk.web) {
-          groundingLinks.push({
-            title: chunk.web.title || 'Referencia web',
-            uri: chunk.web.uri,
-            type: 'news'
-          });
-        }
+        if (chunk.web) groundingLinks.push({ title: chunk.web.title || 'Info', uri: chunk.web.uri, type: 'news' });
       });
     }
 
     const rawData = safeJsonParse(response.text);
     const resultsArray = Array.isArray(rawData) ? rawData : (rawData ? [rawData] : []);
 
-    const places: PlaceData[] = await Promise.all(resultsArray.map(async (data: any, index: number) => {
-      const searchTag = data.imgKeyword || `${data.titulo} Antioquia Colombia`;
-      let photo = await getUnsplashImage(searchTag);
-      if (!photo) {
-        photo = await getPexelsImage(searchTag);
-      }
+    const places: PlaceData[] = await Promise.all(resultsArray.map(async (data: any) => {
+      // 1. Obtener imagen origen
+      let photoSource = await getUnsplashImage(data.imgKeyword || `${data.titulo} Antioquia`);
+      if (!photoSource) photoSource = await getPexelsImage(data.imgKeyword || `${data.titulo} Colombia`);
+      if (!photoSource) photoSource = await generateAIPostal(data.titulo, data.descripcion);
 
-      // Si aún no hay foto, usar un paisaje aleatorio de Antioquia de nuestra lista curada
-      const fallback = ANTIOQUIA_LANDSCAPES[index % ANTIOQUIA_LANDSCAPES.length];
+      // 2. Estabilizar en Vercel Blob para que NUNCA se rompa el link
+      let finalImageUrl = photoSource || "https://images.unsplash.com/photo-1591605417688-6c0b3b320791";
+      if (photoSource) {
+        const blobUrl = await uploadToVercelBlob(photoSource, data.titulo);
+        if (blobUrl) finalImageUrl = blobUrl;
+      }
 
       return {
         type: 'place',
-        titulo: data.titulo || "Destino Desconocido",
-        region: (data.region || 'Valle de Aburrá') as AntioquiaRegion,
-        descripcion: data.descripcion || "Explora la riqueza de Antioquia.",
-        imagen: photo || fallback,
-        viaEstado: data.viaEstado || "Verificada por IA",
-        tiempoDesdeMedellin: data.tiempoDesdeMedellin || "Variable",
+        titulo: data.titulo || "Destino",
+        region: data.region as AntioquiaRegion,
+        descripcion: data.descripcion || "",
+        imagen: finalImageUrl,
+        viaEstado: data.viaEstado || "Pavimentada",
+        tiempoDesdeMedellin: "Variable",
         coordenadas: { lat: 6.2, lng: -75.5 },
         budget: {
           busTicket: data.budget?.busTicket || 35000,
           averageMeal: data.budget?.averageMeal || 25000
         },
-        accessibility: {
-          score: 85,
-          wheelchairFriendly: true,
-          elderlyApproved: true,
-          notes: "Accesibilidad verificada."
-        },
-        security: {
-          status: 'Seguro',
-          lastReported: 'Hoy',
-          emergencyNumber: '123'
-        },
-        neighborTip: data.neighborTip || "Disfruta el paisaje mijo.",
-        terminalInfo: data.region === 'Suroeste' ? "Terminal del Sur" : "Terminal del Norte",
+        accessibility: { score: 85, wheelchairFriendly: true, elderlyApproved: true, notes: "Verificada" },
+        security: { status: 'Seguro', lastReported: 'Hoy', emergencyNumber: '123' },
+        neighborTip: data.neighborTip || "¡Qué berraquera mijo!",
+        terminalInfo: "Terminal Norte/Sur",
         groundingLinks: groundingLinks.length > 0 ? groundingLinks : undefined
       };
     }));
@@ -128,7 +116,6 @@ export async function searchUnified(query: string, lang: SupportedLang = 'es'): 
 
     return places;
   } catch (e) {
-    console.error("Gemini Search Error:", e);
     return localMatch ? [localMatch] : [];
   }
 }
@@ -137,7 +124,7 @@ export async function generateSmartItinerary(pueblo: string, lang: SupportedLang
   try {
     const response = await ai.models.generateContent({
       model: 'gemini-3-flash-preview',
-      contents: `Crea un itinerario de 1 día para ${pueblo}, Antioquia. Responde JSON: { "morning": "...", "afternoon": "...", "evening": "..." }. Idioma: ${lang}.`,
+      contents: `Itinerario 1 día ${pueblo}, Antioquia. JSON: { "morning": "...", "afternoon": "...", "evening": "..." }. Idioma: ${lang}.`,
       config: { responseMimeType: "application/json" }
     });
     return safeJsonParse(response.text);
