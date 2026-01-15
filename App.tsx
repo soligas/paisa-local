@@ -18,7 +18,6 @@ import { Navigation } from './components/organisms/Navigation';
 import { BlobManager } from './components/BlobManager';
 import { getLocalPlace } from './services/logisticsService';
 
-// ... (funciones de audio se mantienen igual)
 function encodeAudio(bytes: Uint8Array) {
   let binary = '';
   const len = bytes.byteLength;
@@ -45,7 +44,7 @@ async function decodeAudioData(data: Uint8Array, ctx: AudioContext, sampleRate: 
   return buffer;
 }
 
-const TRANSLATIONS = {
+const TRANSLATIONS: Record<SupportedLang, any> = {
   es: {
     heroTitle: "ANTIOQUIA",
     heroSubtitle: "TE ESPERA",
@@ -77,9 +76,104 @@ const TRANSLATIONS = {
       { label: "Rutas", value: "100%" },
       { label: "IA", value: "+10k" }
     ],
-    // ... resto se mantiene
+    aboutTitle: "Turismo con Alma",
+    aboutSubtitle: "Impacto Real",
+    aboutDescription: "Cada búsqueda impulsa el comercio local y la visibilidad de los pueblos más recónditos.",
+    placeCard: {
+      weather: "Clima",
+      accessibility: "Accesibilidad",
+      itineraryIA: "Itinerario IA",
+      quickMap: "Mapa Real",
+      quickVideo: "Video Guía",
+      quickFood: "Comida",
+      quickSocial: "Red Social",
+      sourcesTitle: "Fuentes Consultadas",
+      budgetTitle: "Presupuesto",
+      busTicket: "Pasaje Bus",
+      meal: "Almuerzo",
+      departurePoint: "Sale de",
+      arrieroGuide: "Guía del Arriero"
+    },
+    discovery: [
+      { title: "Jardín", subtitle: "Color y Café", image: "https://images.unsplash.com/photo-1596570073289-535359b85642" },
+      { title: "Guatapé", subtitle: "Zócalos y Embalse", image: "https://images.unsplash.com/photo-1599140849279-101442488c2f" },
+      { title: "Jericó", subtitle: "Cultura y Carrieles", image: "https://images.unsplash.com/photo-1624647900726-24845564c785" }
+    ],
+    dichos: [
+      { word: "Mijo", meaning: "Abreviación de 'mi hijo', término de cariño." },
+      { word: "Berraquera", meaning: "Algo excelente, valiente o extraordinario." },
+      { word: "Avemaría", meaning: "Expresión de asombro o alegría." }
+    ],
+    howItWorks: [
+      { icon: Zap, title: "IA Táctica", desc: "Datos actualizados en milisegundos." },
+      { icon: HeartHandshake, title: "Social", desc: "Conectamos con la gente del pueblo." },
+      { icon: ShieldCheck, title: "Seguro", desc: "Rutas verificadas por la comunidad." }
+    ]
   },
-  // ... resto se mantiene
+  en: {
+    heroTitle: "ANTIOQUIA",
+    heroSubtitle: "AWAITS YOU",
+    heroDescription: "Real-time indexing of all 125 towns. Explore with tactical data, AI itineraries, and local wisdom.",
+    searchPlaceholder: "Which town are we looking for?",
+    searchBtn: "Index",
+    backBtn: "BACK",
+    exploreTitle: "Explore",
+    exploreSubtitle: "Subregions and local treasures.",
+    dichosTitle: "Sayings",
+    dichosSubtitle: "Speak like a true highlander.",
+    indexing: "Indexing Destination",
+    indexingMijo: ["Tactical data...", "Price checking...", "Road status...", "Photos..."],
+    listening: "Listening...",
+    arrieroLoco: "Crazy Arriero",
+    favoritesTitle: "Your Treasures",
+    stats: [{ label: "Towns", value: "125" }, { label: "Routes", value: "100%" }, { label: "IA", value: "+10k" }],
+    placeCard: {
+      weather: "Weather",
+      accessibility: "Accessibility",
+      itineraryIA: "AI Itinerary",
+      quickMap: "Live Map",
+      quickVideo: "Video Guide",
+      quickFood: "Food",
+      quickSocial: "Social",
+      sourcesTitle: "Sources",
+      budgetTitle: "Budget",
+      busTicket: "Bus Ticket",
+      meal: "Meal",
+      departurePoint: "Departs from",
+      arrieroGuide: "Highlander's Guide"
+    }
+  },
+  pt: {
+    heroTitle: "ANTIOQUIA",
+    heroSubtitle: "TE ESPERA",
+    heroDescription: "Indexação em tempo real de 125 municípios. Explore com dados táticos e sabedoria local.",
+    searchPlaceholder: "Qual cidade estamos procurando?",
+    searchBtn: "Indexar",
+    backBtn: "VOLTAR",
+    exploreTitle: "Explorar",
+    exploreSubtitle: "Sub-regiões e tesouros locais.",
+    indexing: "Indexando Destino",
+    indexingMijo: ["Dados táticos...", "Preços...", "Estradas...", "Fotos..."],
+    listening: "Falando...",
+    arrieroLoco: "Arriero Louco",
+    favoritesTitle: "Seus Tesouros",
+    stats: [{ label: "Municípios", value: "125" }, { label: "Rotas", value: "100%" }, { label: "IA", value: "+10k" }],
+    placeCard: {
+      weather: "Clima",
+      accessibility: "Acessibilidade",
+      itineraryIA: "Itinerário IA",
+      quickMap: "Mapa Real",
+      quickVideo: "Guia de Vídeo",
+      quickFood: "Comida",
+      quickSocial: "Social",
+      sourcesTitle: "Fontes",
+      budgetTitle: "Orçamento",
+      busTicket: "Passagem",
+      meal: "Refeição",
+      departurePoint: "Saída de",
+      arrieroGuide: "Guia do Arriero"
+    }
+  }
 };
 
 export function App() {
@@ -102,12 +196,11 @@ export function App() {
 
   const t = TRANSLATIONS[state.language] || TRANSLATIONS.es;
 
-  // Efecto para cambiar el mensaje de carga
   useEffect(() => {
     let interval: any;
     if (state.cargando) {
       interval = setInterval(() => {
-        setLoadingMsgIdx(prev => (prev + 1) % t.indexingMijo.length);
+        setLoadingMsgIdx(prev => (prev + 1) % (t.indexingMijo?.length || 1));
       }, 1500);
     } else {
       setLoadingMsgIdx(0);
@@ -214,7 +307,6 @@ export function App() {
   return (
     <div className={`min-h-screen flex flex-col bg-slate-50 text-slate-900 font-sans transition-all duration-500 ${state.accessibilityMode ? 'accessibility-mode grayscale' : ''}`}>
       
-      {/* Header Premium */}
       <header className="sticky top-0 p-4 md:p-8 max-w-7xl mx-auto w-full flex justify-between items-center z-[100] bg-slate-50/80 backdrop-blur-md">
         <PaisaLogo onClick={handleReset} className="scale-75 md:scale-100 origin-left" />
         <div className="flex items-center gap-2 md:gap-4">
@@ -246,12 +338,10 @@ export function App() {
         <AnimatePresence mode="wait">
           {state.activeTab === 'home' && !state.cargando && (
              <motion.div key="home" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="space-y-24 md:space-y-32 py-12 md:py-20">
-                
-                {/* Hero Section */}
                 <div className="text-center space-y-12 md:space-y-20">
                   <div className="space-y-6 md:space-y-8 px-4">
                     <div className="flex justify-center gap-6 md:gap-12 mb-4">
-                       {(t.stats || []).map(s => (
+                       {(t.stats || []).map((s: any) => (
                          <div key={s.label} className="flex flex-col">
                             <span className="text-paisa-emerald text-xl md:text-2xl font-black">{s.value}</span>
                             <span className="text-[8px] md:text-[9px] font-black uppercase tracking-widest text-slate-300">{s.label}</span>
@@ -266,7 +356,6 @@ export function App() {
                     </p>
                   </div>
 
-                  {/* Search Bar */}
                   <div className="relative max-w-3xl mx-auto px-4 group">
                      <div className="flex flex-col md:flex-row gap-4">
                        <div className="relative flex-1">
@@ -381,7 +470,7 @@ export function App() {
                       exit={{ opacity: 0, y: -10 }}
                       className="text-lg md:text-2xl font-serif italic text-slate-400"
                     >
-                      {t.indexingMijo[loadingMsgIdx]}
+                      {t.indexingMijo?.[loadingMsgIdx] || "Consultando..."}
                     </motion.p>
                   </AnimatePresence>
                </div>

@@ -37,25 +37,25 @@ export const PlaceCard: React.FC<PlaceCardProps> = ({ data, lang, i18n, isFavori
 
   const quickActions = [
     { 
-      label: i18n.quickMap || "Mapa Real", 
+      label: i18n?.quickMap || "Mapa Real", 
       icon: Map, 
       color: 'text-blue-500',
       href: `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(data.titulo + " Antioquia")}`
     },
     { 
-      label: i18n.quickVideo || "Video Guía", 
+      label: i18n?.quickVideo || "Video Guía", 
       icon: Play, 
       color: 'text-red-500',
       href: `https://www.youtube.com/results?search_query=${encodeURIComponent("Guia de viaje " + data.titulo + " Antioquia")}`
     },
     { 
-      label: i18n.quickFood || "Comida", 
+      label: i18n?.quickFood || "Comida", 
       icon: Utensils, 
       color: 'text-paisa-emerald',
       href: `https://www.google.com/search?q=${encodeURIComponent("Donde comer en " + data.titulo + " Antioquia")}`
     },
     { 
-      label: i18n.quickSocial || "Red Social", 
+      label: i18n?.quickSocial || "Red Social", 
       icon: Instagram, 
       color: 'text-purple-500',
       href: `https://www.instagram.com/explore/tags/${normalizeForHashtag(data.titulo)}/`
@@ -115,11 +115,11 @@ export const PlaceCard: React.FC<PlaceCardProps> = ({ data, lang, i18n, isFavori
 
                  <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 md:gap-8 pt-6 border-t border-slate-100">
                     <div className="space-y-1">
-                       <span className="text-[10px] font-black uppercase text-slate-300">{i18n.weather}</span>
+                       <span className="text-[10px] font-black uppercase text-slate-300">{i18n?.weather || "Clima"}</span>
                        <div className="flex items-center gap-2 text-paisa-emerald"><Sun size={18} /><span className="text-lg md:text-2xl font-black">22°C</span></div>
                     </div>
                     <div className="space-y-1">
-                       <span className="text-[10px] font-black uppercase text-slate-300">{i18n.accessibility}</span>
+                       <span className="text-[10px] font-black uppercase text-slate-300">{i18n?.accessibility || "Accesibilidad"}</span>
                        <div className="flex items-center gap-2 text-paisa-emerald"><Accessibility size={18} /><span className="text-lg md:text-2xl font-black">{data.accessibility?.score || 90}%</span></div>
                     </div>
                     <div className="space-y-1">
@@ -134,7 +134,7 @@ export const PlaceCard: React.FC<PlaceCardProps> = ({ data, lang, i18n, isFavori
 
                  <button onClick={handleGenerateItinerary} disabled={loadingItinerary} className="w-full h-16 md:h-24 px-8 md:px-12 rounded-2xl md:rounded-[32px] bg-paisa-emerald text-white flex items-center justify-center gap-4 text-[11px] md:text-[13px] font-black uppercase tracking-widest shadow-xl active:scale-95 transition-all">
                     {loadingItinerary ? <Loader2 className="animate-spin" /> : <Zap size={24} className="text-paisa-gold" />} 
-                    {itinerary ? "Refrescar Plan" : i18n.itineraryIA}
+                    {itinerary ? "Refrescar Plan" : (i18n?.itineraryIA || "Itinerario IA")}
                  </button>
               </div>
             </section>
@@ -160,9 +160,8 @@ export const PlaceCard: React.FC<PlaceCardProps> = ({ data, lang, i18n, isFavori
             {data.groundingLinks && data.groundingLinks.length > 0 && (
               <section className="px-4 py-8 bg-slate-100/50 rounded-[40px] border border-slate-200">
                 <div className="flex items-center gap-3 mb-6 px-4">
-                  {/* Fixed: Added missing Info icon import from lucide-react */}
                   <Info size={16} className="text-slate-400" />
-                  <span className="text-[10px] font-black uppercase tracking-widest text-slate-500">{i18n.sourcesTitle || 'Fuentes Consultadas'}</span>
+                  <span className="text-[10px] font-black uppercase tracking-widest text-slate-500">{i18n?.sourcesTitle || 'Fuentes Consultadas'}</span>
                 </div>
                 <div className="flex flex-wrap gap-4 px-4">
                   {data.groundingLinks.map((link, idx) => (
@@ -184,15 +183,15 @@ export const PlaceCard: React.FC<PlaceCardProps> = ({ data, lang, i18n, isFavori
             <section className="grid grid-cols-1 md:grid-cols-2 gap-6 md:gap-8">
                <div className="p-8 md:p-12 rounded-[48px] bg-[#FFFAF0] border border-amber-100 shadow-sm flex flex-col gap-8 relative overflow-hidden group">
                   <div className="flex items-center gap-4 text-amber-700 relative z-10">
-                    <Wallet size={24} /> <span className="text-[11px] font-black uppercase tracking-[0.3em]">{i18n.budgetTitle}</span>
+                    <Wallet size={24} /> <span className="text-[11px] font-black uppercase tracking-[0.3em]">{i18n?.budgetTitle || "Presupuesto"}</span>
                   </div>
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 relative z-10">
                      <div className="p-8 bg-white/80 backdrop-blur-md rounded-[32px] border border-amber-50">
-                        <span className="text-[9px] font-black text-amber-600 uppercase block mb-1">{i18n.busTicket}</span>
+                        <span className="text-[9px] font-black text-amber-600 uppercase block mb-1">{i18n?.busTicket || "Pasaje"}</span>
                         <p className="text-4xl font-black text-slate-900 tracking-tighter">${data.budget?.busTicket?.toLocaleString() || '35,000'}</p>
                      </div>
                      <div className="p-8 bg-white/80 backdrop-blur-md rounded-[32px] border border-amber-50">
-                        <span className="text-[9px] font-black text-amber-600 uppercase block mb-1">{i18n.meal}</span>
+                        <span className="text-[9px] font-black text-amber-600 uppercase block mb-1">{i18n?.meal || "Almuerzo"}</span>
                         <p className="text-4xl font-black text-slate-900 tracking-tighter">${data.budget?.averageMeal?.toLocaleString() || '25,000'}</p>
                      </div>
                   </div>
@@ -200,7 +199,7 @@ export const PlaceCard: React.FC<PlaceCardProps> = ({ data, lang, i18n, isFavori
 
                <div className="p-8 md:p-12 rounded-[48px] bg-[#F0F7FF] border border-blue-100 flex flex-col gap-8 shadow-sm relative overflow-hidden">
                   <div className="bg-white rounded-[32px] p-8 shadow-sm space-y-1">
-                     <span className="text-[10px] font-black uppercase text-blue-500">{i18n.departurePoint}</span>
+                     <span className="text-[10px] font-black uppercase text-blue-500">{i18n?.departurePoint || "Sale de"}</span>
                      <h4 className="text-3xl md:text-5xl font-black text-slate-900 tracking-tighter">{data.terminalInfo || 'Terminal del Norte'}</h4>
                   </div>
                   <div className="flex flex-wrap gap-2">
@@ -222,7 +221,7 @@ export const PlaceCard: React.FC<PlaceCardProps> = ({ data, lang, i18n, isFavori
 
                   <div className="flex-1 space-y-12">
                      <div className="space-y-4">
-                        <span className="text-white/40 text-[11px] font-black uppercase tracking-[0.5em]">{i18n.arrieroGuide}</span>
+                        <span className="text-white/40 text-[11px] font-black uppercase tracking-[0.5em]">{i18n?.arrieroGuide || "Guía del Arriero"}</span>
                         <h4 className="text-4xl md:text-6xl font-serif italic leading-[1.1]">
                           "{data.neighborTip || '¡Eavemaría mijo! Venga a conocer que esto aquí es un paraíso.'}"
                         </h4>
