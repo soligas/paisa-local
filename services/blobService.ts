@@ -1,8 +1,8 @@
 
 import { put, list, del } from '@vercel/blob';
 
-const LOCAL_STORAGE_KEY = 'paisa_local_blob_cache';
-const TOKEN_STORAGE_KEY = 'paisa_blob_token_override';
+const LOCAL_STORAGE_KEY = 'arriero_pro_blob_cache';
+const TOKEN_STORAGE_KEY = 'arriero_pro_token_override';
 
 // Caché en memoria para evitar latencia
 let cachedBlobs: any[] | null = null;
@@ -34,7 +34,7 @@ export function clearManualToken() {
 
 /**
  * Normalización extrema para búsquedas:
- * Quita tildes, extensiones, prefijos 'paisa-local' y caracteres raros.
+ * Quita tildes, extensiones, prefijos y caracteres raros.
  */
 export const normalizeForSearch = (str: string) => {
   if (!str) return "";
@@ -43,8 +43,8 @@ export const normalizeForSearch = (str: string) => {
   // Quitar extensiones
   clean = clean.replace(/\.(jpg|jpeg|png|webp|gif|avif)$/i, "");
   
-  // Quitar prefijos comunes que el usuario o el sistema puedan poner
-  clean = clean.replace(/paisa-local/g, "");
+  // Quitar prefijos comunes
+  clean = clean.replace(/arriero-pro/g, "").replace(/paisa-local/g, "");
   
   // Dejar solo letras y números
   return clean.replace(/[^a-z0-9]/g, "").trim();
@@ -61,7 +61,6 @@ function getLocalInventory(): Array<{url: string, pathname: string, isLocal: boo
 
 /**
  * Busca una URL de imagen con lógica difusa:
- * 'paisa-localGuatape.jpg' -> coincide con 'Guatapé'
  */
 export async function findBlobUrlByName(name: string): Promise<string | null> {
   const searchTarget = normalizeForSearch(name);
@@ -82,7 +81,7 @@ export async function findBlobUrlByName(name: string): Promise<string | null> {
         lastFetchTime = Date.now();
       }
 
-      // Búsqueda inteligente: ¿El nombre normalizado del blob contiene el objetivo?
+      // Búsqueda inteligente
       const match = cachedBlobs.find(b => {
         const normalizedBlobName = normalizeForSearch(b.pathname);
         return normalizedBlobName.includes(searchTarget) || searchTarget.includes(normalizedBlobName);
@@ -119,8 +118,7 @@ export async function uploadToVercelBlob(source: string | File, fileName: string
     }
 
     if (token) {
-      // Usamos el prefijo con guión para consistencia
-      const result = await put(`paisa-local-${cleanName}.png`, body, {
+      const result = await put(`arriero-pro-${cleanName}.png`, body, {
         access: 'public',
         token,
         addRandomSuffix: true,

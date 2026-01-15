@@ -30,24 +30,28 @@ export async function searchUnified(query: string, lang: SupportedLang = 'es'): 
   const localMatch = getLocalPlace(query);
   
   try {
-    // Usamos gemini-3-flash-preview para máxima velocidad
     const response = await ai.models.generateContent({
       model: "gemini-3-flash-preview",
-      contents: `DESTINO: "${query}, Antioquia". 
-      Genera JSON ARRAY (max 2-3 items). 
-      Estructura corta: { 
+      contents: `DESTINATION: "${query}, Antioquia, Colombia". 
+      Language: ${lang}.
+      Generate a JSON ARRAY (max 2-3 items). 
+      IMPORTANT: Translate the description and all tips into ${lang}.
+      Structure: { 
         "titulo": "...", 
         "region": "...", 
-        "descripcion": "Corta/paisa", 
+        "descripcion": "Short description in ${lang}", 
         "imgKeyword": "search term", 
-        "viaEstado": "...", 
+        "viaEstado": "Road status in ${lang}", 
         "budget": {"busTicket": 0, "averageMeal": 0},
-        "foodTip": "...", "cultureTip": "...", "logisticsTip": "...", "peopleTip": "..."
+        "foodTip": "Food tip in ${lang}", 
+        "cultureTip": "Culture tip in ${lang}", 
+        "logisticsTip": "Logistics tip in ${lang}", 
+        "peopleTip": "People tip in ${lang}"
       }`,
       config: {
         tools: [{ googleSearch: {} }],
         responseMimeType: "application/json",
-        systemInstruction: `Eres el Arriero Pro. Genera datos reales y tácticos de Antioquia. Sé extremadamente breve.`
+        systemInstruction: `You are the Arriero Pro. You specialize in Antioquia tourism. Your job is to provide accurate, tactical travel data. Even if the data is local, all text in the JSON must be in ${lang}. Be very professional but keep the Paisa spirit.`
       },
     });
 
@@ -64,11 +68,9 @@ export async function searchUnified(query: string, lang: SupportedLang = 'es'): 
       }));
 
     const places: PlaceData[] = await Promise.all(resultsArray.map(async (data: any) => {
-      // Búsqueda de imagen optimizada: Intenta bodega, si no, busca en las otras dos EN PARALELO
       let finalImageUrl = await findBlobUrlByName(data.titulo);
 
       if (!finalImageUrl) {
-        // Ejecutar Unsplash y Pexels al mismo tiempo y tomar la primera que responda
         const results = await Promise.allSettled([
           getUnsplashImage(data.imgKeyword || `${data.titulo} Antioquia`),
           getPexelsImage(data.imgKeyword || `${data.titulo} Colombia`)
@@ -128,9 +130,19 @@ export async function generateSmartItinerary(pueblo: string, lang: SupportedLang
   try {
     const response = await ai.models.generateContent({
       model: 'gemini-3-flash-preview',
-      contents: `Itinerario corto ${pueblo}, Antioquia. JSON morning, afternoon, evening.`,
-      config: { responseMimeType: "application/json" }
+      contents: `Generate a tactical tourist itinerary for one day in ${pueblo}, Antioquia. 
+      Language for output: ${lang}.
+      Must be a JSON object with 3 key moments (morning, afternoon, evening). 
+      Each moment must have 'activity' (short, engaging string in ${lang}) and 'tip' (short local tip in ${lang}).
+      Example: {"8:00 AM": {"activity": "Coffee at the main square", "tip": "Try Doña Rosa's coffee"}}`,
+      config: { 
+        responseMimeType: "application/json",
+        systemInstruction: `You are an expert guide for Arriero Pro. Your output must be entirely in ${lang}.`
+      }
     });
     return safeJsonParse(response.text);
-  } catch (e) { return null; }
+  } catch (e) { 
+    console.error("Error generating itinerary:", e);
+    return null; 
+  }
 }

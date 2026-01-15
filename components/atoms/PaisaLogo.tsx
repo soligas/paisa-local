@@ -20,8 +20,8 @@ export function PaisaLogo({ className = '', isDark, onClick }: PaisaLogoProps) {
         <path d="M15 70 C 15 70, 35 25, 110 45 C 110 45, 80 90, 15 70 Z" fill="#D4A574" opacity="0.9"/>
       </svg>
       <div className="flex flex-col -space-y-2">
-        <span className="font-paisa text-3xl tracking-tight text-paisa-emerald">PAISA</span>
-        <span className={`font-paisa text-3xl tracking-tight ${isDark ? 'text-white' : 'text-slate-900'}`}>LOCAL</span>
+        <span className="font-paisa text-3xl tracking-tight text-paisa-emerald">ARRIERO</span>
+        <span className={`font-paisa text-3xl tracking-tight ${isDark ? 'text-white' : 'text-slate-900'}`}>PRO</span>
       </div>
     </div>
   );

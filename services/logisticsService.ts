@@ -65,7 +65,7 @@ export function getLocalPlace(query: string): PlaceData | null {
         averageMeal: found.budget?.averageMeal || 25000
       },
       terminalInfo: `Terminal del ${logistics.terminal}`,
-      seguridadTexto: found.seguridadTexto || "Vía reportada como segura y despejada por autoridades."
+      seguridadTexto: found.seguridadTexto || "Vía reportada como segura y despejada por autoridades regionales."
     };
   }
   

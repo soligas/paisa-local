@@ -7,29 +7,23 @@
     <meta name="theme-color" content="#2D7A4C">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    <title>Paisa Local Pro | Guía Experta de Antioquia con IA</title>
+    <title>Arriero Pro | Inteligencia Turística de Antioquia</title>
     
     <!-- SEO Meta Tags -->
-    <meta name="description" content="Explora Antioquia como un local. Itinerarios con IA, precios de bus verificados, los mejores platos típicos y el Arriero Loco en vivo. Turismo regenerativo mijo.">
-    <meta name="keywords" content="Antioquia, Medellín, Turismo Colombia, Bandeja Paisa, Guatapé, Jardín, Jericó, Viajes Inteligentes, IA Viajes, Paisa Local">
-    <meta name="author" content="Paisa Local Pro Team">
-    <link rel="canonical" href="https://paisalocal.pro/" />
+    <meta name="description" content="Arriero Pro es tu guía definitiva por los 125 municipios de Antioquia. Datos reales de buses, estados de vías e IA en vivo.">
+    <meta name="keywords" content="Antioquia, Arriero Pro, Medellín, Guatapé, Jardín, Jericó, Turismo Antioquia, IA Viajes">
+    <meta name="author" content="Arriero Pro Team">
+    <link rel="canonical" href="https://arriero.pro/" />
     
-    <!-- Open Graph / Facebook -->
+    <!-- Open Graph -->
     <meta property="og:type" content="website">
-    <meta property="og:url" content="https://paisalocal.pro/">
-    <meta property="og:title" content="Paisa Local Pro: La Berraquera en tu Bolsillo">
-    <meta property="og:description" content="No seas un turista, sé un vecino temporal. Datos reales, cultura auténtica y IA de impacto social.">
+    <meta property="og:url" content="https://arriero.pro/">
+    <meta property="og:title" content="Arriero Pro: Sabiduría de Montaña, Poder de IA">
+    <meta property="og:description" content="No seas un turista, sé un explorador táctico con datos reales y asistencia en vivo.">
     <meta property="og:image" content="https://images.unsplash.com/photo-1590487988256-9ed24133863e?auto=format&fit=crop&q=80&w=1200">
 
-    <!-- Leaflet Maps CSS -->
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin=""/>
-
-    <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
-    
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,600;1,600&family=Plus+Jakarta+Sans:wght@200;400;600;700;800&family=Montserrat:wght@900&display=swap" rel="stylesheet">
     
     <script>
@@ -48,20 +42,6 @@
               sans: ['Plus Jakarta Sans', 'sans-serif'],
               serif: ['Cormorant Garamond', 'serif'],
               paisa: ['Montserrat', 'sans-serif'],
-            },
-            animation: {
-              shimmer: 'shimmer 2s infinite linear',
-              'bounce-subtle': 'bounce-subtle 3s ease-in-out infinite'
-            },
-            keyframes: {
-              shimmer: {
-                '0%': { backgroundPosition: '-200% 0' },
-                '100%': { backgroundPosition: '200% 0' },
-              },
-              'bounce-subtle': {
-                '0%, 100%': { transform: 'translateY(0)' },
-                '50%': { transform: 'translateY(-5px)' }
-              }
             }
           }
         }
@@ -72,32 +52,27 @@
         :root { --paisa-emerald: #2D7A4C; --paisa-gold: #D4A574; --paisa-charcoal: #1A242F; }
         body { background-color: #fcfdfd; color: var(--paisa-charcoal); overflow-x: hidden; margin: 0; padding: 0; -webkit-font-smoothing: antialiased; }
         .font-paisa { font-family: 'Montserrat', sans-serif; font-weight: 900; text-transform: uppercase; }
-        .glass { background: rgba(255, 255, 255, 0.85); backdrop-filter: blur(24px); -webkit-backdrop-filter: blur(24px); }
-        .layout-container { width: 100%; max-width: 80rem; margin: 0 auto; padding: 0 1.5rem; }
         .no-scrollbar::-webkit-scrollbar { display: none; }
         ::-webkit-scrollbar { width: 8px; }
         ::-webkit-scrollbar-track { background: #f1f1f1; }
         ::-webkit-scrollbar-thumb { background: #2D7A4C; border-radius: 10px; }
-        .xp-bar { background: linear-gradient(90deg, #D4A574 0%, #2D7A4C 100%); transition: width 1s cubic-bezier(0.34, 1.56, 0.64, 1); }
-        .leaflet-container { font-family: 'Plus Jakarta Sans', sans-serif; border-radius: 32px; }
     </style>
-
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
 <script type="importmap">
 {
   "imports": {
-    "path": "https://esm.sh/path@^0.12.7",
-    "react/": "https://esm.sh/react@^19.2.3/",
     "react": "https://esm.sh/react@^19.2.3",
     "react-dom/": "https://esm.sh/react-dom@^19.2.3/",
-    "@vitejs/plugin-react": "https://esm.sh/@vitejs/plugin-react@^5.1.2",
-    "url": "https://esm.sh/url@^0.11.4",
+    "react/": "https://esm.sh/react@^19.2.3/",
     "@google/genai": "https://esm.sh/@google/genai@^1.36.0",
-    "vite": "https://esm.sh/vite@^7.3.1",
+    "framer-motion": "https://esm.sh/framer-motion@^12.26.2",
     "lucide-react": "https://esm.sh/lucide-react@^0.562.0",
-    "@vercel/blob": "https://esm.sh/@vercel/blob@^2.0.0",
+    "vite": "https://esm.sh/vite@^7.3.1",
+    "@vitejs/plugin-react": "https://esm.sh/@vitejs/plugin-react@^5.1.2",
     "process": "https://esm.sh/process@^0.11.10",
-    "framer-motion": "https://esm.sh/framer-motion@^12.26.2"
+    "path": "https://esm.sh/path@^0.12.7",
+    "url": "https://esm.sh/url@^0.11.4",
+    "@vercel/blob": "https://esm.sh/@vercel/blob@^2.0.0"
   }
 }
 </script>
