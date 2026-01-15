@@ -17,44 +17,6 @@ export interface SocialPulse {
   lastUpdate: string;
 }
 
-// Added UGCContent interface
-export interface UGCContent {
-  id: string;
-  created_at: string;
-  place_slug: string;
-  user_name: string;
-  comment: string;
-  stars: number;
-}
-
-// Added ChallengeData interface
-export interface ChallengeData {
-  titulo: string;
-  mision: string;
-  dificultad: 'Fácil' | 'Media' | 'Arriero';
-  recompensa: string;
-  completado: boolean;
-}
-
-// Added DishData interface
-export interface DishData {
-  nombre: string;
-  categoria: string;
-  descripcion: string;
-  precioLocalEstimated: number;
-  precioVerificado: boolean;
-  economiaCircular: boolean;
-}
-
-// Added CultureExperience interface
-export interface CultureExperience {
-  titulo: string;
-  categoria: string;
-  descripcion: string;
-  impactoSocial: string;
-  ubicacion: string;
-}
-
 export interface PlaceData {
   type: 'place';
   titulo: string;
@@ -81,16 +43,23 @@ export interface PlaceData {
   tiempoDesdeMedellin: string;
   imagen: string;
   coordenadas: { lat: number; lng: number };
-  // Added missing optional fields used in PlaceCard
   weather?: {
     condition: string;
     temp: number;
   };
   neighborTip?: string;
+  // Detalle extendido de la Guía del Arriero
+  foodTip?: string;
+  cultureTip?: string;
+  logisticsTip?: string;
+  peopleTip?: string;
   terminalInfo?: string;
   busFrequency?: string;
   busCompanies?: string[];
   seguridadTexto?: string;
+  // Additional fields for local logistics matching
+  nomadScore?: number;
+  wifiQuality?: string;
 }
 
 export type UnifiedItem = PlaceData;
@@ -104,4 +73,43 @@ export interface AppState {
   language: SupportedLang;
   activeTab: AppTab;
   accessibilityMode: boolean;
+}
+
+// Fix: Added missing exported member ChallengeData
+export interface ChallengeData {
+  id: string;
+  titulo: string;
+  mision: string;
+  dificultad: 'Fácil' | 'Media' | 'Arriero';
+  recompensa: string;
+  completado: boolean;
+}
+
+// Fix: Added missing exported member UGCContent
+export interface UGCContent {
+  id: string;
+  created_at: string;
+  place_slug: string;
+  user_name: string;
+  comment: string;
+  stars: number;
+}
+
+// Fix: Added missing exported member DishData
+export interface DishData {
+  nombre: string;
+  descripcion: string;
+  categoria: string;
+  precioLocalEstimated: number;
+  precioVerificado: boolean;
+  economiaCircular: boolean;
+}
+
+// Fix: Added missing exported member CultureExperience
+export interface CultureExperience {
+  titulo: string;
+  descripcion: string;
+  categoria: string;
+  impactoSocial: string;
+  ubicacion: string;
 }
