@@ -1,21 +1,20 @@
 
 import React, { useState, useEffect, useRef } from 'react';
-import { Search, Loader2, ArrowLeft, Heart, Compass, MessageSquare, Map as MapIcon, Target, ShieldCheck, Zap, Sun, Globe, Activity, TrendingUp, Sparkles, Navigation, CheckCircle2, Truck, Users, Coffee } from 'lucide-react';
+import { Search, Loader2, ArrowLeft, Heart, Compass, MessageSquare, Map as MapIcon, Target, ShieldCheck, Zap, Sun, Globe, Activity, TrendingUp, Sparkles, Navigation, CheckCircle, Truck, Users, Coffee } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { GoogleGenAI, Modality, LiveServerMessage } from '@google/genai';
 import { AppState, PlaceData, SupportedLang, AppTab } from './types';
 import { searchUnified } from './services/geminiService';
 import { PaisaLogo } from './components/atoms/PaisaLogo';
-import { Badge } from './components/atoms/Badge';
 import { PlaceCard } from './components/PlaceCard';
 import { Footer } from './components/organisms/Footer';
 import { DiscoveryCard } from './components/molecules/DiscoveryCard';
 import { HorizontalCarousel } from './components/molecules/HorizontalCarousel';
 import { SectionHeader } from './components/molecules/SectionHeader';
 import { EpicAntioquiaMap } from './components/molecules/EpicAntioquiaMap';
-import { CultureCard } from './components/molecules/CultureCard';
 import { Navigation as AppNavigation } from './components/organisms/Navigation';
 import { getLocalPlace } from './services/logisticsService';
+import { TRANSLATIONS } from './constants/translations';
 
 function encodeAudio(bytes: Uint8Array) {
   let binary = '';
@@ -42,96 +41,6 @@ async function decodeAudioData(data: Uint8Array, ctx: AudioContext, sampleRate: 
   }
   return buffer;
 }
-
-const TRANSLATIONS: Record<SupportedLang, any> = {
-  es: {
-    heroTitle: "ANTIOQUIA",
-    heroSubtitle: "ARRIERO PRO",
-    heroDescription: "Indexamos en tiempo real los 125 municipios. Somos Arriero Pro: inteligencia táctica, datos de campo y la berraquera del campo.",
-    searchPlaceholder: "¿Qué pueblo buscamos, mijo?",
-    searchBtn: "BUSCAR",
-    backBtn: "VOLVER",
-    exploreTitle: "Explorar",
-    exploreSubtitle: "Subregiones y tesoros locales.",
-    offerTitle: "PROPUESTA TÁCTICA",
-    offerSubtitle: "Lo que nos hace el concierge definitivo de la región.",
-    dichosTitle: "Dichos",
-    dichosSubtitle: "Hablá como un arriero auténtico.",
-    indexing: "Buscando Destino",
-    indexingMijo: ["Consultando datos tácticos...", "Rastreando precios...", "Verificando vías...", "Preguntándole a los arrieros..."],
-    listening: "Escuchando...",
-    arrieroLoco: "Arriero Pro",
-    favoritesTitle: "Tus Tesoros",
-    systemInstruction: "Eres el Arriero Pro, el guía definitivo de Antioquia. No eres un bot, eres un guía experto que usa lenguaje paisa pero con una precisión técnica absoluta. Ayudas al usuario a descubrir pueblos usando datos reales.",
-    pulseTitle: "PULSO REGIONAL",
-    pulseItems: ["Vía al Suroeste: Despejada 🟢", "Clima en Jardín: 22°C Soleado ☀️", "Túnel de Oriente: Operando ✅"],
-    stats: [{ label: "Municipios", value: "125" }, { label: "Impacto Local", value: "100%" }, { label: "IA Táctica", value: "Realtime" }],
-    offerCards: [
-      { icon: Target, title: "Inteligencia Real", desc: "No usamos datos obsoletos. Consultamos en vivo precios de buses, hoteles y clima." },
-      { icon: Truck, title: "Logística de Campo", desc: "Sabemos de dónde salen los buses, cuánto valen y qué terminal te queda más cerca." },
-      { icon: Coffee, title: "Cultura Auténtica", desc: "Te enseñamos a hablar como un local y a encontrar los charcos que no salen en buscadores." },
-      { icon: ShieldCheck, title: "Impacto Social", desc: "Nuestras recomendaciones priorizan al campesino y al pequeño emprendedor local." }
-    ]
-  },
-  en: {
-    heroTitle: "ANTIOQUIA",
-    heroSubtitle: "ARRIERO PRO",
-    heroDescription: "Real-time indexing of 125 towns. We are Arriero Pro: tactical intelligence, field data, and local heart.",
-    searchPlaceholder: "Which town, buddy?",
-    searchBtn: "SEARCH",
-    backBtn: "BACK",
-    exploreTitle: "Explore",
-    exploreSubtitle: "Subregions and local gems.",
-    offerTitle: "TACTICAL PROPOSAL",
-    offerSubtitle: "What makes us the region's ultimate concierge.",
-    dichosTitle: "Sayings",
-    dichosSubtitle: "Speak like a true local.",
-    indexing: "Searching...",
-    indexingMijo: ["Consulting tactical data...", "Tracking prices...", "Checking roads...", "Asking locals..."],
-    listening: "Listening...",
-    arrieroLoco: "Arriero Pro",
-    favoritesTitle: "Your Treasures",
-    systemInstruction: "You are Arriero Pro, the ultimate guide to Antioquia. You are an expert guide who uses local 'Paisa' terms but with absolute technical precision.",
-    pulseTitle: "REGIONAL PULSE",
-    pulseItems: ["Southwest Road: Clear 🟢", "Jardin Weather: 72°F Sunny ☀️", "East Tunnel: Operating ✅"],
-    stats: [{ label: "Towns", value: "125" }, { label: "Local Impact", value: "100%" }, { label: "Tactical AI", value: "Realtime" }],
-    offerCards: [
-      { icon: Target, title: "Real-time Intel", desc: "We don't use old data. We live-check bus prices, hotels, and current weather." },
-      { icon: Truck, title: "Field Logistics", desc: "We know where buses leave from, their cost, and which terminal is best for you." },
-      { icon: Coffee, title: "Authentic Culture", desc: "We teach you local slang and help you find the spots others don't know." },
-      { icon: ShieldCheck, title: "Social Impact", desc: "Our recommendations prioritize local farmers and small regional businesses." }
-    ]
-  },
-  pt: {
-    heroTitle: "ANTIOQUIA",
-    heroSubtitle: "ARRIERO PRO",
-    heroDescription: "Indexamos em tempo real os 125 municípios. Somos Arriero Pro: inteligência tática, dados de campo e a garra do campo.",
-    searchPlaceholder: "Qual cidade buscamos, mijo?",
-    searchBtn: "BUSCAR",
-    backBtn: "VOLTAR",
-    exploreTitle: "Explorar",
-    exploreSubtitle: "Sub-regiões e tesouros locais.",
-    offerTitle: "PROPOSTA TÁTICA",
-    offerSubtitle: "O que nos torna o concierge definitivo da região.",
-    dichosTitle: "Ditados",
-    dichosSubtitle: "Fale como um arriero autêntico.",
-    indexing: "Buscando Destino",
-    indexingMijo: ["Consultando dados táticos...", "Rastreando preços...", "Verificando vias...", "Perguntando aos arrieros..."],
-    listening: "Ouvindo...",
-    arrieroLoco: "Arriero Pro",
-    favoritesTitle: "Seus Tesouros",
-    systemInstruction: "Você é o Arriero Pro, o guia definitivo de Antioquia. Você é um guia especializado que usa termos locais 'Paisa', mas com absoluta precisão técnica.",
-    pulseTitle: "PULSO REGIONAL",
-    pulseItems: ["Via ao Sudoeste: Liberada 🟢", "Clima em Jardín: 22°C Ensolarado ☀️", "Túnel do Oriente: Operando ✅"],
-    stats: [{ label: "Municípios", value: "125" }, { label: "Impacto Local", value: "100%" }, { label: "IA Tática", value: "Tempo Real" }],
-    offerCards: [
-      { icon: Target, title: "Inteligência Real", desc: "Não usamos dados antigos. Consultamos ao vivo preços de ônibus, hotéis e clima." },
-      { icon: Truck, title: "Logística de Campo", desc: "Sabemos de onde saem os ônibus, quanto custam e qual terminal é melhor para você." },
-      { icon: Coffee, title: "Cultura Autêntica", desc: "Ensinamos você a falar como um local e a encontrar os lugares que outros não conhecem." },
-      { icon: ShieldCheck, title: "Impacto Social", desc: "Nossas recomendações priorizam o produtor rural e o pequeno empreendedor local." }
-    ]
-  }
-};
 
 export function App() {
   const [state, setState] = useState<AppState & { favorites: string[] }>({
@@ -268,11 +177,11 @@ export function App() {
                   onClick={() => setState(s => ({...s, activeTab: tab}))}
                   className={`px-6 py-2 rounded-full text-[10px] font-black uppercase tracking-widest transition-all ${state.activeTab === tab ? 'bg-slate-900 text-white shadow-lg' : 'text-slate-400 hover:text-slate-600'}`}
                 >
-                  {tab}
+                  {t.navigation.tabs[tab]}
                 </button>
               ))}
            </div>
-           <button onClick={() => setShowFavorites(!showFavorites)} className={`p-3 md:p-3.5 rounded-full border transition-all ${showFavorites ? 'bg-red-500 text-white border-red-500 shadow-lg' : 'bg-white border-slate-200 text-slate-400 hover:border-red-100'}`}>
+           <button onClick={() => setShowFavorites(!showFavorites)} className={`p-4 md:p-4 rounded-full border transition-all ${showFavorites ? 'bg-red-500 text-white border-red-500 shadow-lg' : 'bg-white border-slate-200 text-slate-400 hover:border-red-100'}`}>
              <Heart size={20} fill={showFavorites ? "white" : "none"} />
            </button>
         </div>
@@ -280,7 +189,7 @@ export function App() {
 
       <main className="flex-1 max-w-7xl mx-auto w-full px-4 md:px-8">
         <AnimatePresence mode="wait">
-          {state.activeTab === 'home' && !state.cargando && (
+          {state.activeTab === 'home' && !state.cargando && !showFavorites && (
              <motion.div key="home" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="space-y-24 md:space-y-48 py-12 md:py-24">
                 <div className="text-center space-y-16">
                   <div className="space-y-8 px-4">
@@ -311,7 +220,6 @@ export function App() {
                   </div>
                 </div>
 
-                {/* NUEVA SECCIÓN: PROPUESTA TÁCTICA (QUÉ OFRECEMOS) */}
                 <section className="px-4">
                    <SectionHeader title={t.offerTitle} subtitle={t.offerSubtitle} icon={ShieldCheck} />
                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
@@ -352,7 +260,7 @@ export function App() {
              </motion.div>
           )}
 
-          {state.activeTab === 'explore' && !state.cargando && (
+          {(state.activeTab === 'explore' || showFavorites) && !state.cargando && (
             <motion.div key="results" initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="space-y-12 py-12 md:py-20">
                <div className="space-y-4 px-4">
                   <button onClick={handleReset} className="flex items-center gap-3 text-paisa-emerald font-black uppercase text-[12px] tracking-widest hover:translate-x-[-4px] transition-transform">
@@ -362,7 +270,7 @@ export function App() {
                     {showFavorites ? t.favoritesTitle : `${t.exploreTitle}: ${state.busqueda}`}
                   </h2>
                </div>
-               <div className="space-y-16">
+               <div className="grid grid-cols-1 gap-16">
                   {displayedResults.map((item, i) => (
                     <PlaceCard 
                       key={i} 
@@ -385,7 +293,9 @@ export function App() {
 
           {state.cargando && (
             <div key="loading" className="flex flex-col items-center justify-center py-40 gap-8">
-               <Loader2 className="animate-spin text-paisa-emerald" size={100} strokeWidth={1.5} />
+               <div className="relative">
+                  <Loader2 className="animate-spin text-paisa-emerald" size={100} strokeWidth={1.5} />
+               </div>
                <div className="text-center space-y-4">
                   <h3 className="text-4xl md:text-6xl font-black uppercase tracking-tighter text-slate-950">{t.indexing}</h3>
                   <AnimatePresence mode="wait">
@@ -403,14 +313,15 @@ export function App() {
         onReset={handleReset} 
         isLiveActive={isLiveActive} 
         onLiveToggle={toggleLive} 
-        hasResults={state.unifiedResults.length > 0} 
+        hasResults={state.unifiedResults.length > 0 || state.activeTab === 'explore'} 
         label={isLiveActive ? t.listening : t.arrieroLoco}
         currentLang={state.language}
         onLangChange={(l) => setState(s => ({...s, language: l}))}
         isAccessibilityActive={state.accessibilityMode}
         onAccessibilityToggle={() => setState(s => ({...s, accessibilityMode: !s.accessibilityMode}))}
+        t={t.navigation}
       />
-      <Footer />
+      <Footer t={t.footer} />
     </div>
   );
 }

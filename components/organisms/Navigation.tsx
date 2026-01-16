@@ -14,6 +14,7 @@ interface NavigationProps {
   onLangChange: (lang: SupportedLang) => void;
   isAccessibilityActive: boolean;
   onAccessibilityToggle: () => void;
+  t: any;
 }
 
 const LANGUAGES: { code: SupportedLang; label: string; flag: string }[] = [
@@ -24,9 +25,10 @@ const LANGUAGES: { code: SupportedLang; label: string; flag: string }[] = [
 
 export const Navigation: React.FC<NavigationProps> = ({ 
   onReset, isLiveActive, onLiveToggle, hasResults, label,
-  currentLang, onLangChange, isAccessibilityActive, onAccessibilityToggle
+  currentLang, onLangChange, isAccessibilityActive, onAccessibilityToggle, t
 }) => {
   const [showLangMenu, setShowLangMenu] = useState(false);
+  const labels = t || { accessibility: "Modo Accesibilidad", reset: "Reiniciar búsqueda" };
 
   return (
     <nav className="fixed bottom-10 left-1/2 -translate-x-1/2 flex items-center gap-4 z-[400] w-max max-w-[95vw]">
@@ -37,12 +39,12 @@ export const Navigation: React.FC<NavigationProps> = ({
         <button 
           onClick={onAccessibilityToggle}
           className={`h-12 w-12 rounded-full flex items-center justify-center transition-all duration-300 ${isAccessibilityActive ? 'bg-paisa-gold text-slate-900 shadow-lg' : 'text-white/40 hover:text-white hover:bg-white/5'}`}
-          title="Modo Accesibilidad"
+          title={labels.accessibility}
         >
           <Accessibility size={20} />
         </button>
 
-        {/* Selector de Idiomas - Refinado para verse "Real" */}
+        {/* Selector de Idiomas */}
         <div className="relative">
           <button 
             onClick={() => setShowLangMenu(!showLangMenu)}
@@ -96,6 +98,7 @@ export const Navigation: React.FC<NavigationProps> = ({
               animate={{ opacity: 1, scale: 1 }}
               exit={{ opacity: 0, scale: 0.5 }}
               onClick={onReset}
+              title={labels.reset}
               className="relative flex items-center justify-center h-12 w-12 rounded-full transition-all duration-500 text-white/40 hover:text-white hover:bg-white/5 active:scale-90"
             >
               <RotateCcw size={20} />

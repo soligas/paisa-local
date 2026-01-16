@@ -2,14 +2,13 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
-  MapPin, Clock, Heart, Bus, Wallet, ShieldCheck, Zap, 
-  Maximize2, Minimize2, Utensils, Users, Sun, Accessibility, 
-  Loader2, Map, Play, Instagram, MessageSquare, ExternalLink, Info,
-  Coffee, Sparkles, Navigation, Cloud, Target, Compass, Quote, Award,
-  Truck, ArrowRight, RotateCcw, Activity, AlertTriangle
+  Heart, Bus, ShieldCheck, Sun, Accessibility, 
+  Loader2, Utensils, Coffee, Sparkles, Navigation, 
+  Wallet, ExternalLink, Info, Users, ChevronDown, 
+  CheckCircle, Map, Play, Instagram, ArrowRight, AlertTriangle, Clock,
+  Target, Truck, Activity, Compass
 } from 'lucide-react';
 import { PlaceData, SupportedLang } from '../types';
-import { Badge } from './atoms/Badge';
 import { SafeImage } from './atoms/SafeImage';
 import { generateSmartItinerary } from '../services/geminiService';
 
@@ -22,7 +21,6 @@ interface PlaceCardProps {
 }
 
 export const PlaceCard: React.FC<PlaceCardProps> = ({ data, lang, i18n, isFavorite, onToggleFavorite }) => {
-  const [isExpanded, setIsExpanded] = useState(false);
   const [itinerary, setItinerary] = useState<any>(null);
   const [loadingItinerary, setLoadingItinerary] = useState(false);
 
@@ -31,336 +29,275 @@ export const PlaceCard: React.FC<PlaceCardProps> = ({ data, lang, i18n, isFavori
   const handleGenerateItinerary = async () => {
     setLoadingItinerary(true);
     const result = await generateSmartItinerary(data.titulo, lang);
-    if (result) {
-      setItinerary(result);
-    }
+    if (result) setItinerary(result);
     setLoadingItinerary(false);
   };
 
-  const quickActions = [
+  const stats = [
+    { icon: Sun, label: t.climate, val: data.weather?.temp ? `${data.weather.temp}°C` : '22°C', color: 'text-amber-600' },
+    { icon: Accessibility, label: t.accessibility, val: `${data.accessibility?.score || 90}%`, color: 'text-emerald-700' },
+    { icon: ShieldCheck, label: t.security, val: data.security?.status || 'Seguro', color: 'text-blue-600' },
+    { icon: Bus, label: t.terminal, val: data.terminalInfo?.split(' ').pop() || 'Sur', color: 'text-slate-900' }
+  ];
+
+  // Enlaces dinámicos reales para la cuadrícula de utilidades
+  const utilityGrid = [
     { 
-      label: t?.quickMap || "Mapa", 
       icon: Map, 
-      color: 'text-blue-600',
-      bg: 'bg-blue-500/5',
-      href: `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(data.titulo + " Antioquia")}`
+      label: 'MAPA', 
+      color: 'bg-emerald-600', 
+      href: `https://www.google.com/maps/search/${encodeURIComponent(data.titulo + ", Antioquia")}` 
     },
     { 
-      label: t?.quickVideo || "Video", 
       icon: Play, 
-      color: 'text-red-600',
-      bg: 'bg-red-500/5',
-      href: `https://www.youtube.com/results?search_query=${encodeURIComponent("Guia de viaje " + data.titulo + " Antioquia")}`
+      label: 'VIDEO', 
+      color: 'text-red-500', 
+      href: `https://www.youtube.com/results?search_query=${encodeURIComponent(data.titulo + " Antioquia turismo")}` 
     },
     { 
-      label: t?.quickFood || "Comida", 
       icon: Utensils, 
-      color: 'text-emerald-600',
-      bg: 'bg-emerald-500/5',
-      href: `https://www.google.com/search?q=${encodeURIComponent("Donde comer en " + data.titulo + " Antioquia")}`
+      label: 'COMIDA', 
+      color: 'text-emerald-500', 
+      href: `https://www.google.com/search?q=${encodeURIComponent("mejores restaurantes en " + data.titulo + " Antioquia")}` 
     },
     { 
-      label: t?.quickSocial || "Explorar", 
       icon: Instagram, 
-      color: 'text-purple-600',
-      bg: 'bg-purple-500/5',
-      href: `https://www.instagram.com/explore/tags/${data.titulo.toLowerCase().replace(/\s+/g, '')}/`
+      label: 'EXPLORAR', 
+      color: 'text-purple-500', 
+      href: `https://www.instagram.com/explore/tags/${encodeURIComponent(data.titulo.toLowerCase().replace(/\s/g, ''))}/` 
     }
   ];
 
-  const tipLabels = t.tipLabels || {};
-
-  const arrieroTips = [
-    { label: tipLabels.food || 'Sazón Local', val: data.foodTip || "Pida el plato del día, mijo, que eso no tiene pierde.", icon: Utensils, color: 'text-orange-500', bg: 'bg-orange-500/10' },
-    { label: tipLabels.culture || 'Cultura', val: data.cultureTip || "Salude a todo el mundo que aquí somos muy amables.", icon: Sparkles, color: 'text-paisa-gold', bg: 'bg-paisa-gold/10' },
-    { label: tipLabels.logistics || 'Vía/Ruta', val: data.logisticsTip || "Salga tempranito para que rinda el día.", icon: Navigation, color: 'text-blue-500', bg: 'bg-blue-500/10' },
-    { label: tipLabels.people || 'El Parche', val: data.peopleTip || "Váyase para la plaza que allá es donde está el ambiente.", icon: Users, color: 'text-emerald-500', bg: 'bg-emerald-500/10' },
-    { label: tipLabels.weather || 'Clima', val: "Cargue sombrilla que el clima de la montaña es traicionero.", icon: Cloud, color: 'text-sky-500', bg: 'bg-sky-500/10' },
-    { label: tipLabels.tactical || 'Táctico', val: "Tenga efectivo a la mano que el internet a veces falla.", icon: Target, color: 'text-rose-500', bg: 'bg-rose-500/10' }
+  const tacticalTips = [
+    { icon: Utensils, label: t.tips?.sazon, val: data.foodTip || "Pida el plato del día, mijo." },
+    { icon: Sparkles, label: t.tips?.cultura, val: data.cultureTip || "Salude a todo el mundo." },
+    { icon: Navigation, label: t.tips?.ruta, val: data.logisticsTip || "Salga tempranito." },
+    { icon: Users, label: t.tips?.parche, val: data.peopleTip || "Váyase para la plaza." },
+    { icon: Clock, label: t.tips?.clima, val: "Cargue sombrilla mijo." },
+    { icon: Target, label: t.tips?.tactico, val: "Tenga efectivo a la mano." }
   ];
 
   return (
-    <motion.div layout className="w-full">
-      <AnimatePresence mode="wait">
-        {!isExpanded ? (
-          <motion.div 
-            key="compact" initial={{ opacity: 0 }} animate={{ opacity: 1 }}
-            className="flex flex-col sm:flex-row items-center gap-8 p-8 rounded-[40px] border border-slate-100 bg-white shadow-xl hover:shadow-2xl transition-all cursor-pointer group"
-            onClick={() => setIsExpanded(true)}
-          >
-            <div className="w-24 h-24 rounded-3xl overflow-hidden shadow-lg group-hover:scale-105 transition-transform duration-500">
-              <SafeImage src={data.imagen} alt={data.titulo} region={data.region} className="w-full h-full object-cover" />
-            </div>
-            <div className="flex-1 text-center sm:text-left">
-              <div className="flex flex-wrap items-center justify-center sm:justify-start gap-3 mb-2">
-                 <h3 className="text-3xl font-black uppercase tracking-tighter text-slate-900">{data.titulo}</h3>
-                 <Badge color="emerald" className="scale-90 origin-left">{data.region}</Badge>
+    <motion.div layout className="w-full max-w-4xl mx-auto px-4 py-12 space-y-12">
+      <div className="rounded-[64px] bg-white shadow-2xl border border-slate-100 overflow-hidden flex flex-col md:flex-row relative min-h-[600px]">
+        {/* Lado Izquierdo (Hero) */}
+        <div className="w-full md:w-[40%] bg-[#FEF9C3]/40 relative p-12 flex flex-col items-center justify-center text-center space-y-8">
+           <div className="relative">
+              <div className="w-32 h-32 rounded-full bg-white shadow-xl flex items-center justify-center">
+                 <Coffee size={48} className="text-slate-700" strokeWidth={1.5} />
               </div>
-              <p className="text-slate-500 font-serif italic line-clamp-1 text-lg">"{data.descripcion}"</p>
-            </div>
-            <div className="p-5 rounded-full bg-slate-50 text-slate-300 group-hover:bg-paisa-emerald group-hover:text-white transition-all">
-              <Maximize2 size={24} strokeWidth={1.5} />
-            </div>
-          </motion.div>
-        ) : (
-          <motion.div key="full" initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="space-y-12">
-            
-            <section className="rounded-[64px] overflow-hidden shadow-2xl border border-slate-100 flex flex-col md:flex-row bg-white">
-              <div className="w-full md:w-5/12 h-[400px] md:h-auto min-h-[400px] relative">
-                 <SafeImage src={data.imagen} alt={data.titulo} region={data.region} className="absolute inset-0 w-full h-full object-cover" />
+              <div className="absolute -top-2 -right-2 w-8 h-8 bg-emerald-500 rounded-full flex items-center justify-center text-white shadow-lg border-2 border-white">
+                <CheckCircle size={16} strokeWidth={3} />
               </div>
-              <div className="flex-1 p-8 md:p-12 lg:p-20 space-y-10">
-                 <div className="flex justify-between items-start">
-                    <Badge color="gold" className="text-lg px-6 py-2 shadow-md">{data.region}</Badge>
-                    <div className="flex gap-4">
-                      <button onClick={() => setIsExpanded(false)} className="p-4 rounded-full bg-slate-50 text-slate-400 hover:bg-slate-100 transition-all border border-slate-100"><Minimize2 size={24} strokeWidth={1.5} /></button>
-                      <button onClick={() => onToggleFavorite(data.titulo)} className={`p-4 rounded-full border transition-all ${isFavorite ? 'bg-red-500 text-white shadow-lg border-red-500' : 'text-red-300 bg-white border-slate-100 hover:border-red-200'}`}><Heart size={24} fill={isFavorite ? 'white' : 'none'} strokeWidth={1.5} /></button>
-                    </div>
-                 </div>
-                 <div className="space-y-4">
-                    <h2 className="text-6xl md:text-8xl lg:text-9xl font-black uppercase tracking-tighter leading-[0.85] text-slate-950">{data.titulo}</h2>
-                    <p className="text-slate-600 text-2xl md:text-4xl font-serif italic max-w-2xl leading-snug">"{data.descripcion}"</p>
-                 </div>
+           </div>
+           
+           <div className="space-y-2">
+              <span className="text-[10px] font-black uppercase tracking-[0.4em] text-slate-400">{data.region.toUpperCase()}</span>
+              <h1 className="text-6xl md:text-8xl font-black uppercase tracking-tighter text-slate-950 leading-none">{data.titulo}</h1>
+           </div>
 
-                 <div className="grid grid-cols-2 lg:grid-cols-4 gap-8 pt-10 border-t border-slate-100">
-                    {[
-                      { icon: Sun, label: t.weather || 'CLIMA', val: '22°C', col: 'text-amber-700' },
-                      { icon: Accessibility, label: t.accessibility || 'ACCESIBILIDAD', val: `${data.accessibility?.score || 90}%`, col: 'text-emerald-700' },
-                      { icon: ShieldCheck, label: 'SEGURIDAD', val: 'Seguro', col: 'text-blue-700' },
-                      { icon: Bus, label: 'TERMINAL', val: data.terminalInfo?.split(' ').pop() || 'Sur', col: 'text-slate-900' }
-                    ].map((st, idx) => (
-                      <div key={idx} className="space-y-2">
-                        <span className="text-[10px] font-black uppercase text-slate-400 tracking-widest">{st.label}</span>
-                        <div className={`flex items-center gap-2 ${st.col}`}><st.icon size={20} strokeWidth={2} /><span className="text-2xl font-black">{st.val}</span></div>
-                      </div>
-                    ))}
-                 </div>
-
-                 <div className="space-y-6">
-                    <button 
-                      onClick={handleGenerateItinerary} 
-                      disabled={loadingItinerary} 
-                      className="w-full h-24 px-12 rounded-[40px] bg-paisa-emerald text-white flex flex-col items-center justify-center gap-1 text-center shadow-2xl active:scale-95 transition-all overflow-hidden relative group"
-                    >
-                        {loadingItinerary ? (
-                          <div className="flex items-center gap-4">
-                            <Loader2 className="animate-spin" size={24} />
-                            <span className="text-[14px] font-black uppercase tracking-widest">Indexando...</span>
-                          </div>
-                        ) : (
-                          <>
-                            <span className="text-[16px] font-black uppercase tracking-widest leading-none">
-                              {itinerary ? "REFRESCAR ITINERARIO" : t.itineraryIA || "GENERAR ITINERARIO"}
-                            </span>
-                            {!itinerary && (
-                              <span className="text-[9px] font-medium opacity-70 uppercase tracking-widest">
-                                {t.itinerarySubtitle || "Recomendaciones del horario ideal para viajar"}
-                              </span>
-                            )}
-                          </>
-                        )}
-                    </button>
-
-                    <AnimatePresence>
-                        {itinerary && (
-                            <motion.div 
-                                initial={{ opacity: 0, height: 0 }} 
-                                animate={{ opacity: 1, height: 'auto' }}
-                                exit={{ opacity: 0, height: 0 }}
-                                className="bg-slate-50 rounded-[40px] p-8 md:p-10 space-y-8 border border-slate-200 overflow-hidden shadow-inner"
-                            >
-                                <div className="flex items-center justify-between border-b border-slate-200 pb-4">
-                                    <div className="flex items-center gap-3">
-                                      <Clock size={18} className="text-paisa-emerald" strokeWidth={2.5} />
-                                      <span className="text-[11px] font-black uppercase tracking-[0.2em] text-slate-900">
-                                        {t.itinerarySubtitle || "RECOMENDACIONES DEL HORARIO IDEAL PARA VIAJAR"}
-                                      </span>
-                                    </div>
-                                    <Badge color="emerald" className="shadow-sm">Verificado</Badge>
-                                </div>
-                                
-                                <div className="space-y-12">
-                                  {Object.entries(itinerary).map(([time, val]: [string, any], idx) => (
-                                      <motion.div 
-                                          key={time} 
-                                          initial={{ opacity: 0, x: -10 }} 
-                                          animate={{ opacity: 1, x: 0 }}
-                                          transition={{ delay: idx * 0.1 }}
-                                          className="flex flex-col md:flex-row gap-4 md:gap-10 items-start group"
-                                      >
-                                          <div className="w-full md:w-32 text-[12px] font-black uppercase text-paisa-emerald shrink-0 pt-1 border-b md:border-none border-emerald-100 pb-2 md:pb-0">
-                                              {time}
-                                          </div>
-                                          <div className="flex-1 space-y-4">
-                                              <p className="text-2xl md:text-4xl font-black text-slate-950 leading-tight">
-                                                  {typeof val === 'string' ? val : val.activity}
-                                              </p>
-                                              {val.tip && (
-                                                  <div className="flex items-start gap-4 text-sm italic text-slate-700 bg-white p-5 rounded-3xl w-full md:w-fit border border-slate-200 shadow-sm">
-                                                      <Info size={16} className="text-paisa-gold shrink-0 mt-0.5" strokeWidth={2.5} />
-                                                      <span className="leading-relaxed font-medium">{val.tip}</span>
-                                                  </div>
-                                              )}
-                                          </div>
-                                      </motion.div>
-                                  ))}
-                                </div>
-                            </motion.div>
-                        )}
-                    </AnimatePresence>
-                 </div>
+           <div className="flex flex-col items-center gap-4">
+              <div className="w-20 h-1.5 bg-paisa-gold/40 rounded-full" />
+              <div className="flex items-center gap-2 text-paisa-gold">
+                <Sparkles size={14} />
+                <span className="text-[11px] font-black uppercase tracking-[0.3em]">TIERRA CAFETERA</span>
               </div>
-            </section>
+           </div>
+           
+           <div className="absolute bottom-10 left-10 opacity-20"><Navigation size={24} /></div>
+        </div>
 
-            {/* Acciones Rápidas */}
-            <section className="grid grid-cols-2 md:grid-cols-4 gap-6">
-               {quickActions.map((action, idx) => (
-                 <motion.a 
-                    key={idx} href={action.href} target="_blank" rel="noopener noreferrer" whileHover={{ y: -10 }} 
-                    className="flex flex-col items-center justify-center gap-6 p-8 md:p-12 rounded-[48px] md:rounded-[64px] bg-white border border-slate-100 shadow-xl group no-underline transition-all relative overflow-hidden"
-                 >
-                   <div className={`absolute inset-0 ${action.bg} opacity-20 pointer-events-none group-hover:scale-110 transition-transform duration-700`} />
-                   
-                   <div className={`relative z-10 p-6 rounded-[32px] bg-white ${action.color} group-hover:bg-paisa-emerald group-hover:text-white transition-all shadow-lg border border-slate-50`}>
-                      <action.icon size={44} strokeWidth={1} />
+        {/* Lado Derecho (Stats & Action) */}
+        <div className="flex-1 p-12 md:p-20 flex flex-col justify-between bg-white space-y-12">
+           <div className="space-y-6">
+              <h2 className="text-8xl md:text-[10rem] font-black uppercase tracking-tighter text-slate-950 leading-[0.8]">
+                 {data.titulo}
+              </h2>
+              <p className="text-3xl font-serif italic text-slate-300">"{data.descripcion || '...'}"</p>
+           </div>
+
+           <div className="w-full h-px bg-slate-100" />
+
+           {/* Stats Grid */}
+           <div className="grid grid-cols-2 gap-x-16 gap-y-12">
+              {stats.map((st, i) => (
+                <div key={i} className="space-y-3">
+                   <span className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-300">{st.label}</span>
+                   <div className={`flex items-center gap-4 ${st.color}`}>
+                      <st.icon size={28} strokeWidth={2.5} />
+                      <span className="text-4xl font-black tracking-tighter uppercase">{st.val}</span>
                    </div>
-                   <span className="relative z-10 text-[12px] font-black uppercase tracking-[0.2em] text-slate-950 group-hover:text-paisa-emerald transition-colors">{action.label}</span>
-                 </motion.a>
-               ))}
-            </section>
+                </div>
+              ))}
+           </div>
 
-            {/* Logística y Presupuesto */}
-            <section className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-               {/* Logística Detallada */}
-               <div className="p-10 md:p-16 rounded-[64px] bg-[#F4F9F6] border border-emerald-100 flex flex-col gap-12 shadow-xl">
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-4 text-emerald-800">
-                      <Truck size={24} strokeWidth={2.5} /> 
-                      <span className="text-[12px] font-black uppercase tracking-[0.3em]">{t.logisticsTitle || "¿CÓMO LLEGAR?"}</span>
+           {/* Botón Principal */}
+           <div className="pt-8">
+              <button 
+                onClick={handleGenerateItinerary}
+                disabled={loadingItinerary}
+                className="w-full h-32 rounded-[64px] bg-[#2D7A4C] text-white flex flex-col items-center justify-center gap-1 shadow-2xl hover:brightness-110 active:scale-95 transition-all"
+              >
+                {loadingItinerary ? <Loader2 className="animate-spin" size={32} /> : (
+                  <>
+                    <span className="text-2xl font-black uppercase tracking-[0.1em]">{t.btnItinerary}</span>
+                    <span className="text-[10px] font-bold opacity-60 uppercase tracking-widest">{t.btnItinerarySub}</span>
+                  </>
+                )}
+              </button>
+           </div>
+        </div>
+      </div>
+
+      {/* Grid de Accesos Rápidos */}
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
+         {utilityGrid.map((item, i) => (
+           <a 
+             key={i} 
+             href={item.href} 
+             target="_blank" 
+             rel="noopener noreferrer"
+             className="p-8 rounded-[48px] bg-white border border-slate-100 shadow-[0_20px_50px_rgba(0,0,0,0.05)] flex flex-col items-center justify-center gap-6 group hover:translate-y-[-8px] transition-all"
+           >
+              <div className={`w-20 h-20 rounded-[32px] flex items-center justify-center shadow-lg transition-transform group-hover:scale-110 ${item.color.startsWith('bg') ? item.color : 'bg-white border border-slate-100'}`}>
+                 <item.icon size={32} className={!item.color.startsWith('bg') ? item.color : 'text-white'} />
+              </div>
+              <span className="text-[11px] font-black uppercase tracking-[0.3em] text-slate-400 group-hover:text-paisa-emerald">{item.label}</span>
+           </a>
+         ))}
+      </div>
+
+      {/* Sección "¿Cómo llegar?" */}
+      <div className="rounded-[64px] bg-[#F7FBF9] p-12 md:p-16 border border-[#EAF5EF] space-y-10 relative overflow-hidden">
+         <div className="flex justify-between items-center">
+            <div className="flex items-center gap-5">
+               <div className="w-12 h-12 rounded-2xl bg-[#EAF5EF] text-paisa-emerald flex items-center justify-center">
+                  <Truck size={24} />
+               </div>
+               <h3 className="text-2xl font-black uppercase tracking-widest text-[#1A4731]">{t.howToGet}</h3>
+            </div>
+            <div className="px-6 py-2 rounded-full bg-[#3B82F6] text-white text-[10px] font-black uppercase tracking-widest shadow-lg">
+               {t.realTime}
+            </div>
+         </div>
+
+         <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+            <a 
+              href="https://terminalesmedellin.com" target="_blank" rel="noopener noreferrer"
+              className="p-10 rounded-[48px] bg-white shadow-[0_20px_80px_rgba(0,0,0,0.08)] flex flex-col items-center justify-center text-center space-y-4 hover:scale-[1.02] transition-transform"
+            >
+               <span className="text-[10px] font-black uppercase tracking-widest text-paisa-gold">{t.leavesFrom}</span>
+               <h4 className="text-3xl font-black uppercase tracking-tighter text-slate-900">{data.terminalInfo || 'TERMINAL DEL SUR'}</h4>
+            </a>
+            <div className="p-10 rounded-[48px] bg-white shadow-[0_20px_80px_rgba(0,0,0,0.08)] flex flex-col items-center justify-center text-center space-y-4">
+               <span className="text-[10px] font-black uppercase tracking-widest text-paisa-emerald">{t.duration}</span>
+               <h4 className="text-3xl font-black uppercase tracking-tighter text-slate-900">{data.tiempoDesdeMedellin || '2.5 Horas'}</h4>
+            </div>
+         </div>
+
+         <div className="rounded-[48px] bg-[#1A242F] p-10 flex flex-col md:flex-row items-center gap-10">
+            <div className="w-16 h-16 rounded-2xl bg-[#2D7A4C]/20 border border-[#2D7A4C]/40 text-paisa-emerald flex items-center justify-center shrink-0">
+               <AlertTriangle size={32} />
+            </div>
+            <div className="flex-1 space-y-2 text-center md:text-left">
+               <span className="text-[10px] font-black uppercase tracking-widest text-slate-500">{t.roadStatus}</span>
+               <p className="text-white text-2xl font-serif italic">"{data.viaEstado || 'Vía pavimentada, sin cierres reportados.'}"</p>
+            </div>
+            <a 
+              href="https://terminalesmedellin.com" target="_blank" rel="noopener noreferrer"
+              className="px-12 py-6 rounded-full bg-[#D4A574] text-slate-950 font-black uppercase text-[11px] tracking-widest shadow-xl flex items-center gap-4 hover:brightness-110 active:scale-95 transition-all"
+            >
+               {t.verTerminales} <ArrowRight size={18} />
+            </a>
+         </div>
+      </div>
+
+      {/* Sección "Presupuesto Estimado" */}
+      <div className="rounded-[64px] bg-[#FFFBF0] p-12 md:p-16 border border-[#FEF3C7] space-y-10">
+         <div className="flex items-center gap-5 justify-center">
+            <Wallet size={24} className="text-paisa-gold" />
+            <h3 className="text-xl font-black uppercase tracking-[0.3em] text-[#92400E]">{t.estimatedBudget}</h3>
+         </div>
+         <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+            <a 
+              href="https://terminalesmedellin.com" target="_blank" rel="noopener noreferrer"
+              className="p-12 rounded-[56px] bg-white shadow-[0_30px_100px_rgba(0,0,0,0.1)] border border-slate-50 flex flex-col items-center justify-center space-y-6 hover:scale-[1.02] transition-transform"
+            >
+               <span className="text-[10px] font-black uppercase tracking-[0.2em] text-paisa-gold">{t.pasaje}</span>
+               <h4 className="text-7xl font-black tracking-tighter text-slate-900">${(data.budget?.busTicket || 32000).toLocaleString()}</h4>
+            </a>
+            <a 
+              href={`https://www.google.com/search?q=${encodeURIComponent("donde almorzar en " + data.titulo + " Antioquia precios")}`}
+              target="_blank" rel="noopener noreferrer"
+              className="p-12 rounded-[56px] bg-white shadow-[0_30px_100px_rgba(0,0,0,0.1)] border border-slate-50 flex flex-col items-center justify-center space-y-6 hover:scale-[1.02] transition-transform"
+            >
+               <span className="text-[10px] font-black uppercase tracking-[0.2em] text-paisa-gold">{t.almuerzo}</span>
+               <h4 className="text-7xl font-black tracking-tighter text-slate-900">${(data.budget?.averageMeal || 25000).toLocaleString()}</h4>
+            </a>
+         </div>
+      </div>
+
+      {/* Sección "Guía del Arriero" */}
+      <div className="rounded-[64px] bg-[#1a4731] p-12 md:p-24 space-y-16 relative overflow-hidden text-center">
+         <div className="absolute top-0 left-0 w-full h-full opacity-5 pointer-events-none flex items-center justify-center">
+            <Activity size={400} />
+         </div>
+
+         <div className="space-y-8 relative z-10">
+            <div className="flex items-center gap-4 justify-center">
+               <Compass size={24} className="text-paisa-gold" />
+               <h3 className="text-[12px] font-black uppercase tracking-[0.5em] text-[#D4A574]">{t.arrieroGuide}</h3>
+            </div>
+            <div className="flex justify-center">
+               <div className="w-24 h-24 rounded-full bg-[#D4A574]/20 flex items-center justify-center border border-[#D4A574]/40">
+                  <ShieldCheck size={40} className="text-paisa-gold" />
+               </div>
+            </div>
+            <p className="text-white text-5xl md:text-7xl font-serif italic max-w-4xl mx-auto leading-tight">
+               "{t.quote}"
+            </p>
+         </div>
+
+         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8 relative z-10">
+            {tacticalTips.map((tip, i) => (
+              <div key={i} className="p-10 rounded-[56px] bg-white/10 border border-white/10 backdrop-blur-md flex flex-col items-start text-left space-y-6 hover:bg-white/20 transition-all">
+                 <div className="flex items-center gap-5">
+                    <div className="w-14 h-14 rounded-2xl bg-white/10 text-paisa-gold flex items-center justify-center">
+                       <tip.icon size={24} />
                     </div>
-                    <Badge color="blue" className="px-4 py-2">Real Time</Badge>
-                  </div>
+                    <span className="text-[10px] font-black uppercase tracking-[0.3em] text-white/40">{tip.label}</span>
+                 </div>
+                 <p className="text-white text-2xl font-serif italic leading-relaxed">
+                    "{tip.val}"
+                 </p>
+              </div>
+            ))}
+         </div>
+         
+         <div className="pt-10">
+            <a 
+              href={data.groundingLinks?.[0]?.uri || `https://www.google.com/search?q=${encodeURIComponent(data.titulo + " Antioquia turismo guia oficial")}`} 
+              target="_blank" rel="noopener noreferrer"
+              className="px-12 py-6 rounded-full bg-[#1A242F] text-white font-black uppercase text-[10px] tracking-widest shadow-2xl hover:bg-slate-800 transition-all inline-flex items-center gap-3"
+            >
+               {t.btnVerMas} <ExternalLink size={14} />
+            </a>
+         </div>
+      </div>
 
-                  <div className="grid grid-cols-2 gap-4">
-                     <div className="p-8 bg-white rounded-[40px] border border-emerald-50 shadow-sm text-center space-y-2">
-                        <span className="text-[10px] font-black text-emerald-600 uppercase opacity-60 tracking-widest">{t.departurePoint || "SALE DE"}</span>
-                        <p className="text-2xl font-black text-slate-900 uppercase tracking-tighter">{data.terminalInfo || "Terminal Sur"}</p>
-                     </div>
-                     <div className="p-8 bg-white rounded-[40px] border border-emerald-50 shadow-sm text-center space-y-2">
-                        <span className="text-[10px] font-black text-emerald-600 uppercase opacity-60 tracking-widest">{t.travelTime || "DURACIÓN"}</span>
-                        <p className="text-2xl font-black text-slate-900 tracking-tighter">{data.tiempoDesdeMedellin || "2.5 Horas"}</p>
-                     </div>
-                  </div>
-
-                  {/* Estado de la Vía */}
-                  <div className="p-10 bg-[#1A242F] rounded-[48px] border border-white/5 flex flex-col gap-8 shadow-2xl relative overflow-hidden">
-                     <div className="flex items-center gap-5 relative z-10">
-                        <div className="p-4 bg-emerald-500/20 rounded-2xl text-emerald-400">
-                           <AlertTriangle size={24} strokeWidth={2.5} />
-                        </div>
-                        <div className="space-y-1">
-                           <span className="text-[10px] font-black uppercase text-white/40 tracking-[0.2em]">{t.roadStatus || "ESTADO DE LA VÍA"}</span>
-                           <p className="text-white text-lg font-serif italic">"{data.viaEstado || 'Vía pavimentada, sin cierres reportados.'}"</p>
-                        </div>
-                     </div>
-                     
-                     <a 
-                       href={t.terminalUrl || "https://terminalesmedellin.com/"} 
-                       target="_blank" 
-                       className="w-full py-7 bg-paisa-gold text-slate-950 rounded-full font-black uppercase text-[12px] tracking-[0.3em] hover:brightness-110 active:scale-95 transition-all flex items-center justify-center gap-4 shadow-xl group"
-                     >
-                       {t.reserveTicket || "VER TERMINALES"}
-                       <ArrowRight size={20} className="group-hover:translate-x-1 transition-transform" />
-                     </a>
-                  </div>
-               </div>
-
-               {/* Presupuesto */}
-               <div className="p-10 md:p-16 rounded-[64px] bg-[#FFFBF4] border border-amber-200 flex flex-col gap-12 shadow-xl">
-                  <div className="flex items-center justify-center md:justify-start gap-4 text-amber-800">
-                    <Wallet size={24} strokeWidth={2.5} /> 
-                    <span className="text-[12px] font-black uppercase tracking-[0.3em]">{t.budgetTitle || "PRESUPUESTO ESTIMADO"}</span>
-                  </div>
-                  <div className="flex flex-col gap-8">
-                     <div className="p-12 bg-white rounded-[48px] border border-amber-100 shadow-sm flex flex-col items-center text-center group hover:border-amber-400 transition-all">
-                        <span className="text-[14px] font-black text-[#A35A05] uppercase block mb-3 tracking-[0.2em]">{t.busTicket || "PASAJE"}</span>
-                        <p className="text-7xl md:text-8xl font-black text-slate-950 tracking-tighter leading-none group-hover:scale-105 transition-transform">${data.budget?.busTicket?.toLocaleString() || '35,000'}</p>
-                     </div>
-                     <div className="p-12 bg-white rounded-[48px] border border-amber-100 shadow-sm flex flex-col items-center text-center group hover:border-amber-400 transition-all">
-                        <span className="text-[14px] font-black text-[#A35A05] uppercase block mb-3 tracking-[0.2em]">{t.meal || "ALMUERZO"}</span>
-                        <p className="text-7xl md:text-8xl font-black text-slate-950 tracking-tighter leading-none group-hover:scale-105 transition-transform">${data.budget?.averageMeal?.toLocaleString() || '25,000'}</p>
-                     </div>
-                  </div>
-               </div>
-            </section>
-
-            {/* Guía del Arriero */}
-            <section className="grid grid-cols-1 gap-8">
-               <div className="p-10 md:p-20 rounded-[64px] bg-[#1E5233] text-white flex flex-col gap-16 relative overflow-hidden shadow-2xl border-4 border-white/10">
-                  <div className="relative z-10 flex flex-col gap-16 items-start w-full">
-                     <div className="flex flex-col md:flex-row gap-12 items-center md:items-start w-full">
-                        <div className="relative shrink-0">
-                           <div className="w-32 h-32 md:w-40 md:h-40 rounded-full border-4 border-white/20 bg-white/5 overflow-hidden backdrop-blur-md shadow-2xl relative z-10">
-                              <SafeImage alt="Arriero" src="https://images.unsplash.com/photo-1596570073289-535359b85642?auto=format&fit=crop&q=80&w=400" className="opacity-90 scale-125" />
-                           </div>
-                           <motion.div 
-                              initial={{ scale: 0, rotate: -20 }}
-                              animate={{ scale: 1, rotate: 0 }}
-                              transition={{ delay: 0.5, type: 'spring', stiffness: 260, damping: 20 }}
-                              className="absolute -bottom-2 -right-2 z-20 bg-paisa-gold p-4 rounded-3xl shadow-xl border-4 border-[#1E5233] flex items-center justify-center"
-                           >
-                              <Award size={32} className="text-[#1E5233]" fill="currentColor" />
-                           </motion.div>
-                        </div>
-                        <div className="flex-1 text-center md:text-left space-y-6">
-                          <span className="text-paisa-gold text-[12px] font-black uppercase tracking-[0.5em] flex items-center justify-center md:justify-start gap-4">
-                             <Compass size={20} strokeWidth={3} className="animate-pulse" />
-                             {t.arrieroGuide || "GUÍA DEL ARRIERO"}
-                          </span>
-                          <div className="relative inline-block px-4">
-                            <Quote className="absolute -left-12 -top-10 opacity-20 text-white" size={80} />
-                            <p className="text-4xl md:text-7xl font-serif italic leading-[1.1] text-white drop-shadow-2xl">
-                               "{data.neighborTip || '¡Eavemaría mijo! Venga a conocer que esto aquí es un paraíso.'}"
-                            </p>
-                          </div>
-                        </div>
-                     </div>
-                     
-                     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8 w-full">
-                        {arrieroTips.map((tip, idx) => (
-                            <motion.div 
-                                key={idx}
-                                initial={{ opacity: 0, y: 15 }}
-                                animate={{ opacity: 1, y: 0 }}
-                                transition={{ delay: 0.2 + (idx * 0.1) }}
-                                className="p-10 rounded-[48px] bg-white/5 border border-white/10 flex flex-col gap-6 hover:bg-white/10 transition-all group backdrop-blur-sm shadow-inner relative overflow-hidden"
-                            >
-                                <div className="flex items-center gap-5">
-                                    <div className={`p-4 rounded-2xl bg-white/10 ${tip.color} shadow-lg group-hover:scale-110 transition-transform`}>
-                                      <tip.icon size={24} strokeWidth={3} />
-                                    </div>
-                                    <span className="text-[11px] font-black uppercase tracking-[0.3em] text-white/60">{tip.label}</span>
-                                </div>
-                                <p className="text-xl font-serif italic text-white leading-relaxed font-medium relative z-10">"{tip.val}"</p>
-                                
-                                <div className="absolute -bottom-6 -right-6 opacity-[0.03] group-hover:opacity-[0.1] transition-opacity">
-                                   <tip.icon size={120} />
-                                </div>
-                            </motion.div>
-                        ))}
-                     </div>
-                  </div>
-                  
-                  {/* Decoración Fondo */}
-                  <div className="absolute -bottom-40 -right-40 opacity-[0.03] pointer-events-none rotate-12">
-                    <MessageSquare size={600} strokeWidth={0.5} />
-                  </div>
-                  <div className="absolute top-20 left-20 opacity-[0.03] pointer-events-none">
-                     <Activity size={300} strokeWidth={1} />
-                  </div>
-               </div>
-            </section>
-
+      {/* Itinerario Resultante */}
+      <AnimatePresence>
+        {itinerary && (
+          <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: 'auto' }} className="w-full space-y-8 pt-4">
+             {Object.entries(itinerary).map(([time, val]: [string, any], idx) => (
+                <div key={idx} className="flex gap-10 items-start p-10 rounded-[48px] bg-white border border-slate-100 shadow-xl">
+                   <div className="text-2xl font-black text-paisa-emerald uppercase w-32 pt-1">{time}</div>
+                   <div className="space-y-3 flex-1">
+                      <p className="text-3xl font-black text-slate-900 leading-none">{val.activity}</p>
+                      <p className="text-lg italic text-slate-400 font-serif">"{val.tip}"</p>
+                   </div>
+                </div>
+             ))}
           </motion.div>
         )}
       </AnimatePresence>

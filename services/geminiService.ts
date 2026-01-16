@@ -51,7 +51,7 @@ export async function searchUnified(query: string, lang: SupportedLang = 'es'): 
       config: {
         tools: [{ googleSearch: {} }],
         responseMimeType: "application/json",
-        systemInstruction: `You are the Arriero Pro. You specialize in Antioquia tourism. Your job is to provide accurate, tactical travel data. Even if the data is local, all text in the JSON must be in ${lang}. Be very professional but keep the Paisa spirit.`
+        systemInstruction: `You are the Arriero Pro. You specialize in Antioquia tourism. Your job is to provide accurate, tactical travel data. Even if the data is local, all text in the JSON must be in ${lang}. Be very professional but keep the Paisa spirit. NEVER mention the current year or specific dates.`
       },
     });
 
@@ -137,7 +137,7 @@ export async function generateSmartItinerary(pueblo: string, lang: SupportedLang
       Example: {"8:00 AM": {"activity": "Coffee at the main square", "tip": "Try Doña Rosa's coffee"}}`,
       config: { 
         responseMimeType: "application/json",
-        systemInstruction: `You are an expert guide for Arriero Pro. Your output must be entirely in ${lang}.`
+        systemInstruction: `You are an expert guide for Arriero Pro. Your output must be entirely in ${lang}. Never mention current year or specific dates.`
       }
     });
     return safeJsonParse(response.text);
