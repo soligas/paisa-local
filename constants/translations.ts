@@ -47,6 +47,7 @@ export const TRANSLATIONS: Record<SupportedLang, any> = {
       btnItinerarySub: "RECOMENDACIONES DEL HORARIO IDEAL PARA VIAJAR",
       howToGet: "¿CÓMO LLEGAR?",
       realTime: "REAL TIME",
+      verRuta: "VER RUTA",
       leavesFrom: "SALE DE",
       duration: "DURACIÓN",
       roadStatus: "ESTADO DE LA VÍA",
@@ -54,6 +55,9 @@ export const TRANSLATIONS: Record<SupportedLang, any> = {
       estimatedBudget: "PRESUPUESTO ESTIMADO",
       pasaje: "PASAJE",
       almuerzo: "ALMUERZO",
+      calcTotal: "CALCULAR TOTAL",
+      calcPersons: "PERSONAS",
+      calcMeals: "ALMUERZOS",
       arrieroGuide: "GUÍA DEL ARRIERO",
       quote: "¡Eavemaría mijo! Venga a conocer que esto aquí es un paraíso.",
       tips: {
@@ -64,7 +68,9 @@ export const TRANSLATIONS: Record<SupportedLang, any> = {
         clima: "CLIMA",
         tactico: "TÁCTICO"
       },
-      btnVerMas: "VER FUENTES DE VERIFICACIÓN"
+      btnVerMas: "VER FUENTES DE VERIFICACIÓN",
+      btnRecommendations: "RECOMENDACIONES",
+      btnRecommendationsSub: "SECRETOS Y JOYAS OCULTAS DEL ARRIERO"
     },
     navigation: {
       accessibility: "Modo Accesibilidad",
@@ -130,6 +136,7 @@ export const TRANSLATIONS: Record<SupportedLang, any> = {
       btnItinerarySub: "IDEAL TRAVEL SCHEDULE RECOMMENDATIONS",
       howToGet: "HOW TO GET THERE",
       realTime: "REAL TIME",
+      verRuta: "VIEW ROUTE",
       leavesFrom: "DEPARTS FROM",
       duration: "DURATION",
       roadStatus: "ROAD STATUS",
@@ -137,6 +144,9 @@ export const TRANSLATIONS: Record<SupportedLang, any> = {
       estimatedBudget: "ESTIMATED BUDGET",
       pasaje: "TICKET",
       almuerzo: "LUNCH",
+      calcTotal: "CALCULATE TOTAL",
+      calcPersons: "PEOPLE",
+      calcMeals: "MEALS",
       arrieroGuide: "ARRIERO'S GUIDE",
       quote: "Good heavens, buddy! Come visit, this place is a paradise.",
       tips: {
@@ -147,7 +157,9 @@ export const TRANSLATIONS: Record<SupportedLang, any> = {
         clima: "WEATHER",
         tactico: "TACTICAL"
       },
-      btnVerMas: "VIEW VERIFICATION SOURCES"
+      btnVerMas: "VIEW VERIFICATION SOURCES",
+      btnRecommendations: "RECOMMENDATIONS",
+      btnRecommendationsSub: "ARRIERO'S SECRETS AND HIDDEN GEMS"
     },
     navigation: {
       accessibility: "Accessibility Mode",
@@ -177,7 +189,7 @@ export const TRANSLATIONS: Record<SupportedLang, any> = {
     searchBtn: "BUSCAR",
     backBtn: "VOLTAR",
     exploreTitle: "Explorar",
-    exploreSubtitle: "Sub-regiões e tesouros locais.",
+    exploreSubtitle: "Sub-regiões e tesouros locales.",
     offerTitle: "PROPOSTA TÁTICA",
     offerSubtitle: "O que nos torna o concierge definitivo da região.",
     indexing: "Buscando Destino",
@@ -213,6 +225,7 @@ export const TRANSLATIONS: Record<SupportedLang, any> = {
       btnItinerarySub: "RECOMENDAÇÕES DE HORÁRIOS IDEAIS PARA VIAJAR",
       howToGet: "COMO CHEGAR",
       realTime: "TEMPO REAL",
+      verRuta: "VER ROTA",
       leavesFrom: "SAI DE",
       duration: "DURAÇÃO",
       roadStatus: "ESTADO DA VIA",
@@ -220,6 +233,9 @@ export const TRANSLATIONS: Record<SupportedLang, any> = {
       estimatedBudget: "ORÇAMENTO ESTIMADO",
       pasaje: "PASSAGEM",
       almuerzo: "ALMOÇO",
+      calcTotal: "CALCULAR TOTAL",
+      calcPersons: "PESSOAS",
+      calcMeals: "REFEIÇÕES",
       arrieroGuide: "GUIA DO ARRIERO",
       quote: "Eavemaría mijo! Venha conhecer que isso aqui é um paraíso.",
       tips: {
@@ -230,7 +246,9 @@ export const TRANSLATIONS: Record<SupportedLang, any> = {
         clima: "CLIMA",
         tactico: "TÁTICO"
       },
-      btnVerMas: "VER FONTES DE VERIFICAÇÃO"
+      btnVerMas: "VER FONTES DE VERIFICAÇÃO",
+      btnRecommendations: "RECOMENDAÇÕES",
+      btnRecommendationsSub: "SEGREDOS E JOIAS ESCONDIDAS DO ARRIERO"
     },
     navigation: {
       accessibility: "Modo de Acessibilidad",
@@ -241,14 +259,14 @@ export const TRANSLATIONS: Record<SupportedLang, any> = {
       }
     },
     footer: {
-      quote: "Transformando o turismo em uma ferramenta de regeneración social y económica para las montañas de Antioquia.",
+      quote: "Transformando o turismo en una herramienta de regeneración social e económica para as montanhas de Antioquia.",
       network: "Nossa Rede",
       verification: "Verificação",
       contact: "Contato",
       v1: "Dados Logísticos Actualizados",
       v2: "Segurança Rodoviária Verificada",
-      terms: "Termos",
-      privacy: "Privacidade",
+      terms: "Terms",
+      privacy: "Privacidad",
       copy: "© Arriero Pro. Feito com garra arriera."
     }
   }

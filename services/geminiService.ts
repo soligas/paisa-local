@@ -146,3 +146,24 @@ export async function generateSmartItinerary(pueblo: string, lang: SupportedLang
     return null; 
   }
 }
+
+export async function generateTacticalRecommendations(pueblo: string, lang: SupportedLang = 'es') {
+  try {
+    const response = await ai.models.generateContent({
+      model: 'gemini-3-flash-preview',
+      contents: `Generate 5 tactical and practical recommendations for visiting ${pueblo}, Antioquia. 
+      Language for output: ${lang}.
+      CRITICAL: One recommendation MUST be about a lesser-known but excellent local hostel, lodge, or accommodation (a "hidden gem" that travelers usually miss).
+      Other recommendations should cover: Safety (tactical advice), Local Food/Drink, Best spot for a non-touristy photo, and a secret Arriero tip.
+      Must be a JSON ARRAY of strings in ${lang}.`,
+      config: { 
+        responseMimeType: "application/json",
+        systemInstruction: `You are the Arriero Pro. You know every secret corner, charco, and hostel in Antioquia. Your output must be authentic, providing value beyond typical search results. Use the language: ${lang}.`
+      }
+    });
+    return safeJsonParse(response.text);
+  } catch (e) { 
+    console.error("Error generating recommendations:", e);
+    return null; 
+  }
+}

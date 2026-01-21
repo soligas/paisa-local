@@ -1,6 +1,6 @@
 
 import React, { useState, useEffect, useRef } from 'react';
-import { Search, Loader2, ArrowLeft, Heart, Compass, MessageSquare, Map as MapIcon, Target, ShieldCheck, Zap, Sun, Globe, Activity, TrendingUp, Sparkles, Navigation, CheckCircle, Truck, Users, Coffee } from 'lucide-react';
+import { Search, Loader2, ArrowLeft, Heart, Compass, MessageSquare, Map as MapIcon, Target, ShieldCheck, Zap, Sun, Globe, Activity, TrendingUp, Sparkles, Navigation, CheckCircle, Truck, Users, Coffee, MapPin } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { GoogleGenAI, Modality, LiveServerMessage } from '@google/genai';
 import { AppState, PlaceData, SupportedLang, AppTab } from './types';
@@ -13,7 +13,7 @@ import { HorizontalCarousel } from './components/molecules/HorizontalCarousel';
 import { SectionHeader } from './components/molecules/SectionHeader';
 import { EpicAntioquiaMap } from './components/molecules/EpicAntioquiaMap';
 import { Navigation as AppNavigation } from './components/organisms/Navigation';
-import { getLocalPlace } from './services/logisticsService';
+import { getLocalPlace, getLocalSuggestions } from './services/logisticsService';
 import { TRANSLATIONS } from './constants/translations';
 
 function encodeAudio(bytes: Uint8Array) {
@@ -53,11 +53,14 @@ export function App() {
   const [loadingMsgIdx, setLoadingMsgIdx] = useState(0);
   const [showFavorites, setShowFavorites] = useState(false);
   const [isLiveActive, setIsLiveActive] = useState(false);
+  const [suggestions, setSuggestions] = useState<string[]>([]);
+  const [showSuggestions, setShowSuggestions] = useState(false);
   
   const audioContextRef = useRef<AudioContext | null>(null);
   const nextStartTimeRef = useRef<number>(0);
   const sourcesRef = useRef<Set<AudioBufferSourceNode>>(new Set());
   const activeSessionRef = useRef<any>(null);
+  const searchContainerRef = useRef<HTMLDivElement>(null);
 
   const t = TRANSLATIONS[state.language] || TRANSLATIONS.es;
 
@@ -70,6 +73,28 @@ export function App() {
     }
     return () => clearInterval(interval);
   }, [state.cargando, t.indexingMijo]);
+
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (searchContainerRef.current && !searchContainerRef.current.contains(event.target as Node)) {
+        setShowSuggestions(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
+
+  const handleSearchChange = (val: string) => {
+    setState(s => ({ ...s, busqueda: val }));
+    if (val.length >= 2) {
+      const sugs = getLocalSuggestions(val);
+      setSuggestions(sugs);
+      setShowSuggestions(true);
+    } else {
+      setSuggestions([]);
+      setShowSuggestions(false);
+    }
+  };
 
   const toggleLive = async () => {
     if (isLiveActive) {
@@ -134,6 +159,7 @@ export function App() {
   const handleSearch = async (q?: string) => {
     const query = q || state.busqueda;
     if (!query) return;
+    setShowSuggestions(false);
     setState(s => ({ ...s, cargando: true, error: null, activeTab: 'explore', busqueda: query }));
     try {
       const results = await searchUnified(query, state.language);
@@ -198,21 +224,48 @@ export function App() {
                          <TrendingUp size={14} /> REGIONAL GUIDE
                        </div>
                     </div>
-                    <h1 className="text-7xl sm:text-8xl md:text-[11rem] font-black uppercase tracking-tighter leading-[0.8] text-slate-950">
+                    <h1 className="text-6xl sm:text-8xl md:text-[10rem] font-black uppercase tracking-tighter leading-[0.85] text-slate-950">
                       {t.heroTitle} <br /> <span className="text-paisa-emerald">{t.heroSubtitle}</span>
                     </h1>
                     <p className="text-xl md:text-3xl font-serif italic text-slate-600 max-w-4xl mx-auto drop-shadow-sm">"{t.heroDescription}"</p>
                   </div>
 
-                  <div className="relative max-w-4xl mx-auto px-4 pt-4 space-y-8">
-                     <div className="flex flex-col md:flex-row gap-4">
-                       <input 
-                         type="text" placeholder={t.searchPlaceholder}
-                         className="w-full p-6 md:p-12 rounded-3xl md:rounded-[48px] text-lg md:text-3xl outline-none border-2 border-slate-200 shadow-2xl focus:border-paisa-emerald bg-white transition-all font-medium"
-                         value={state.busqueda} onChange={e => setState(s => ({...s, busqueda: e.target.value}))}
-                         onKeyDown={e => e.key === 'Enter' && handleSearch()}
-                       />
-                       <button onClick={() => handleSearch()} className="w-full md:w-auto p-6 md:px-14 rounded-3xl md:rounded-[40px] bg-paisa-emerald text-white font-black uppercase tracking-widest shadow-2xl hover:brightness-110 active:scale-95 text-xl flex items-center justify-center gap-4 transition-all">
+                  <div ref={searchContainerRef} className="relative max-w-4xl mx-auto px-4 pt-4 space-y-8">
+                     <div className="flex flex-col md:flex-row gap-4 relative z-20">
+                       <div className="flex-1 relative">
+                         <input 
+                           type="text" placeholder={t.searchPlaceholder}
+                           className="w-full p-6 md:p-12 rounded-3xl md:rounded-[48px] text-lg md:text-3xl outline-none border-2 border-slate-200 shadow-2xl focus:border-paisa-emerald bg-white transition-all font-medium"
+                           value={state.busqueda} 
+                           onChange={e => handleSearchChange(e.target.value)}
+                           onFocus={() => state.busqueda.length >= 2 && setShowSuggestions(true)}
+                           onKeyDown={e => e.key === 'Enter' && handleSearch()}
+                         />
+                         <AnimatePresence>
+                           {showSuggestions && suggestions.length > 0 && (
+                             <motion.div 
+                               initial={{ opacity: 0, y: -10 }}
+                               animate={{ opacity: 1, y: 0 }}
+                               exit={{ opacity: 0, y: -10 }}
+                               className="absolute top-full mt-4 left-0 right-0 bg-white rounded-[32px] shadow-4xl border border-slate-100 overflow-hidden z-[1002] py-4"
+                             >
+                               {suggestions.map((s, idx) => (
+                                 <button 
+                                   key={idx} 
+                                   onClick={() => handleSearch(s)}
+                                   className="w-full px-8 py-5 text-left hover:bg-slate-50 flex items-center gap-4 group transition-colors"
+                                 >
+                                   <div className="w-10 h-10 rounded-full bg-emerald-50 text-emerald-600 flex items-center justify-center group-hover:bg-emerald-600 group-hover:text-white transition-all">
+                                      <MapPin size={18} />
+                                   </div>
+                                   <span className="text-xl font-bold text-slate-700">{s}</span>
+                                 </button>
+                               ))}
+                             </motion.div>
+                           )}
+                         </AnimatePresence>
+                       </div>
+                       <button onClick={() => handleSearch()} className="w-full md:w-auto p-6 md:px-14 rounded-3xl md:rounded-[40px] bg-paisa-emerald text-white font-black uppercase tracking-widest shadow-2xl hover:brightness-110 active:scale-95 text-xl flex items-center justify-center gap-4 transition-all h-auto">
                          <Search size={28} />
                          <span>{t.searchBtn}</span>
                        </button>
@@ -261,7 +314,7 @@ export function App() {
           )}
 
           {(state.activeTab === 'explore' || showFavorites) && !state.cargando && (
-            <motion.div key="results" initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="space-y-12 py-12 md:py-20">
+            <motion.div key="results" initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="space-y-12 py-12 md:py-20 max-w-7xl mx-auto">
                <div className="space-y-4 px-4">
                   <button onClick={handleReset} className="flex items-center gap-3 text-paisa-emerald font-black uppercase text-[12px] tracking-widest hover:translate-x-[-4px] transition-transform">
                      <ArrowLeft size={20} /> {t.backBtn}
@@ -270,7 +323,7 @@ export function App() {
                     {showFavorites ? t.favoritesTitle : `${t.exploreTitle}: ${state.busqueda}`}
                   </h2>
                </div>
-               <div className="grid grid-cols-1 gap-16">
+               <div className="flex flex-col gap-24 relative pb-32">
                   {displayedResults.map((item, i) => (
                     <PlaceCard 
                       key={i} 
