@@ -1,14 +1,14 @@
+
 import React from 'react';
-import ReactDOM from 'react-dom/client';
-// Fix: Use named import for App as the component is likely exported as a named export
+import { createRoot } from 'react-dom/client';
 import { App } from './App';
 
-const rootElement = document.getElementById('root');
-if (!rootElement) {
+const container = document.getElementById('root');
+if (!container) {
   throw new Error("No se pudo encontrar el elemento root para montar la aplicación.");
 }
 
-const root = ReactDOM.createRoot(rootElement);
+const root = createRoot(container);
 root.render(
   <React.StrictMode>
     <App />
