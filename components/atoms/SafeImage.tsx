@@ -3,18 +3,21 @@ import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
   Sparkles, Coffee, Mountain, Waves, Trees, 
-  Compass, Loader2, MapPin, Wind, Sun, ShieldCheck, Plus
+  Compass, Loader2, MapPin, Wind, Sun, ShieldCheck, Plus, Utensils
 } from 'lucide-react';
 import { AntioquiaRegion } from '../../types';
 
+// Fix: Added 'type' property to SafeImageProps to support specific placeholders for dishes and experiences
 interface SafeImageProps {
   src?: string | null | undefined;
   alt: string;
   className?: string;
   region?: AntioquiaRegion | string;
+  type?: 'place' | 'dish' | 'experience' | string;
 }
 
-export const SafeImage: React.FC<SafeImageProps> = ({ src, alt, className = "", region = "Valle de Aburrá" }) => {
+// Fix: Updated component to handle the new 'type' prop for enhanced fallback visual representation
+export const SafeImage: React.FC<SafeImageProps> = ({ src, alt, className = "", region = "Valle de Aburrá", type = 'place' }) => {
   const [error, setError] = useState(false);
   const [loading, setLoading] = useState(true);
 
@@ -28,14 +31,23 @@ export const SafeImage: React.FC<SafeImageProps> = ({ src, alt, className = "", 
     }
   }, [src]);
 
-  const config = {
+  // Fix: Improved config selection logic to prioritize region-based styling while allowing type-based fallbacks for gastronomy and culture
+  const regionConfig = {
     'Suroeste': { color: '#3E2A19', Icon: Coffee, label: 'Tierra Cafetera', grad: 'from-amber-200 to-amber-50' },
     'Oriente': { color: '#1B4D31', Icon: Waves, label: 'Aguas del Oriente', grad: 'from-emerald-200 to-emerald-50' },
     'Urabá': { color: '#112D8C', Icon: Wind, label: 'Mar de Antioquia', grad: 'from-blue-200 to-blue-50' },
     'Norte': { color: '#0F4021', Icon: Trees, label: 'Ruta Lechera', grad: 'from-green-200 to-green-50' },
     'Occidente': { color: '#A35A05', Icon: Sun, label: 'Sol de Occidente', grad: 'from-orange-200 to-orange-50' },
     'Valle de Aburrá': { color: '#036346', Icon: Sparkles, label: 'Corazón Urbano', grad: 'from-slate-200 to-slate-50' },
-  }[region as string] || { color: '#1B4D31', Icon: MapPin, label: 'Tesoro Local', grad: 'from-slate-200 to-slate-50' };
+  }[region as string];
+
+  const typeConfig = {
+    'dish': { color: '#B45309', Icon: Utensils, label: 'Gastronomía', grad: 'from-orange-100 to-amber-50' },
+    'experience': { color: '#6366F1', Icon: Sparkles, label: 'Experiencia', grad: 'from-indigo-100 to-blue-50' },
+    'place': { color: '#1B4D31', Icon: MapPin, label: 'Tesoro Local', grad: 'from-slate-200 to-slate-50' }
+  }[type as string] || { color: '#1B4D31', Icon: MapPin, label: 'Tesoro Local', grad: 'from-slate-200 to-slate-50' };
+
+  const config = regionConfig || typeConfig;
 
   return (
     <div className={`relative overflow-hidden flex items-center justify-center bg-slate-100 ${className}`}>

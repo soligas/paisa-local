@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
@@ -6,7 +5,8 @@ import {
   Loader2, Utensils, Coffee, Sparkles, Navigation, 
   Wallet, ExternalLink, Info, Users, ChevronDown, 
   CheckCircle, Map, Play, Instagram, ArrowRight, AlertTriangle, Clock,
-  Target, Truck, Activity, Compass, Plus, Minus, Calculator, MapPin, Star
+  Target, Truck, Activity, Compass, Plus, Minus, Calculator, MapPin, Star,
+  Home, Flag
 } from 'lucide-react';
 import { PlaceData, SupportedLang } from '../types';
 import { SafeImage } from './atoms/SafeImage';
@@ -87,7 +87,7 @@ export const PlaceCard: React.FC<PlaceCardProps> = ({ data, lang, i18n, isFavori
       icon: Instagram, 
       label: 'EXPLORAR', 
       color: 'text-purple-500', 
-      href: `https://www.instagram.com/explore/tags/${encodeURIComponent(data.titulo.toLowerCase().replace(/\s/g, '') + 'antioquia')}/` 
+      href: `https://www.google.com/search?q=site:instagram.com+oficial+alcaldia+${encodeURIComponent(data.titulo)}+Antioquia` 
     }
   ];
 
@@ -104,10 +104,17 @@ export const PlaceCard: React.FC<PlaceCardProps> = ({ data, lang, i18n, isFavori
   const mealPrice = data.budget?.averageMeal || 25000;
   const totalBudget = (busPrice * passengers) + (mealPrice * mealsCount);
 
+  const journeySteps = [
+    { icon: Home, label: 'Medellín', desc: 'Arranque mijo' },
+    { icon: Bus, label: data.terminalInfo || 'Terminal del Sur', desc: 'Pa\' comprar el tiquete' },
+    { icon: Navigation, label: 'Ruta Regional', desc: 'A disfrutar el paisaje' },
+    { icon: Flag, label: data.titulo, desc: '¡Llegamos al paraíso!' }
+  ];
+
   return (
     <motion.div layout className="w-full max-w-6xl mx-auto px-4 py-8 space-y-12">
       <div className="rounded-[40px] md:rounded-[64px] bg-white shadow-2xl border border-slate-100 overflow-hidden flex flex-col lg:flex-row relative min-h-[500px]">
-        {/* Lado Izquierdo (Hero) - Fuente ajustada para evitar traslapos */}
+        {/* Lado Izquierdo (Hero) */}
         <div className="w-full lg:w-[35%] bg-[#FEF9C3]/40 relative p-8 md:p-12 flex flex-col items-center justify-center text-center space-y-6">
            <div className="relative">
               <div className="w-20 h-20 md:w-32 md:h-32 rounded-full bg-white shadow-xl flex items-center justify-center">
@@ -134,7 +141,7 @@ export const PlaceCard: React.FC<PlaceCardProps> = ({ data, lang, i18n, isFavori
            <div className="absolute bottom-6 left-6 opacity-10"><Navigation size={20} /></div>
         </div>
 
-        {/* Lado Derecho (Stats & Action) - Reducción de fuentes para nombres largos */}
+        {/* Lado Derecho (Stats & Action) */}
         <div className="flex-1 p-8 md:p-16 flex flex-col justify-between bg-white space-y-10">
            <div className="space-y-4">
               <h2 className="text-3xl md:text-5xl lg:text-6xl font-black uppercase tracking-tighter text-slate-950 leading-[0.9] text-balance">
@@ -234,6 +241,40 @@ export const PlaceCard: React.FC<PlaceCardProps> = ({ data, lang, i18n, isFavori
             </div>
          </div>
 
+         {/* Guía Gráfica de Inicio a Fin */}
+         <div className="py-10 px-4">
+            <div className="relative flex flex-col md:flex-row items-start md:items-center justify-between gap-8 md:gap-4">
+               {/* Línea de conexión de fondo (Desktop) */}
+               <div className="absolute top-10 left-[10%] right-[10%] h-0.5 bg-slate-200 hidden md:block" />
+               
+               {journeySteps.map((step, i) => (
+                 <div key={i} className="relative z-10 flex flex-row md:flex-col items-center gap-6 md:gap-4 flex-1">
+                    <motion.div 
+                      initial={{ scale: 0.8, opacity: 0 }}
+                      whileInView={{ scale: 1, opacity: 1 }}
+                      transition={{ delay: i * 0.15 }}
+                      className={`w-16 h-16 md:w-20 md:h-20 rounded-full flex items-center justify-center border-4 border-white shadow-2xl transition-colors
+                        ${i === 0 ? 'bg-slate-100 text-slate-400' : 
+                          i === journeySteps.length - 1 ? 'bg-paisa-emerald text-white shadow-emerald-500/20' : 
+                          'bg-white text-paisa-gold'}`}
+                    >
+                       <step.icon size={24} />
+                    </motion.div>
+                    <div className="flex flex-col items-start md:items-center text-left md:text-center space-y-1">
+                       <span className="text-[10px] font-black uppercase tracking-widest text-slate-900">{step.label}</span>
+                       <span className="text-[8px] font-bold uppercase tracking-widest text-slate-400 italic">"{step.desc}"</span>
+                    </div>
+                    {/* Flecha de conexión (Mobile) */}
+                    {i < journeySteps.length - 1 && (
+                      <div className="md:hidden absolute -bottom-6 left-8 text-slate-200">
+                         <ChevronDown size={16} />
+                      </div>
+                    )}
+                 </div>
+               ))}
+            </div>
+         </div>
+
          <div className="rounded-[32px] md:rounded-[48px] bg-[#1A242F] p-8 flex flex-col md:flex-row items-center gap-8">
             <div className="w-14 h-14 rounded-2xl bg-[#2D7A4C]/20 border border-[#2D7A4C]/40 text-paisa-emerald flex items-center justify-center shrink-0">
                <AlertTriangle size={28} />
@@ -268,7 +309,7 @@ export const PlaceCard: React.FC<PlaceCardProps> = ({ data, lang, i18n, isFavori
               className="p-10 md:p-12 rounded-[40px] md:rounded-[56px] bg-white shadow-xl border border-slate-50 flex flex-col items-center justify-center space-y-4 hover:scale-[1.02] transition-transform"
             >
                <span className="text-[9px] font-black uppercase tracking-[0.2em] text-paisa-gold">{t.pasaje}</span>
-               <h4 className="text-4xl md:text-6xl font-black tracking-tighter text-slate-900">${busPrice.toLocaleString()}</h4>
+               <h4 className="text-3xl md:text-5xl font-black tracking-tighter text-slate-900">${busPrice.toLocaleString()}</h4>
             </a>
             <a 
               href={`https://www.google.com/search?q=${encodeURIComponent("donde almorzar en " + data.titulo + " Antioquia precios")}`}
@@ -276,7 +317,7 @@ export const PlaceCard: React.FC<PlaceCardProps> = ({ data, lang, i18n, isFavori
               className="p-10 md:p-12 rounded-[40px] md:rounded-[56px] bg-white shadow-xl border border-slate-50 flex flex-col items-center justify-center space-y-4 hover:scale-[1.02] transition-transform"
             >
                <span className="text-[9px] font-black uppercase tracking-[0.2em] text-paisa-gold">{t.almuerzo}</span>
-               <h4 className="text-4xl md:text-6xl font-black tracking-tighter text-slate-900">${mealPrice.toLocaleString()}</h4>
+               <h4 className="text-3xl md:text-5xl font-black tracking-tighter text-slate-900">${mealPrice.toLocaleString()}</h4>
             </a>
          </div>
 

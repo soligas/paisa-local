@@ -8,6 +8,10 @@ export const normalizeText = (str: string) =>
      .toLowerCase()
      .trim();
 
+export const MUNICIPIOS_ANTIOQUIA = [
+  "Abejorral", "Abriaqui", "Alejandria", "Amaga", "Amalfi", "Andes", "Angelopolis", "Angostura", "Anori", "Anza", "Apartado", "Arboletes", "Argelia", "Armenia", "Barbosa", "Belmira", "Bello", "Betania", "Betulia", "Briceño", "Buritica", "Caicedo", "Caldas", "Campamento", "Cañasgordas", "Caracoli", "Caramanta", "Carepa", "El Carmen de Viboral", "Carolina del Principe", "Caucasia", "Chigorodo", "Cisneros", "Ciudad Bolivar", "Cocorna", "Concepcion", "Concordia", "Copacabana", "Dabeiba", "Donmatias", "Ebejico", "El Bagre", "El Peñol", "El Retiro", "El Santuario", "Entrerrios", "Envigado", "Frontino", "Fredonia", "Giraldo", "Girardota", "Gomez Plata", "Granada", "Guadalupe", "Guarne", "Guatape", "Heliconia", "Hispania", "Itagui", "Ituango", "Jardin", "Jerico", "La Ceja", "La Estrella", "La Pintada", "La Union", "Liborina", "Maceo", "Marinilla", "Medellin", "Montebello", "Murindo", "Mutata", "Nariño", "Nechi", "Necocli", "Olaya", "Peque", "Pueblorrico", "Puerto Berrio", "Puerto Nare", "Puerto Triunfo", "Remedios", "Rionegro", "Sabanalarga", "Sabaneta", "Salgar", "San Andres de Cuerquia", "San Carlos", "San Francisco", "San Jeronimo", "San Jose de la Montaña", "San Juan de Uraba", "San Luis", "San Pedro de los Milagros", "San Pedro de Uraba", "San Rafael", "San Roque", "San Vicente Ferrer", "Santa Barbara", "Santa Fe de Antioquia", "Santa Rosa de Osos", "Santo Domingo", "Segovia", "Sonson", "Sopetran", "Tamesis", "Taraza", "Tarso", "Titiribi", "Toledo", "Turbo", "Uramita", "Urrao", "Valdivia", "Valparaiso", "Vegachi", "Venecia", "Vigia del Fuerte", "Yali", "Yarumal", "Yolombo", "Yondo", "Zaragoza"
+];
+
 const DEFAULT_LOGISTICS: Record<string, { terminal: string, avgPrice: number, time: string, frequency: string, companies: string[] }> = {
   'Oriente': { terminal: 'Norte', avgPrice: 18000, time: '1.5h', frequency: 'Cada 15 min', companies: ['Sotra San Vicente', 'Transunidos', 'Sotrasantafe'] },
   'Suroeste': { terminal: 'Sur', avgPrice: 32000, time: '3h', frequency: 'Cada 30 - 45 min', companies: ['Transportes Suroeste', 'Rápido Ochoa', 'Cootransandina'] },
@@ -28,10 +32,16 @@ export function getLocalSuggestions(query: string): string[] {
   const q = normalizeText(query);
   if (!q || q.length < 2) return [];
 
-  return Object.values(localData)
-    .filter(place => normalizeText(place.titulo).includes(q))
-    .map(place => place.titulo)
-    .slice(0, 5);
+  // Combinar localData con la lista maestra de municipios
+  const allNames = Array.from(new Set([
+    ...Object.values(localData).map(p => p.titulo),
+    ...MUNICIPIOS_ANTIOQUIA
+  ]));
+
+  return allNames
+    .filter(name => normalizeText(name).includes(q))
+    .sort((a, b) => a.localeCompare(b))
+    .slice(0, 8);
 }
 
 export function getLocalPlace(query: string): PlaceData | null {

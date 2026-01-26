@@ -1,6 +1,6 @@
 
 import React, { useState, useEffect, useRef } from 'react';
-import { Search, Loader2, ArrowLeft, Heart, Compass, MessageSquare, Map as MapIcon, Target, ShieldCheck, Zap, Sun, Globe, Activity, TrendingUp, Sparkles, Navigation, CheckCircle, Truck, Users, Coffee, MapPin } from 'lucide-react';
+import { Search, Loader2, ArrowLeft, Heart, Compass, MessageSquare, Map as MapIcon, Target, ShieldCheck, Zap, Sun, Globe, Activity, TrendingUp, Sparkles, Navigation, CheckCircle, Truck, Users, Coffee, MapPin, Waves, Mountain, Wind } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { GoogleGenAI, Modality, LiveServerMessage } from '@google/genai';
 import { AppState, PlaceData, SupportedLang, AppTab } from './types';
@@ -174,6 +174,14 @@ export function App() {
     setShowFavorites(false);
   };
 
+  const quickDiscoveryCategories = [
+    { label: "Pueblos con Charcos", icon: Waves, q: "Pueblos con charcos y rios Antioquia" },
+    { label: "Tierra Cafetera", icon: Coffee, q: "Suroeste Antioqueño Cafe" },
+    { label: "Aventura Extrema", icon: Mountain, q: "Deportes de aventura en Antioquia" },
+    { label: "Clima Frío", icon: Wind, q: "Pueblos de clima frio en Antioquia" },
+    { label: "Arquitectura Colonial", icon: MapIcon, q: "Pueblos coloniales de Antioquia" }
+  ];
+
   const displayedResults = showFavorites 
     ? (state.favorites.map(title => getLocalPlace(title)).filter(p => p !== null) as PlaceData[])
     : state.unifiedResults;
@@ -269,6 +277,27 @@ export function App() {
                          <Search size={28} />
                          <span>{t.searchBtn}</span>
                        </button>
+                     </div>
+
+                     {/* Nueva Sección: Sugerencias para usuarios que no saben dónde ir */}
+                     <div className="pt-6 text-center space-y-6">
+                        <div className="flex items-center justify-center gap-3">
+                           <div className="h-px w-8 bg-slate-200" />
+                           <span className="text-[10px] font-black uppercase tracking-[0.3em] text-slate-400">¿No sabe pa' donde arrancar, mijo?</span>
+                           <div className="h-px w-8 bg-slate-200" />
+                        </div>
+                        <div className="flex flex-wrap justify-center gap-3">
+                           {quickDiscoveryCategories.map((cat, i) => (
+                             <button 
+                               key={i}
+                               onClick={() => handleSearch(cat.q)}
+                               className="px-6 py-3 rounded-full bg-white border border-slate-100 shadow-md hover:border-paisa-emerald hover:text-paisa-emerald transition-all flex items-center gap-2 group"
+                             >
+                               <cat.icon size={14} className="text-slate-400 group-hover:text-paisa-emerald transition-colors" />
+                               <span className="text-[11px] font-bold uppercase tracking-widest">{cat.label}</span>
+                             </button>
+                           ))}
+                        </div>
                      </div>
                   </div>
                 </div>
