@@ -1,6 +1,6 @@
 
 import { GoogleGenAI, Type } from "@google/genai";
-import { SupportedLang, UnifiedItem, PlaceData, AntioquiaRegion, DishData, CultureExperience } from "../types";
+import { SupportedLang, PlaceData, AntioquiaRegion, DishData, CultureExperience } from "../types";
 import { getLocalPlace } from "./logisticsService";
 import { getUnsplashImage } from "./unsplashService";
 import { findBlobUrlByName } from "./blobService";
@@ -20,7 +20,10 @@ function safeJsonParse(text: string) {
     if (endIdx === -1 || endIdx < startIdx) return null;
     cleaned = cleaned.substring(startIdx, endIdx + 1);
     return JSON.parse(cleaned);
-  } catch (e) { return null; }
+  } catch (e) { 
+    console.error("Error parseando JSON de Gemini:", e);
+    return null; 
+  }
 }
 
 export async function searchUnified(query: string, lang: SupportedLang = 'es'): Promise<any[]> {
@@ -29,26 +32,67 @@ export async function searchUnified(query: string, lang: SupportedLang = 'es'): 
   try {
     const response = await ai.models.generateContent({
       model: "gemini-3-flash-preview",
-      contents: `SEARCH QUERY: "${query}, Antioquia, Colombia". Language: ${lang}.
-      Urgente: Genera un mix de información turística táctica. Devuelve un objeto JSON con:
-      1. "places": [max 1 objeto con titulo, region, descripcion, imgKeyword, viaEstado, pavementType, budget: {busTicket, averageMeal}, foodTip, cultureTip, logisticsTip, peopleTip]
-      2. "dishes": [max 2 objetos con nombre, descripcion, categoria, precioLocalEstimated, precioVerificado, economiaCircular]
-      3. "experiences": [max 2 objetos con titulo, descripcion, categoria, impactoSocial, ubicacion]
-      
-      IMPORTANTE: 'viaEstado' debe indicar si está despejada o hay obras. 'pavementType' debe indicar si es Pavimentada, Destapada o Placa Huella. Los precios en COP.`,
+      contents: `Proporciona información turística y logística real para: "${query}, Antioquia, Colombia". Idioma: ${lang}.`,
       config: {
         tools: [{ googleSearch: {} }],
         responseMimeType: "application/json",
-        systemInstruction: `Eres Arriero Pro. Tu misión es proveer datos tácticos y ricos sobre el turismo en Antioquia. Combina sabiduría popular con precisión técnica extrema sobre logística de transporte.`
+        responseSchema: {
+          type: Type.OBJECT,
+          properties: {
+            places: {
+              type: Type.ARRAY,
+              items: {
+                type: Type.OBJECT,
+                properties: {
+                  titulo: { type: Type.STRING },
+                  region: { type: Type.STRING, description: "Subregión de Antioquia (Oriente, Suroeste, etc)" },
+                  descripcion: { type: Type.STRING },
+                  imgKeyword: { type: Type.STRING },
+                  viaEstado: { type: Type.STRING, description: "Estado actual de la vía (Despejada, Obras)" },
+                  pavementType: { type: Type.STRING, description: "Pavimentada, Placa Huella o Destapada" },
+                  tiempoDesdeMedellin: { type: Type.STRING },
+                  budget: {
+                    type: Type.OBJECT,
+                    properties: {
+                      busTicket: { type: Type.NUMBER },
+                      averageMeal: { type: Type.NUMBER }
+                    }
+                  }
+                },
+                required: ["titulo", "region", "descripcion"]
+              }
+            },
+            dishes: {
+              type: Type.ARRAY,
+              items: {
+                type: Type.OBJECT,
+                properties: {
+                  nombre: { type: Type.STRING },
+                  descripcion: { type: Type.STRING },
+                  categoria: { type: Type.STRING },
+                  precioLocalEstimated: { type: Type.NUMBER }
+                }
+              }
+            }
+          }
+        },
+        systemInstruction: `Eres Arriero Pro. Tu misión es proveer datos tácticos precisos sobre Antioquia. Siempre usa Google Search para verificar precios de pasajes y estados de vías actuales.`
       },
     });
 
     const rawData = safeJsonParse(response.text);
+    
+    // Extracción obligatoria de enlaces de grounding (Google Search Rules)
+    const groundingLinks = response.candidates?.[0]?.groundingMetadata?.groundingChunks?.map((chunk: any) => ({
+      title: chunk.web?.title || "Fuente de verificación",
+      uri: chunk.web?.uri || "#",
+      type: 'news'
+    })) || [];
+
     if (!rawData) return localMatch ? [localMatch] : [];
 
     const results: any[] = [];
 
-    // Procesar Lugares (PlaceCard)
     if (rawData.places) {
       for (const data of rawData.places) {
         let img = await findBlobUrlByName(data.titulo) || await getUnsplashImage(data.imgKeyword || `${data.titulo} Antioquia`);
@@ -61,39 +105,28 @@ export async function searchUnified(query: string, lang: SupportedLang = 'es'): 
           viaEstado: data.viaEstado || "Despejada",
           pavementType: data.pavementType || "Pavimentada",
           budget: data.budget || { busTicket: 35000, averageMeal: 25000 },
-          foodTip: data.foodTip,
-          cultureTip: data.cultureTip,
-          logisticsTip: data.logisticsTip,
-          peopleTip: data.peopleTip,
-          terminalInfo: data.region === 'Oriente' || data.region === 'Norte' ? "Terminal del Norte" : "Terminal del Sur",
+          terminalInfo: data.region?.includes('Oriente') || data.region?.includes('Norte') ? "Terminal del Norte" : "Terminal del Sur",
           accessibility: { score: 85, wheelchairFriendly: true },
           security: { status: 'Seguro' },
-          tiempoDesdeMedellin: data.tiempoDesdeMedellin || "2-3 Horas"
+          tiempoDesdeMedellin: data.tiempoDesdeMedellin || "2-3 Horas",
+          groundingLinks: groundingLinks // Inyectamos las fuentes verificadas
         });
       }
     }
 
-    // Procesar Platos (DishCard)
     if (rawData.dishes) {
       rawData.dishes.forEach((d: any) => {
         results.push({ ...d, type: 'dish' });
       });
     }
 
-    // Procesar Experiencias (ExperienceCard)
-    if (rawData.experiences) {
-      rawData.experiences.forEach((e: any) => {
-        results.push({ ...e, type: 'experience' });
-      });
-    }
-
-    // Priorizar match local exacto si existe
-    if (localMatch && !results.some(r => r.type === 'place' && r.titulo.toLowerCase() === localMatch.titulo.toLowerCase())) {
+    if (localMatch && !results.some(r => r.type === 'place' && r.titulo.toLowerCase().includes(localMatch.titulo.toLowerCase()))) {
       results.unshift(localMatch);
     }
 
     return results;
   } catch (e) {
+    console.error("Fallo crítico en búsqueda:", e);
     return localMatch ? [localMatch] : [];
   }
 }
@@ -102,8 +135,18 @@ export async function generateSmartItinerary(pueblo: string, lang: SupportedLang
   try {
     const response = await ai.models.generateContent({
       model: 'gemini-3-flash-preview',
-      contents: `Crea un itinerario de 3 momentos (mañana, tarde, noche) para ${pueblo}, Antioquia. Idioma: ${lang}. JSON: {"morning": {"activity": "...", "tip": "..."}, "afternoon": {...}, "evening": {...}}`,
-      config: { responseMimeType: "application/json" }
+      contents: `Crea un itinerario de 3 momentos para ${pueblo}, Antioquia. Idioma: ${lang}.`,
+      config: { 
+        responseMimeType: "application/json",
+        responseSchema: {
+          type: Type.OBJECT,
+          properties: {
+            morning: { type: Type.OBJECT, properties: { activity: { type: Type.STRING }, tip: { type: Type.STRING } } },
+            afternoon: { type: Type.OBJECT, properties: { activity: { type: Type.STRING }, tip: { type: Type.STRING } } },
+            evening: { type: Type.OBJECT, properties: { activity: { type: Type.STRING }, tip: { type: Type.STRING } } }
+          }
+        }
+      }
     });
     return safeJsonParse(response.text);
   } catch (e) { return null; }
@@ -113,8 +156,14 @@ export async function generateTacticalRecommendations(pueblo: string, lang: Supp
   try {
     const response = await ai.models.generateContent({
       model: 'gemini-3-flash-preview',
-      contents: `Dame 5 tips tácticos secretos para visitar ${pueblo}, Antioquia. Idioma: ${lang}. Devuelve un array JSON de strings.`,
-      config: { responseMimeType: "application/json" }
+      contents: `Dame 5 tips tácticos secretos para visitar ${pueblo}, Antioquia. Idioma: ${lang}.`,
+      config: { 
+        responseMimeType: "application/json",
+        responseSchema: {
+          type: Type.ARRAY,
+          items: { type: Type.STRING }
+        }
+      }
     });
     return safeJsonParse(response.text);
   } catch (e) { return null; }

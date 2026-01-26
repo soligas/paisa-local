@@ -397,18 +397,29 @@ export const PlaceCard: React.FC<PlaceCardProps> = ({ data, lang, i18n, isFavori
         </AnimatePresence>
       </div>
 
-      {/* Footer del card - Fuentes */}
-      <div className="pt-8 border-t border-slate-100 flex flex-col md:flex-row justify-between items-center gap-6 opacity-40">
-         <div className="flex items-center gap-3 text-[10px] font-black uppercase tracking-widest">
+      {/* Footer del card - Fuentes (Grounding Obligatorio) */}
+      <div className="pt-8 border-t border-slate-100 flex flex-col md:flex-row justify-between items-start gap-6">
+         <div className="flex items-center gap-3 text-[10px] font-black uppercase tracking-widest opacity-40">
             <ShieldCheck size={16} className="text-emerald-500" /> Datos Verificados por Arriero Pro
          </div>
-         <a 
-           href={`https://www.google.com/search?q=${data.titulo}+noticias+turismo+actualidad`} 
-           target="_blank"
-           className="flex items-center gap-2 text-[10px] font-black uppercase tracking-widest hover:text-paisa-emerald transition-colors"
-         >
-           <LinkIcon size={14} /> Fuentes de Verificación <ExternalLink size={12} />
-         </a>
+         {data.groundingLinks && data.groundingLinks.length > 0 && (
+           <div className="space-y-2 w-full md:w-auto">
+             <span className="text-[9px] font-black uppercase tracking-widest text-slate-300">Fuentes de Verificación:</span>
+             <div className="flex flex-wrap gap-3">
+               {data.groundingLinks.map((link, idx) => (
+                 <a 
+                   key={idx}
+                   href={link.uri} 
+                   target="_blank"
+                   rel="noopener noreferrer"
+                   className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-slate-50 border border-slate-100 text-[9px] font-bold text-slate-500 hover:text-paisa-emerald hover:bg-emerald-50 transition-all"
+                 >
+                   <LinkIcon size={10} /> {link.title.slice(0, 30)}... <ExternalLink size={10} />
+                 </a>
+               ))}
+             </div>
+           </div>
+         )}
       </div>
     </motion.div>
   );
