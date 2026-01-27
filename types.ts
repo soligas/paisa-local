@@ -19,6 +19,14 @@ export interface CharcoTactico {
   requiereGuia: boolean;
 }
 
+export interface LocalTour {
+  nombre: string;
+  descripcion: string;
+  precioCosto: string;
+  duracion: string;
+  incluye: string[];
+}
+
 export interface FinancialSpot {
   nombre: string;
   tipo: 'ATM' | 'CORRESPONSAL' | 'CAMBIO' | 'BANCO';

@@ -10,11 +10,11 @@ import {
   Activity, Instagram, Youtube, PlayCircle, Map, Waves, Coins,
   CreditCard, Store, Landmark, Info, Briefcase, Footprints, UserCheck, Bike,
   CheckCircle2, AlertCircle, Map as MapIcon, Flag, Link as LinkIcon, ShoppingCart, Coffee, Clock,
-  X, Repeat, ChevronRight
+  X, Repeat, ChevronRight, MapPinned
 } from 'lucide-react';
-import { PlaceData, SupportedLang, CharcoTactico, FinancialSpot, GastroRecommendation } from '../types';
+import { PlaceData, SupportedLang, CharcoTactico, FinancialSpot, GastroRecommendation, LocalTour } from '../types';
 import { SafeImage } from './atoms/SafeImage';
-import { generateSmartItinerary, generateTacticalRecommendations } from '../services/geminiService';
+import { generateSmartItinerary, generateTacticalRecommendations, generateLocalTours } from '../services/geminiService';
 import { Badge } from './atoms/Badge';
 
 interface PlaceCardProps {
@@ -76,6 +76,8 @@ export const PlaceCard: React.FC<PlaceCardProps> = ({ data, lang, i18n, isFavori
   const [itinerary, setItinerary] = useState<any[] | null>(null);
   const [loadingTips, setLoadingTips] = useState(false);
   const [tips, setTips] = useState<string[] | null>(null);
+  const [loadingTours, setLoadingTours] = useState(false);
+  const [tours, setTours] = useState<LocalTour[] | null>(null);
   
   const [numPeople, setNumPeople] = useState(1);
   const [numMeals, setNumMeals] = useState(1);
@@ -96,6 +98,14 @@ export const PlaceCard: React.FC<PlaceCardProps> = ({ data, lang, i18n, isFavori
     const results = await generateTacticalRecommendations(data.titulo, lang);
     if (results) setTips(results);
     setLoadingTips(false);
+  };
+
+  const handleGetTours = async () => {
+    if (loadingTours) return;
+    setLoadingTours(true);
+    const results = await generateLocalTours(data.titulo, lang);
+    if (results) setTours(results);
+    setLoadingTours(false);
   };
 
   const ticketCost = data.budget?.busTicket || 35000;
@@ -307,7 +317,7 @@ export const PlaceCard: React.FC<PlaceCardProps> = ({ data, lang, i18n, isFavori
                                         <span className="text-xs font-black text-[#5C3F1E] mt-1">${dish.precio.toLocaleString()}</span>
                                      </div>
                                   </div>
-                                ))}
+                                )).slice(0, 2)}
                              </div>
                           </div>
                        </div>
@@ -404,6 +414,38 @@ export const PlaceCard: React.FC<PlaceCardProps> = ({ data, lang, i18n, isFavori
                   ))}
                </div>
 
+               {/* RECOMENDACIONES DE TOURS SOLICITADAS */}
+               {tours && (
+                 <div className="bg-white p-12 rounded-[64px] border border-slate-100 space-y-10 shadow-3xl">
+                    <div className="space-y-2">
+                      <h4 className="text-2xl font-black uppercase tracking-widest text-slate-900 flex items-center gap-3">
+                        <MapPinned className="text-paisa-emerald" size={24} /> TOURS IDEALES RECOMENDADOS
+                      </h4>
+                      <p className="text-sm font-serif italic text-slate-400">Seleccionados por nuestro concierge para su disfrute mijo.</p>
+                    </div>
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                       {tours.map((tour, idx) => (
+                         <div key={idx} className="p-8 rounded-[40px] bg-slate-50 border border-slate-100 space-y-4 relative group hover:bg-emerald-50 transition-all">
+                            <div className="flex justify-between items-center">
+                               <Badge color="emerald">{tour.duracion}</Badge>
+                               <span className="text-[11px] font-black text-slate-900">{tour.precioCosto}</span>
+                            </div>
+                            <h5 className="text-lg font-black text-slate-900 uppercase leading-tight">{tour.nombre}</h5>
+                            <p className="text-[11px] text-slate-500 leading-relaxed italic">"{tour.descripcion}"</p>
+                            <div className="pt-4 border-t border-slate-200 space-y-2">
+                               <span className="text-[8px] font-black text-slate-400 uppercase tracking-widest block">INCLUYE:</span>
+                               <div className="flex flex-wrap gap-2">
+                                  {tour.incluye.map((inc, i) => (
+                                    <span key={i} className="text-[8px] font-bold text-paisa-emerald bg-white px-2 py-1 rounded-md shadow-sm border border-slate-100">{inc}</span>
+                                  ))}
+                               </div>
+                            </div>
+                         </div>
+                       ))}
+                    </div>
+                 </div>
+               )}
+
                {tips && (
                  <div className="bg-[#FEFCE8] p-10 rounded-[48px] border border-amber-200 space-y-6">
                     <h4 className="text-xl font-black uppercase tracking-widest text-amber-900 flex items-center gap-3">
@@ -423,12 +465,15 @@ export const PlaceCard: React.FC<PlaceCardProps> = ({ data, lang, i18n, isFavori
                   <h3 className="text-white text-3xl md:text-5xl font-serif italic max-w-2xl mx-auto leading-tight">
                     "¿Quiere que le arme el plan completo mijo?"
                   </h3>
-                  <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
-                    <button onClick={handleGenerateItinerary} disabled={loadingItinerary} className="px-12 py-6 rounded-3xl bg-white text-paisa-emerald font-black uppercase text-[11px] tracking-widest shadow-2xl flex items-center justify-center gap-3 hover:scale-105 transition-all">
+                  <div className="flex flex-wrap items-center justify-center gap-4">
+                    <button onClick={handleGenerateItinerary} disabled={loadingItinerary} className="px-8 py-5 rounded-3xl bg-white text-paisa-emerald font-black uppercase text-[11px] tracking-widest shadow-2xl flex items-center justify-center gap-3 hover:scale-105 transition-all">
                       {loadingItinerary ? <Loader2 className="animate-spin" size={20} /> : <><Sparkles size={20}/> {i18n.btnItinerary}</>}
                     </button>
-                    <button onClick={handleGetTips} disabled={loadingTips} className="px-12 py-6 rounded-3xl bg-white/10 text-white border border-white/20 font-black uppercase text-[11px] tracking-widest shadow-2xl flex items-center justify-center gap-3 hover:bg-white/20 transition-all">
+                    <button onClick={handleGetTips} disabled={loadingTips} className="px-8 py-5 rounded-3xl bg-white/10 text-white border border-white/20 font-black uppercase text-[11px] tracking-widest shadow-2xl flex items-center justify-center gap-3 hover:bg-white/20 transition-all">
                       {loadingTips ? <Loader2 className="animate-spin" size={20} /> : <><Info size={20}/> {i18n.btnTips}</>}
+                    </button>
+                    <button onClick={handleGetTours} disabled={loadingTours} className="px-8 py-5 rounded-3xl bg-paisa-gold text-slate-900 font-black uppercase text-[11px] tracking-widest shadow-2xl flex items-center justify-center gap-3 hover:scale-105 transition-all">
+                      {loadingTours ? <Loader2 className="animate-spin" size={20} /> : <><MapPinned size={20}/> VER TOURS IDEALES</>}
                     </button>
                   </div>
                </div>

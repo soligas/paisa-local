@@ -150,7 +150,7 @@ export async function searchUnified(query: string, lang: SupportedLang = 'es'): 
     return localMatch ? [localMatch] : []; 
   }
 }
-// Resto del código se mantiene igual...
+
 export async function generateSmartItinerary(place: string, lang: SupportedLang = 'es'): Promise<any> {
   const apiKey = process.env.API_KEY || "";
   if (!apiKey) return null;
@@ -205,4 +205,39 @@ export async function generateTacticalRecommendations(place: string, lang: Suppo
     const data = safeJsonParse(response.text);
     return data?.tips || null;
   } catch (e) { return null; }
+}
+
+export async function generateLocalTours(place: string, lang: SupportedLang = 'es'): Promise<any[]> {
+  const apiKey = process.env.API_KEY || "";
+  if (!apiKey) return [];
+  const ai = new GoogleGenAI({ apiKey });
+  try {
+    const response = await ai.models.generateContent({
+      model: 'gemini-3-flash-preview',
+      contents: `Proporciona 3 recomendaciones de tours ideales para ${place}, Antioquia. Incluye tours de aventura, culturales o de naturaleza. Formato JSON.`,
+      config: {
+        responseMimeType: "application/json",
+        responseSchema: {
+          type: Type.OBJECT,
+          properties: {
+            tours: {
+              type: Type.ARRAY,
+              items: {
+                type: Type.OBJECT,
+                properties: {
+                  nombre: { type: Type.STRING },
+                  descripcion: { type: Type.STRING },
+                  precioCosto: { type: Type.STRING },
+                  duracion: { type: Type.STRING },
+                  incluye: { type: Type.ARRAY, items: { type: Type.STRING } }
+                }
+              }
+            }
+          }
+        }
+      }
+    });
+    const data = safeJsonParse(response.text);
+    return data?.tours || [];
+  } catch (e) { return []; }
 }
