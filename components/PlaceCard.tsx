@@ -190,12 +190,12 @@ export const PlaceCard: React.FC<PlaceCardProps> = ({ data, lang, i18n, isFavori
                      <div className="bg-white p-8 rounded-[40px] shadow-sm border border-slate-50">
                         <span className="text-[9px] font-black uppercase tracking-widest text-slate-300 block mb-4">{i18n.buses}</span>
                         <span className="text-lg md:text-xl font-black text-slate-900 leading-tight">
-                          {data.busFrequency || '...'}
+                          {data.busFrequency || 'Cada 45 min aprox.'}
                         </span>
                      </div>
                      <div className="bg-white p-8 rounded-[40px] shadow-sm border border-slate-50">
                         <span className="text-[9px] font-black uppercase tracking-widest text-slate-300 block mb-4">{i18n.departure}</span>
-                        <span className="text-xl md:text-2xl font-black text-slate-900">{data.terminalInfo || '...'}</span>
+                        <span className="text-xl md:text-2xl font-black text-slate-900">{data.terminalInfo || 'Terminal del Sur'}</span>
                      </div>
                   </div>
                </div>
@@ -231,7 +231,7 @@ export const PlaceCard: React.FC<PlaceCardProps> = ({ data, lang, i18n, isFavori
                           <Store size={18} className="text-paisa-emerald" />
                           <div className="flex flex-col">
                              <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest">DÍA DE MERCADO</span>
-                             <span className="text-xs font-black text-slate-700">{data.marketDay || '...'}</span>
+                             <span className="text-xs font-black text-slate-700">{data.marketDay || 'Sábados y Domingos'}</span>
                           </div>
                        </div>
 
