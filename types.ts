@@ -1,6 +1,6 @@
 
 export type SupportedLang = 'es' | 'en' | 'pt';
-export type AppTab = 'home' | 'explore' | 'social_pulse';
+export type AppTab = 'home' | 'explore' | 'social_pulse' | 'favorites';
 export type AntioquiaRegion = 'Oriente' | 'Suroeste' | 'Occidente' | 'Norte' | 'Bajo Cauca' | 'Nordeste' | 'Magdalena Medio' | 'Urabá' | 'Valle de Aburrá';
 
 export interface GroundingLink {
@@ -9,12 +9,53 @@ export interface GroundingLink {
   type: 'video' | 'official' | 'social' | 'news';
 }
 
-export interface SocialPulse {
-  trendingScore: number; // 0-100
-  platform: 'TikTok' | 'Instagram' | 'YouTube';
-  sentiment: 'Positivo' | 'Neutral' | 'Crítico';
-  recentMentions: number;
-  lastUpdate: string;
+export interface CharcoTactico {
+  nombre: string;
+  descripcion: string;
+  mapUrl: string;
+  videoUrl: string;
+  dificultad: 'Fácil' | 'Media' | 'Arriero';
+  equipoNecesario: string[];
+  requiereGuia: boolean;
+}
+
+export interface FinancialSpot {
+  nombre: string;
+  tipo: 'ATM' | 'CORRESPONSAL' | 'CAMBIO' | 'BANCO';
+  nota?: string;
+}
+
+export interface GastroRecommendation {
+  nombre: string;
+  precio: number;
+  descripcion?: string;
+}
+
+/**
+ * Representa un plato típico con información de sostenibilidad y verificación.
+ * Se utiliza en el componente DishCard.
+ */
+export interface DishData {
+  nombre: string;
+  categoria: string;
+  descripcion: string;
+  precioLocalEstimated: number;
+  precioVerificado: boolean;
+  economiaCircular: boolean;
+  imagen?: string;
+}
+
+/**
+ * Representa una experiencia cultural o turística.
+ * Se utiliza en el componente ExperienceCard.
+ */
+export interface CultureExperience {
+  titulo: string;
+  categoria: string;
+  descripcion: string;
+  impactoSocial: string;
+  ubicacion: string;
+  imagen?: string;
 }
 
 export interface PlaceData {
@@ -25,6 +66,7 @@ export interface PlaceData {
   budget: {
     busTicket: number;
     averageMeal: number;
+    dailyStay?: number;
   };
   accessibility: {
     score: number;
@@ -37,8 +79,6 @@ export interface PlaceData {
     lastReported: string;
     emergencyNumber: string;
   };
-  socialPulse?: SocialPulse;
-  groundingLinks?: GroundingLink[];
   viaEstado: string;
   tiempoDesdeMedellin: string;
   imagen: string;
@@ -47,19 +87,32 @@ export interface PlaceData {
     condition: string;
     temp: number;
   };
+  paymentMethods: {
+    cashOnly: boolean;
+    cardAcceptance: 'Baja' | 'Media' | 'Alta';
+    digitalTransfer: boolean;
+    tacticalNote?: string; // e.g., "Manda el efectivo y QR de Bancolombia"
+  };
+  atmAvailable: boolean;
+  financialSpots?: FinancialSpot[];
+  marketDay?: string;
+  localMobility: {
+    type: string;
+    estimatedCost: number;
+  };
+  packingList: string[];
   neighborTip?: string;
-  // Detalle extendido de la Guía del Arriero
-  foodTip?: string;
-  cultureTip?: string;
-  logisticsTip?: string;
-  peopleTip?: string;
-  terminalInfo?: string;
   busFrequency?: string;
-  busCompanies?: string[];
-  seguridadTexto?: string;
-  // Additional fields for local logistics matching
-  nomadScore?: number;
-  wifiQuality?: string;
+  terminalInfo?: string;
+  vibeScore?: number;
+  mapUrl?: string;
+  terminalUrl?: string;
+  gastroSocialUrl?: string;
+  gastroVideoUrl?: string;
+  exchangeHousesUrl?: string;
+  charcosTacticos?: CharcoTactico[];
+  groundingLinks?: GroundingLink[];
+  gastronomia?: GastroRecommendation[];
 }
 
 export type UnifiedItem = PlaceData;
@@ -70,14 +123,13 @@ export interface AppState {
   error: string | null;
   tarjeta: PlaceData | null;
   unifiedResults: UnifiedItem[];
+  favoritePlaces: PlaceData[];
   language: SupportedLang;
   activeTab: AppTab;
   accessibilityMode: boolean;
 }
 
-// Fix: Added missing exported member ChallengeData
 export interface ChallengeData {
-  id: string;
   titulo: string;
   mision: string;
   dificultad: 'Fácil' | 'Media' | 'Arriero';
@@ -85,7 +137,6 @@ export interface ChallengeData {
   completado: boolean;
 }
 
-// Fix: Added missing exported member UGCContent
 export interface UGCContent {
   id: string;
   created_at: string;
@@ -93,23 +144,4 @@ export interface UGCContent {
   user_name: string;
   comment: string;
   stars: number;
-}
-
-// Fix: Added missing exported member DishData
-export interface DishData {
-  nombre: string;
-  descripcion: string;
-  categoria: string;
-  precioLocalEstimated: number;
-  precioVerificado: boolean;
-  economiaCircular: boolean;
-}
-
-// Fix: Added missing exported member CultureExperience
-export interface CultureExperience {
-  titulo: string;
-  descripcion: string;
-  categoria: string;
-  impactoSocial: string;
-  ubicacion: string;
 }

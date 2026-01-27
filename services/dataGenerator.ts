@@ -22,10 +22,8 @@ function robustParse(text: string) {
 }
 
 export async function generateAndSeedPueblos(onProgress: (current: number, total: number, lastPueblo: string) => void) {
-  const apiKey = (process.env.API_KEY || '').toString();
-  if (!apiKey || apiKey === 'undefined') return;
+  if (!process.env.API_KEY || process.env.API_KEY === 'undefined') return;
   
-  const ai = new GoogleGenAI({ apiKey });
   const batchSize = 3; 
   const total = MUNICIPIOS_ANTIOQUIA.length;
 
@@ -33,10 +31,12 @@ export async function generateAndSeedPueblos(onProgress: (current: number, total
     const batch = MUNICIPIOS_ANTIOQUIA.slice(i, i + batchSize);
     
     try {
+      // Create a new GoogleGenAI instance right before making an API call to ensure it always uses the most up-to-date API key
+      const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
       const response = await ai.models.generateContent({
         model: "gemini-3-pro-preview",
         contents: `Investiga municipios de Antioquia: ${batch.join(", ")}.
-        Responde un JSON ARRAY con objetos:
+        Responde un JSON ARRAY with objetos:
         {
           "titulo": "...",
           "region": "...",

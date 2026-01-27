@@ -1,11 +1,9 @@
 
 import { GoogleGenAI, Type } from "@google/genai";
-import { SupportedLang, PlaceData, AntioquiaRegion, DishData, CultureExperience } from "../types";
+import { SupportedLang, PlaceData, GroundingLink } from "../types";
 import { getLocalPlace } from "./logisticsService";
 import { getUnsplashImage } from "./unsplashService";
 import { findBlobUrlByName } from "./blobService";
-
-const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
 
 function safeJsonParse(text: string) {
   if (!text) return null;
@@ -13,26 +11,30 @@ function safeJsonParse(text: string) {
     let cleaned = text.trim();
     cleaned = cleaned.replace(/```json/g, '').replace(/```/g, '').trim();
     const startIdx = cleaned.search(/[\{\[]/);
-    if (startIdx === -1) return null;
     const lastBracket = cleaned.lastIndexOf(']');
     const lastBrace = cleaned.lastIndexOf('}');
     const endIdx = Math.max(lastBracket, lastBrace);
-    if (endIdx === -1 || endIdx < startIdx) return null;
-    cleaned = cleaned.substring(startIdx, endIdx + 1);
-    return JSON.parse(cleaned);
-  } catch (e) { 
-    console.error("Error parseando JSON de Gemini:", e);
-    return null; 
-  }
+    if (startIdx === -1 || endIdx === -1 || endIdx < startIdx) return null;
+    return JSON.parse(cleaned.substring(startIdx, endIdx + 1));
+  } catch (e) { return null; }
 }
 
 export async function searchUnified(query: string, lang: SupportedLang = 'es'): Promise<any[]> {
   const localMatch = getLocalPlace(query);
+  if (!process.env.API_KEY) return localMatch ? [localMatch] : [];
+  
+  const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
   
   try {
     const response = await ai.models.generateContent({
       model: "gemini-3-flash-preview",
-      contents: `Proporciona información turística y logística real para: "${query}, Antioquia, Colombia". Idioma: ${lang}.`,
+      contents: `Realiza una auditoría táctica de viaje para: "${query}, Antioquia". Idioma: ${lang}.
+      Necesito detalles CRUDOS para un turista:
+      1. Logística: Buses, frecuencia, terminal y movilidad local.
+      2. Economía: Cajeros (ATM), si aceptan tarjeta, nota táctica sobre pagos (efectivo vs QR Bancolombia), lugares específicos de cambio de moneda (Western Union o bancos), puntos específicos de retiro y qué día es el mercado.
+      3. Gastronomía: 3 platos típicos imperdibles con precio estimado.
+      4. Aventura: 3 charcos/rutas con dificultad y equipo.
+      5. Maleta: 5 cosas esenciales.`,
       config: {
         tools: [{ googleSearch: {} }],
         responseMimeType: "application/json",
@@ -45,105 +47,137 @@ export async function searchUnified(query: string, lang: SupportedLang = 'es'): 
                 type: Type.OBJECT,
                 properties: {
                   titulo: { type: Type.STRING },
-                  region: { type: Type.STRING, description: "Subregión de Antioquia (Oriente, Suroeste, etc)" },
+                  region: { type: Type.STRING },
                   descripcion: { type: Type.STRING },
-                  imgKeyword: { type: Type.STRING },
-                  viaEstado: { type: Type.STRING, description: "Estado actual de la vía (Despejada, Obras)" },
-                  pavementType: { type: Type.STRING, description: "Pavimentada, Placa Huella o Destapada" },
-                  tiempoDesdeMedellin: { type: Type.STRING },
+                  busFrequency: { type: Type.STRING },
+                  atmAvailable: { type: Type.BOOLEAN },
+                  marketDay: { type: Type.STRING },
+                  paymentMethods: {
+                    type: Type.OBJECT,
+                    properties: {
+                      cashOnly: { type: Type.BOOLEAN },
+                      cardAcceptance: { type: Type.STRING },
+                      tacticalNote: { type: Type.STRING }
+                    }
+                  },
+                  financialSpots: {
+                    type: Type.ARRAY,
+                    items: {
+                      type: Type.OBJECT,
+                      properties: {
+                        nombre: { type: Type.STRING },
+                        tipo: { type: Type.STRING, enum: ["ATM", "CORRESPONSAL", "CAMBIO", "BANCO"] },
+                        nota: { type: Type.STRING }
+                      }
+                    }
+                  },
+                  gastronomia: {
+                    type: Type.ARRAY,
+                    items: {
+                      type: Type.OBJECT,
+                      properties: {
+                        nombre: { type: Type.STRING },
+                        precio: { type: Type.NUMBER },
+                        descripcion: { type: Type.STRING }
+                      }
+                    }
+                  },
+                  localMobility: {
+                    type: Type.OBJECT,
+                    properties: {
+                      type: { type: Type.STRING },
+                      estimatedCost: { type: Type.NUMBER }
+                    }
+                  },
+                  packingList: { type: Type.ARRAY, items: { type: Type.STRING } },
                   budget: {
                     type: Type.OBJECT,
                     properties: {
                       busTicket: { type: Type.NUMBER },
-                      averageMeal: { type: Type.NUMBER }
+                      averageMeal: { type: Type.NUMBER },
+                      dailyStay: { type: Type.NUMBER }
+                    }
+                  },
+                  charcosTacticos: {
+                    type: Type.ARRAY,
+                    items: {
+                      type: Type.OBJECT,
+                      properties: {
+                        nombre: { type: Type.STRING },
+                        descripcion: { type: Type.STRING },
+                        dificultad: { type: Type.STRING },
+                        requiereGuia: { type: Type.BOOLEAN },
+                        equipoNecesario: { type: Type.ARRAY, items: { type: Type.STRING } },
+                        mapUrl: { type: Type.STRING },
+                        videoUrl: { type: Type.STRING }
+                      }
                     }
                   }
-                },
-                required: ["titulo", "region", "descripcion"]
-              }
-            },
-            dishes: {
-              type: Type.ARRAY,
-              items: {
-                type: Type.OBJECT,
-                properties: {
-                  nombre: { type: Type.STRING },
-                  descripcion: { type: Type.STRING },
-                  categoria: { type: Type.STRING },
-                  precioLocalEstimated: { type: Type.NUMBER }
                 }
               }
             }
           }
         },
-        systemInstruction: `Eres Arriero Pro. Tu misión es proveer datos tácticos precisos sobre Antioquia. Siempre usa Google Search para verificar precios de pasajes y estados de vías actuales.`
+        systemInstruction: "Eres Arriero Pro. Sé específico sobre los métodos de pago. En muchos pueblos de Antioquia manda el efectivo o el QR de Bancolombia. Identifica casas de cambio reales o corresponsales bancarios clave."
       },
     });
 
-    const rawData = safeJsonParse(response.text);
-    
-    // Extracción obligatoria de enlaces de grounding (Google Search Rules)
-    const groundingLinks = response.candidates?.[0]?.groundingMetadata?.groundingChunks?.map((chunk: any) => ({
-      title: chunk.web?.title || "Fuente de verificación",
-      uri: chunk.web?.uri || "#",
-      type: 'news'
-    })) || [];
-
-    if (!rawData) return localMatch ? [localMatch] : [];
-
-    const results: any[] = [];
-
-    if (rawData.places) {
-      for (const data of rawData.places) {
-        let img = await findBlobUrlByName(data.titulo) || await getUnsplashImage(data.imgKeyword || `${data.titulo} Antioquia`);
-        results.push({
-          type: 'place',
-          titulo: data.titulo,
-          region: data.region || "Valle de Aburrá",
-          descripcion: data.descripcion,
-          imagen: img || "https://images.unsplash.com/photo-1591605417688-6c0b3b320791",
-          viaEstado: data.viaEstado || "Despejada",
-          pavementType: data.pavementType || "Pavimentada",
-          budget: data.budget || { busTicket: 35000, averageMeal: 25000 },
-          terminalInfo: data.region?.includes('Oriente') || data.region?.includes('Norte') ? "Terminal del Norte" : "Terminal del Sur",
-          accessibility: { score: 85, wheelchairFriendly: true },
-          security: { status: 'Seguro' },
-          tiempoDesdeMedellin: data.tiempoDesdeMedellin || "2-3 Horas",
-          groundingLinks: groundingLinks // Inyectamos las fuentes verificadas
-        });
-      }
-    }
-
-    if (rawData.dishes) {
-      rawData.dishes.forEach((d: any) => {
-        results.push({ ...d, type: 'dish' });
+    const groundingLinks: GroundingLink[] = [];
+    const groundingChunks = response.candidates?.[0]?.groundingMetadata?.groundingChunks;
+    if (groundingChunks) {
+      groundingChunks.forEach((chunk: any) => {
+        if (chunk.web) {
+          groundingLinks.push({
+            title: chunk.web.title || 'Referencia',
+            uri: chunk.web.uri,
+            type: 'news'
+          });
+        }
       });
     }
 
-    if (localMatch && !results.some(r => r.type === 'place' && r.titulo.toLowerCase().includes(localMatch.titulo.toLowerCase()))) {
-      results.unshift(localMatch);
+    const rawData = safeJsonParse(response.text || "");
+    const results: any[] = [];
+    if (rawData?.places) {
+      for (const data of rawData.places) {
+        const img = await findBlobUrlByName(data.titulo) || await getUnsplashImage(`${data.titulo} Antioquia`);
+        results.push({
+          type: 'place',
+          ...data,
+          imagen: img || "https://images.unsplash.com/photo-1591605417688-6c0b3b320791",
+          terminalInfo: data.region?.toLowerCase().includes('oriente') ? "Terminal del Norte" : "Terminal del Sur",
+          groundingLinks
+        });
+      }
     }
-
-    return results;
-  } catch (e) {
-    console.error("Fallo crítico en búsqueda:", e);
-    return localMatch ? [localMatch] : [];
-  }
+    return results.length === 0 && localMatch ? [localMatch] : results;
+  } catch (e) { return localMatch ? [localMatch] : []; }
 }
 
-export async function generateSmartItinerary(pueblo: string, lang: SupportedLang = 'es') {
+export async function generateSmartItinerary(place: string, lang: SupportedLang = 'es'): Promise<any> {
+  if (!process.env.API_KEY) return null;
+  const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
   try {
     const response = await ai.models.generateContent({
       model: 'gemini-3-flash-preview',
-      contents: `Crea un itinerario de 3 momentos para ${pueblo}, Antioquia. Idioma: ${lang}.`,
+      contents: `Crea un itinerario táctico de un día (mañana, tarde, noche) para un viaje a ${place}, Antioquia. Incluye horas sugeridas, actividades recomendadas y un 'tip del arriero' por cada parada. Idioma: ${lang}.`,
       config: { 
         responseMimeType: "application/json",
         responseSchema: {
           type: Type.OBJECT,
           properties: {
-            morning: { type: Type.OBJECT, properties: { activity: { type: Type.STRING }, tip: { type: Type.STRING } } },
-            afternoon: { type: Type.OBJECT, properties: { activity: { type: Type.STRING }, tip: { type: Type.STRING } } },
-            evening: { type: Type.OBJECT, properties: { activity: { type: Type.STRING }, tip: { type: Type.STRING } } }
+            itinerary: {
+              type: Type.ARRAY,
+              items: {
+                type: Type.OBJECT,
+                properties: {
+                  hora: { type: Type.STRING },
+                  actividad: { type: Type.STRING },
+                  lugar: { type: Type.STRING },
+                  tip: { type: Type.STRING }
+                }
+              }
+            }
           }
         }
       }
@@ -152,19 +186,24 @@ export async function generateSmartItinerary(pueblo: string, lang: SupportedLang
   } catch (e) { return null; }
 }
 
-export async function generateTacticalRecommendations(pueblo: string, lang: SupportedLang = 'es') {
+export async function generateTacticalRecommendations(place: string, lang: SupportedLang = 'es'): Promise<string[] | null> {
+  if (!process.env.API_KEY) return null;
+  const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
   try {
     const response = await ai.models.generateContent({
       model: 'gemini-3-flash-preview',
-      contents: `Dame 5 tips tácticos secretos para visitar ${pueblo}, Antioquia. Idioma: ${lang}.`,
-      config: { 
+      contents: `Dime 5 secretos o 'tips del arriero' que solo un local sabe sobre ${place}, Antioquia. Se muy específico sobre lugares, rutas o comida.`,
+      config: {
         responseMimeType: "application/json",
         responseSchema: {
-          type: Type.ARRAY,
-          items: { type: Type.STRING }
+          type: Type.OBJECT,
+          properties: {
+            tips: { type: Type.ARRAY, items: { type: Type.STRING } }
+          }
         }
       }
     });
-    return safeJsonParse(response.text);
+    const data = safeJsonParse(response.text);
+    return data?.tips || null;
   } catch (e) { return null; }
 }

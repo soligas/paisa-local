@@ -3,7 +3,8 @@ import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
   Coffee, Waves, Mountain, Trees, Compass, Users, 
-  ChevronRight, Map as MapIcon
+  ChevronRight, Map as MapIcon, Sparkles, Navigation as NavIcon,
+  Sun, Wind, Briefcase, Zap
 } from 'lucide-react';
 import { Badge } from '../atoms/Badge';
 import { SupportedLang } from '../../types';
@@ -19,42 +20,41 @@ interface RegionData {
   tesoros: Record<SupportedLang, string[]>;
 }
 
-// Polígonos estilizados basados en la imagen de referencia (Geometría limpia)
 const REGIONS: RegionData[] = [
   { 
     id: 'uraba', name: { es: 'Urabá', en: 'Uraba', pt: 'Urabá' }, municipios: 11, 
     vibe: { es: 'Mar de Oportunidades', en: 'Sea of Opportunities', pt: 'Mar de Oportunidades' }, 
-    icon: Waves, color: '#D4A574', // Oro para el activo inicial en la imagen
+    icon: Wind, color: '#1B4731', 
     path: "M15,25 L35,15 L55,20 L60,35 L45,55 L25,60 L15,45 Z",
-    tesoros: { es: ['Necoclí', 'Capurganá'], en: ['Necocli', 'Capurgana'], pt: ['Necocli', 'Capurganá'] }
+    tesoros: { es: ['Necoclí', 'Apartadó'], en: ['Necocli', 'Apartado'], pt: ['Necocli', 'Apartadó'] }
   },
   { 
     id: 'norte', name: { es: 'Norte', en: 'North', pt: 'Norte' }, municipios: 17, 
     vibe: { es: 'Ruta de la Leche', en: 'The Milk Route', pt: 'Rota do Leite' }, 
     icon: Trees, color: '#2d7a4c', 
     path: "M55,20 L80,15 L95,30 L75,50 L60,35 Z",
-    tesoros: { es: ['Belmira', 'San Pedro'], en: ['Belmira', 'San Pedro'], pt: ['Belmira', 'São Pedro'] }
+    tesoros: { es: ['Belmira', 'S. Rosa de Osos'], en: ['Belmira', 'Santa Rosa'], pt: ['Belmira', 'Santa Rosa'] }
   },
   { 
     id: 'occidente', name: { es: 'Occidente', en: 'West', pt: 'Ocidente' }, municipios: 19, 
     vibe: { es: 'Historia y Sol', en: 'History & Sun', pt: 'História e Sol' }, 
-    icon: Mountain, color: '#1A4731', 
+    icon: Sun, color: '#1A4731', 
     path: "M45,55 L65,55 L65,75 L40,85 L25,60 Z",
-    tesoros: { es: ['Sta Fe de Antioquia', 'Liborina'], en: ['Santa Fe', 'Liborina'], pt: ['Santa Fé', 'Liborina'] }
+    tesoros: { es: ['Sta Fe de Antioquia', 'Sopetrán'], en: ['Santa Fe', 'Sopetran'], pt: ['Santa Fé', 'Sopetran'] }
   },
   { 
     id: 'aburra', name: { es: 'Valle de Aburrá', en: 'Aburra Valley', pt: 'Vale de Aburrá' }, municipios: 10, 
     vibe: { es: 'Corazón Urbano', en: 'Urban Heart', pt: 'Coração Urbano' }, 
-    icon: Users, color: '#2d7a4c', 
+    icon: NavIcon, color: '#2d7a4c', 
     path: "M65,55 L85,55 L90,70 L70,80 L65,75 Z",
-    tesoros: { es: ['Medellín', 'Bello'], en: ['Medellin', 'Bello'], pt: ['Medellín', 'Bello'] }
+    tesoros: { es: ['Medellín', 'Envigado'], en: ['Medellin', 'Envigado'], pt: ['Medellín', 'Envigado'] }
   },
   { 
     id: 'oriente', name: { es: 'Oriente', en: 'East', pt: 'Oriente' }, municipios: 23, 
     vibe: { es: 'Aguas y Flores', en: 'Waters & Flowers', pt: 'Águas e Flores' }, 
     icon: Waves, color: '#1A4731', 
     path: "M85,55 L110,65 L100,85 L85,100 L70,95 L70,80 Z",
-    tesoros: { es: ['Guatapé', 'Rionegro'], en: ['Guatape', 'Rionegro'], pt: ['Guatapé', 'Rionegro'] }
+    tesoros: { es: ['Guatapé', 'El Carmen'], en: ['Guatape', 'El Carmen'], pt: ['Guatapé', 'El Carmen'] }
   },
   { 
     id: 'suroeste', name: { es: 'Suroeste', en: 'Southwest', pt: 'Sudoeste' }, municipios: 23, 
@@ -77,49 +77,80 @@ export const EpicAntioquiaMap: React.FC<EpicAntioquiaMapProps> = ({ onSelectRegi
   const activeRegion = hovered || selected;
 
   return (
-    <div className="relative w-full min-h-[500px] bg-white rounded-[48px] overflow-hidden shadow-2xl border border-slate-100 flex flex-col lg:flex-row">
+    <div className="relative w-full rounded-[64px] overflow-hidden shadow-4xl border border-slate-100 flex flex-col lg:flex-row bg-white h-auto lg:h-[600px]">
       
-      {/* Panel Info Estilo Minimalista */}
-      <div className="z-20 w-full lg:w-[40%] p-10 flex flex-col justify-center bg-white/60 backdrop-blur-xl">
+      {/* Panel de Info - Optimización visual táctica */}
+      <div className="z-20 w-full lg:w-[45%] p-10 md:p-14 flex flex-col justify-center bg-white/80 backdrop-blur-3xl border-r border-slate-50">
         <AnimatePresence mode="wait">
           {activeRegion && (
             <motion.div 
               key={activeRegion.id}
-              initial={{ opacity: 0, x: -20 }}
+              initial={{ opacity: 0, x: -30 }}
               animate={{ opacity: 1, x: 0 }}
-              className="space-y-6"
+              exit={{ opacity: 0, x: 30 }}
+              className="space-y-8"
             >
-              <h4 className="text-[12px] font-black uppercase tracking-[0.4em] text-paisa-gold">SUBREGIÓN {activeRegion.id}</h4>
-              <h2 className="text-4xl md:text-5xl font-black uppercase tracking-tighter text-slate-900 leading-none">
-                {activeRegion.name[lang]}
-              </h2>
-              <div className="flex items-center gap-3">
-                 <Badge color="emerald">{activeRegion.municipios} Municipios</Badge>
-              </div>
-              <p className="text-slate-400 text-xl italic font-serif leading-snug">
-                "{activeRegion.vibe[lang]}"
-              </p>
-              
-              <div className="flex flex-wrap gap-2 pt-2">
-                 {activeRegion.tesoros[lang].map(t => (
-                   <span key={t} className="px-3 py-1 rounded-full bg-slate-50 text-[10px] font-bold text-slate-400 uppercase tracking-widest">{t}</span>
-                 ))}
+              <div className="flex items-center gap-4">
+                 <div className="w-14 h-14 rounded-2xl bg-paisa-emerald text-white flex items-center justify-center shadow-xl ring-4 ring-emerald-50">
+                    <activeRegion.icon size={28} />
+                 </div>
+                 <div className="space-y-1">
+                    <h4 className="text-[10px] font-black uppercase tracking-[0.4em] text-paisa-gold">SUBREGIÓN TÁCTICA</h4>
+                    <h2 className="text-4xl md:text-6xl font-black uppercase tracking-tighter text-slate-950 leading-none">
+                      {activeRegion.name[lang]}
+                    </h2>
+                 </div>
               </div>
 
-              <button 
-                onClick={() => onSelectRegion(activeRegion.name[lang])}
-                className="w-full py-5 bg-paisa-emerald text-white rounded-2xl font-black uppercase text-[11px] tracking-widest shadow-lg hover:brightness-110 active:scale-95 transition-all flex items-center justify-center gap-2"
-              >
-                Explorar {activeRegion.name[lang]} <ChevronRight size={18} />
-              </button>
+              <div className="grid grid-cols-2 gap-4">
+                 <div className="p-6 rounded-[32px] bg-slate-50 border border-slate-100">
+                    <span className="block text-[8px] font-black uppercase tracking-widest text-slate-400 mb-1">CENSO</span>
+                    <span className="text-xl font-black text-slate-900">{activeRegion.municipios} Pueblos</span>
+                 </div>
+                 <div className="p-6 rounded-[32px] bg-emerald-50 border border-emerald-100">
+                    <span className="block text-[8px] font-black uppercase tracking-widest text-paisa-emerald mb-1">VIBE</span>
+                    <span className="text-xl font-black text-paisa-emerald">Pura Vida</span>
+                 </div>
+              </div>
+
+              <div className="space-y-4">
+                 <p className="text-slate-400 text-2xl italic font-serif leading-tight">
+                   "{activeRegion.vibe[lang]}"
+                 </p>
+                 <div className="flex flex-wrap gap-2">
+                    {activeRegion.tesoros[lang].map(t => (
+                      <span key={t} className="px-4 py-2 rounded-xl bg-slate-100 text-[9px] font-black text-slate-500 uppercase tracking-widest border border-slate-200">
+                         {t}
+                      </span>
+                    ))}
+                 </div>
+              </div>
+
+              <div className="pt-4">
+                <button 
+                  onClick={() => onSelectRegion(activeRegion.name[lang])}
+                  className="group w-full py-6 bg-slate-950 text-white rounded-3xl font-black uppercase text-[12px] tracking-[0.2em] shadow-2xl hover:bg-paisa-emerald transition-all flex items-center justify-center gap-4"
+                >
+                  <Zap size={18} className="text-paisa-gold group-hover:animate-pulse" />
+                  EXPLORAR {activeRegion.name[lang]}
+                  <ChevronRight size={18} />
+                </button>
+              </div>
             </motion.div>
           )}
         </AnimatePresence>
       </div>
 
-      {/* Mapa de Polígonos Geométricos (Simulando la imagen) */}
-      <div className="flex-1 flex items-center justify-center p-12 bg-slate-50 relative overflow-hidden">
-        <svg viewBox="0 0 150 120" className="w-full h-full max-h-[400px] drop-shadow-xl overflow-visible">
+      {/* Mapa Táctico - Estilo Geométrico Minimalista */}
+      <div className="flex-1 flex items-center justify-center p-12 bg-slate-50/50 relative overflow-hidden">
+        <div className="absolute top-10 right-10 flex flex-col items-end gap-1 opacity-20 pointer-events-none">
+           <span className="text-[10px] font-black uppercase tracking-widest">Antioquia Data Index</span>
+           <div className="flex gap-1">
+              {[1,2,3,4,5].map(i => <div key={i} className="w-1 h-1 bg-paisa-emerald rounded-full" />)}
+           </div>
+        </div>
+
+        <svg viewBox="0 0 150 120" className="w-full h-full max-h-[450px] drop-shadow-[0_25px_50px_rgba(0,0,0,0.15)] overflow-visible">
           {REGIONS.map((region) => (
             <motion.path
               key={region.id}
@@ -134,13 +165,28 @@ export const EpicAntioquiaMap: React.FC<EpicAntioquiaMapProps> = ({ onSelectRegi
               className="cursor-pointer transition-all duration-300 outline-none"
               initial={false}
               animate={{
-                fill: activeRegion?.id === region.id ? '#D4A574' : region.color
+                fill: activeRegion?.id === region.id ? '#D4A574' : region.color,
+                strokeWidth: activeRegion?.id === region.id ? 2 : 1.5,
+                filter: activeRegion?.id === region.id ? 'brightness(1.1)' : 'brightness(1)'
               }}
             />
           ))}
-          {/* Indicador de punto central (Medellín) */}
-          <circle cx="75" cy="65" r="1.5" fill="white" className="pointer-events-none" />
+          {/* Medellín Marker */}
+          <motion.circle 
+            cx="75" cy="65" r="2" fill="white" 
+            animate={{ scale: [1, 1.5, 1], opacity: [0.5, 1, 0.5] }}
+            transition={{ duration: 2, repeat: Infinity }}
+            className="pointer-events-none shadow-xl" 
+          />
         </svg>
+
+        {/* Legend / Overlay */}
+        <div className="absolute bottom-10 right-10 text-right space-y-2">
+           <div className="flex items-center gap-3 justify-end">
+              <span className="text-[9px] font-black uppercase tracking-widest text-slate-400">Arriero Pro Tactical Map v2.9</span>
+              <NavIcon size={14} className="text-paisa-gold" />
+           </div>
+        </div>
       </div>
     </div>
   );
