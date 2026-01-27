@@ -35,7 +35,7 @@ export async function searchUnified(query: string, lang: SupportedLang = 'es'): 
       model: "gemini-3-flash-preview",
       contents: `Realiza una auditoría táctica de viaje para: "${query}, Antioquia". Idioma: ${lang}.
       Necesito detalles CRUDOS para un turista:
-      1. Logística: Buses, frecuencia, terminal y movilidad local.
+      1. Logística: Debes especificar la frecuencia exacta de buses (ej: cada 20 min) y decir exactamente si sale de la 'Terminal del Norte' o 'Terminal del Sur'. No digas 'Norte/Sur'.
       2. Economía: Cajeros (ATM), si aceptan tarjeta, nota táctica sobre pagos (efectivo vs QR Bancolombia), lugares específicos de cambio de moneda (Western Union o bancos), puntos específicos de retiro y qué día es el mercado.
       3. Gastronomía: 3 platos típicos imperdibles con precio estimado.
       4. Aventura: 3 charcos/rutas con dificultad y equipo.
@@ -54,7 +54,8 @@ export async function searchUnified(query: string, lang: SupportedLang = 'es'): 
                   titulo: { type: Type.STRING },
                   region: { type: Type.STRING },
                   descripcion: { type: Type.STRING },
-                  busFrequency: { type: Type.STRING },
+                  busFrequency: { type: Type.STRING, description: "Frecuencia de salida de buses desde Medellín" },
+                  terminalInfo: { type: Type.STRING, description: "Indicar si es Terminal del Norte o Terminal del Sur" },
                   atmAvailable: { type: Type.BOOLEAN },
                   marketDay: { type: Type.STRING },
                   paymentMethods: {
@@ -123,7 +124,7 @@ export async function searchUnified(query: string, lang: SupportedLang = 'es'): 
             }
           }
         },
-        systemInstruction: "Eres Arriero Pro. Sé específico sobre los métodos de pago. En muchos pueblos de Antioquia manda el efectivo o el QR de Bancolombia. Identifica casas de cambio reales o corresponsales bancarios clave. Si no encuentras datos exactos, usa promedios lógicos de la subregión."
+        systemInstruction: "Eres Arriero Pro. No uses marcadores de posición como '...'. Si no conoces la terminal exacta, búscala. Suroeste sale de la Sur, Oriente/Norte sale de la Norte."
       },
     });
 
@@ -136,7 +137,8 @@ export async function searchUnified(query: string, lang: SupportedLang = 'es'): 
           type: 'place',
           ...data,
           imagen: img || "https://images.unsplash.com/photo-1591605417688-6c0b3b320791",
-          terminalInfo: data.region?.toLowerCase().includes('oriente') ? "Terminal del Norte" : "Terminal del Sur",
+          terminalInfo: data.terminalInfo || (data.region?.toLowerCase().includes('oriente') ? "Terminal del Norte" : "Terminal del Sur"),
+          busFrequency: data.busFrequency || "Cada 30 minutos aprox.",
           packingList: (data.packingList && data.packingList.length > 0) ? data.packingList : ["Bloqueador solar", "Repelente", "Saco ligero", "Cámara", "Efectivo"],
           vibeScore: data.vibeScore || 95
         });
@@ -148,7 +150,7 @@ export async function searchUnified(query: string, lang: SupportedLang = 'es'): 
     return localMatch ? [localMatch] : []; 
   }
 }
-
+// Resto del código se mantiene igual...
 export async function generateSmartItinerary(place: string, lang: SupportedLang = 'es'): Promise<any> {
   const apiKey = process.env.API_KEY || "";
   if (!apiKey) return null;

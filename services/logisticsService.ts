@@ -9,15 +9,16 @@ export const normalizeText = (str: string) =>
      .trim();
 
 export const MUNICIPIOS_ANTIOQUIA = [
-  "Abejorral", "Abriaqui", "Alejandria", "Amaga", "Amalfi", "Andes", "Angelopolis", "Angostura", "Anori", "Anza", "Apartado", "Arboletes", "Argelia", "Armenia", "Barbosa", "Belmira", "Bello", "Betania", "Betulia", "Briceño", "Buritica", "Caicedo", "Caldas", "Campamento", "Cañasgordas", "Caracoli", "Caramanta", "Carepa", "El Carmen de Viboral", "Carolina del Principe", "Caucasia", "Chigorodo", "Cisneros", "Ciudad Bolivar", "Cocorna", "Concepcion", "Concordia", "Copacabana", "Dabeiba", "Donmatias", "Ebejico", "El Bagre", "El Peñol", "El Retiro", "El Santuario", "Entrerrios", "Envigado", "Frontino", "Fredonia", "Giraldo", "Girardota", "Gomez Plata", "Granada", "Guadalupe", "Guarne", "Guatape", "Heliconia", "Hispania", "Itagui", "Ituango", "Jardin", "Jerico", "La Ceja", "La Estrella", "La Pintada", "La Union", "Liborina", "Maceo", "Marinilla", "Medellín", "Montebello", "Murindo", "Mutata", "Nariño", "Nechi", "Necocli", "Olaya", "Peque", "Pueblorrico", "Puerto Berrio", "Puerto Nare", "Puerto Triunfo", "Remedios", "Rionegro", "Sabanalarga", "Sabaneta", "Salgar", "San Andres de Cuerquia", "San Carlos", "San Francisco", "San Jeronimo", "San Jose de la Montaña", "San Juan de Uraba", "San Luis", "San Pedro de los Milagros", "San Pedro de Uraba", "San Rafael", "San Roque", "San Vicente Ferrer", "Santa Barbara", "Santa Fe de Antioquia", "Santa Rosa de Osos", "Santo Domingo", "Segovia", "Sonson", "Sopetran", "Tamesis", "Taraza", "Tarso", "Titiribi", "Toledo", "Turbo", "Uramita", "Urrao", "Valdivia", "Valparaiso", "Vegachi", "Venecia", "Vigia del Fuerte", "Yali", "Yarumal", "Yolombo", "Yondo", "Zaragoza"
+  "Abejorral", "Abriaqui", "Alejandria", "Amaga", "Amalfi", "Andes", "Angelopolis", "Angostura", "Anori", "Anza", "Apartado", "Arboletes", "Argelia", "Armenia", "Barbosa", "Belmira", "Bello", "Betania", "Betulia", "Briceño", "Buritica", "Caicedo", "Caldas", "Campamento", "Cañasgordas", "Caracoli", "Caramanta", "Carepa", "El Carmen de Viboral", "Carolina del Principe", "Caucasia", "Chigorodo", "Cisneros", "Ciudad Bolivar", "Cocorna", "Concepcion", "Concordia", "Copacabana", "Dabeiba", "Donmatias", "Ebejico", "El Bagre", "El Peñol", "El Retiro", "El Santuario", "Entrerrios", "Envigado", "Frontino", "Fredonia", "Giraldo", "Girardota", "Gomez Plata", "Granada", "Guadalupe", "Guarne", "Guatape", "Heliconia", "Hispania", "Itagui", "Ituango", "Jardin", "Jerico", "La Ceja", "La Estrella", "La Pintada", "La Union", "Liborina", "Maceo", "Marinilla", "Medellín", "Montebello", "Murindo", "Mutata", "Nariño", "Nechi", "Necocli", "Olaya", "Peque", "Pueblorrico", "Puerto Berrio", "Puerto Nare", "Puerto Triunfo", "Remedios", "Rionegro", "Sabanalarga", "Sabaneta", "Salgar", "San Andres de Cuerquia", "San Carlos", "San Francisco", "San Jeronimo", "San Jose de la Montaña", "San Juan de Uraba", "San Luis", "San Pedro de los Milagros", "San Pedro de Uraba", "San Rafael", "San Roque", "San Vicente Ferrer", "Santa Barbara", "Santa Fe de Antioquia", "Santa Rosa de Osos", "Santo Domingo", "Segovia", "SSonson", "Sopetran", "Tamesis", "Taraza", "Tarso", "Titiribi", "Toledo", "Turbo", "Uramita", "Urrao", "Valdivia", "Valparaiso", "Vegachi", "Venecia", "Vigia del Fuerte", "Yali", "Yarumal", "Yolombo", "Yondo", "Zaragoza"
 ];
 
 const DEFAULT_LOGISTICS: Record<string, { terminal: string, avgPrice: number, time: string, frequency: string, companies: string[] }> = {
-  'Oriente': { terminal: 'Norte', avgPrice: 18000, time: '1.5h', frequency: 'Cada 15 min', companies: ['Sotra San Vicente', 'Transunidos'] },
-  'Suroeste': { terminal: 'Sur', avgPrice: 32000, time: '3h', frequency: 'Cada 30 min', companies: ['Transportes Suroeste', 'Rápido Ochoa'] },
-  'Occidente': { terminal: 'Norte', avgPrice: 15000, time: '1.5h', frequency: 'Cada 20 min', companies: ['Sotrasur', 'Gomez Hernandez'] },
-  'Norte': { terminal: 'Norte', avgPrice: 25000, time: '2.5h', frequency: 'Cada 45 min', companies: ['Coonorte', 'Expreso Brasilia'] },
-  'Valle de Aburrá': { terminal: 'Norte/Sur', avgPrice: 3000, time: '0.5h', frequency: 'Cada 5 min', companies: ['Metro de Medellín'] }
+  'Oriente': { terminal: 'Norte', avgPrice: 18000, time: '1.5h', frequency: 'Cada 15-20 min', companies: ['Sotra San Vicente', 'Transunidos', 'Sotramar'] },
+  'Suroeste': { terminal: 'Sur', avgPrice: 35000, time: '3h', frequency: 'Cada 30-45 min', companies: ['Transportes Suroeste', 'Rápido Ochoa', 'Coonorte'] },
+  'Occidente': { terminal: 'Norte', avgPrice: 16000, time: '1.5h', frequency: 'Cada 20-30 min', companies: ['Sotrasur', 'Gomez Hernandez'] },
+  'Norte': { terminal: 'Norte', avgPrice: 28000, time: '2.5h', frequency: 'Cada 40 min', companies: ['Coonorte', 'Expreso Brasilia'] },
+  'Urabá': { terminal: 'Norte', avgPrice: 85000, time: '8h', frequency: 'Salidas diarias c/ 2 horas', companies: ['Sotrauraba', 'Coonorte'] },
+  'Valle de Aburrá': { terminal: 'Norte/Sur', avgPrice: 3500, time: '0.5h', frequency: 'Cada 5-10 min', companies: ['Metro de Medellín', 'Buses Integrados'] }
 };
 
 export function getLocalSuggestions(query: string): string[] {
@@ -31,7 +32,6 @@ export function getLocalPlace(query: string): PlaceData | null {
   const q = normalizeText(query);
   if (!q || q.length < 2) return null;
 
-  // 1. Intentar match en datos curados
   let foundKey = Object.keys(localData).find(key => normalizeText(key) === q || normalizeText(localData[key].titulo) === q);
   
   if (foundKey) {
@@ -42,13 +42,16 @@ export function getLocalPlace(query: string): PlaceData | null {
       type: 'place',
       budget: { busTicket: found.budget?.busTicket || logistics.avgPrice, averageMeal: found.budget?.averageMeal || 25000 },
       terminalInfo: `Terminal del ${logistics.terminal}`,
+      busFrequency: logistics.frequency,
       viaEstado: found.viaEstado || "🟢 Despejada"
     };
   }
 
-  // 2. Intentar match en lista maestra (Fallback para que nunca esté vacío)
   const muniMatch = MUNICIPIOS_ANTIOQUIA.find(m => normalizeText(m) === q || normalizeText(m).includes(q));
   if (muniMatch) {
+    // Intentar adivinar la subregión si no la tenemos para dar datos más precisos
+    const logistics = DEFAULT_LOGISTICS['Norte']; // Fallback general
+    
     return {
       titulo: muniMatch,
       region: 'Antioquia',
@@ -57,7 +60,8 @@ export function getLocalPlace(query: string): PlaceData | null {
       budget: { busTicket: 35000, averageMeal: 25000 },
       viaEstado: "🟢 Despejada",
       tiempoDesdeMedellin: "2.5 Horas",
-      terminalInfo: "Terminal del Norte/Sur",
+      terminalInfo: "Terminal del Norte",
+      busFrequency: "Cada 45 minutos aprox.",
       type: 'place',
       vibeScore: 90,
       neighborTip: "No deje de preguntar por la especialidad del pueblo en el parque principal."
