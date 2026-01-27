@@ -21,9 +21,14 @@ function safeJsonParse(text: string) {
 
 export async function searchUnified(query: string, lang: SupportedLang = 'es'): Promise<any[]> {
   const localMatch = getLocalPlace(query);
-  if (!process.env.API_KEY) return localMatch ? [localMatch] : [];
+  const apiKey = process.env.API_KEY || "";
   
-  const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
+  if (!apiKey || apiKey === "undefined" || apiKey === "") {
+    console.warn("Mijo, falta la API_KEY en el entorno. Usando datos locales.");
+    return localMatch ? [localMatch] : [];
+  }
+  
+  const ai = new GoogleGenAI({ apiKey });
   
   try {
     const response = await ai.models.generateContent({
@@ -118,27 +123,13 @@ export async function searchUnified(query: string, lang: SupportedLang = 'es'): 
             }
           }
         },
-        systemInstruction: "Eres Arriero Pro. Sé específico sobre los métodos de pago. En muchos pueblos de Antioquia manda el efectivo o el QR de Bancolombia. Identifica casas de cambio reales o corresponsales bancarios clave."
+        systemInstruction: "Eres Arriero Pro. Sé específico sobre los métodos de pago. En muchos pueblos de Antioquia manda el efectivo o el QR de Bancolombia. Identifica casas de cambio reales o corresponsales bancarios clave. Si no encuentras datos exactos, usa promedios lógicos de la subregión."
       },
     });
 
-    const groundingLinks: GroundingLink[] = [];
-    const groundingChunks = response.candidates?.[0]?.groundingMetadata?.groundingChunks;
-    if (groundingChunks) {
-      groundingChunks.forEach((chunk: any) => {
-        if (chunk.web) {
-          groundingLinks.push({
-            title: chunk.web.title || 'Referencia',
-            uri: chunk.web.uri,
-            type: 'news'
-          });
-        }
-      });
-    }
-
     const rawData = safeJsonParse(response.text || "");
     const results: any[] = [];
-    if (rawData?.places) {
+    if (rawData?.places && rawData.places.length > 0) {
       for (const data of rawData.places) {
         const img = await findBlobUrlByName(data.titulo) || await getUnsplashImage(`${data.titulo} Antioquia`);
         results.push({
@@ -146,17 +137,22 @@ export async function searchUnified(query: string, lang: SupportedLang = 'es'): 
           ...data,
           imagen: img || "https://images.unsplash.com/photo-1591605417688-6c0b3b320791",
           terminalInfo: data.region?.toLowerCase().includes('oriente') ? "Terminal del Norte" : "Terminal del Sur",
-          groundingLinks
+          packingList: (data.packingList && data.packingList.length > 0) ? data.packingList : ["Bloqueador solar", "Repelente", "Saco ligero", "Cámara", "Efectivo"],
+          vibeScore: data.vibeScore || 95
         });
       }
     }
     return results.length === 0 && localMatch ? [localMatch] : results;
-  } catch (e) { return localMatch ? [localMatch] : []; }
+  } catch (e) { 
+    console.error("Gemini Error:", e);
+    return localMatch ? [localMatch] : []; 
+  }
 }
 
 export async function generateSmartItinerary(place: string, lang: SupportedLang = 'es'): Promise<any> {
-  if (!process.env.API_KEY) return null;
-  const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
+  const apiKey = process.env.API_KEY || "";
+  if (!apiKey) return null;
+  const ai = new GoogleGenAI({ apiKey });
   try {
     const response = await ai.models.generateContent({
       model: 'gemini-3-flash-preview',
@@ -187,8 +183,9 @@ export async function generateSmartItinerary(place: string, lang: SupportedLang 
 }
 
 export async function generateTacticalRecommendations(place: string, lang: SupportedLang = 'es'): Promise<string[] | null> {
-  if (!process.env.API_KEY) return null;
-  const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
+  const apiKey = process.env.API_KEY || "";
+  if (!apiKey) return null;
+  const ai = new GoogleGenAI({ apiKey });
   try {
     const response = await ai.models.generateContent({
       model: 'gemini-3-flash-preview',
