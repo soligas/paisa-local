@@ -13,7 +13,11 @@
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@200;400;600;700;800&family=Montserrat:wght@900&display=swap" rel="stylesheet">
     
     <script>
-      window.process = { env: { NODE_ENV: 'production' } };
+      // Inicialización segura de process.env para no borrar la API_KEY
+      window.process = window.process || { env: {} };
+      window.process.env = window.process.env || {};
+      window.process.env.NODE_ENV = 'production';
+
       tailwind.config = {
         theme: {
           extend: {
@@ -49,6 +53,14 @@
         .font-paisa { font-family: 'Montserrat', sans-serif; font-weight: 900; text-transform: uppercase; }
         .no-scrollbar::-webkit-scrollbar { display: none; }
         .animate-marquee { display: flex; gap: 40px; }
+        
+        /* Estilos para el iframe de Helio */
+        #helio-container iframe {
+          border-radius: 32px;
+          border: none;
+          width: 100%;
+          height: 500px;
+        }
     </style>
 <script type="importmap">
 {

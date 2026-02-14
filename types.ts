@@ -19,12 +19,38 @@ export interface CharcoTactico {
   requiereGuia: boolean;
 }
 
+export interface LocalStore {
+  nombre: string;
+  tipo: 'Cadena' | 'Local' | 'Mercado';
+  itemReferencia: string;
+  precioReferencia: number;
+}
+
+// Added LocalTour interface to fix import error in PlaceCard.tsx
 export interface LocalTour {
   nombre: string;
   descripcion: string;
-  precioCosto: string;
   duracion: string;
   incluye: string[];
+}
+
+// Added DishData interface to fix import error in DishCard.tsx
+export interface DishData {
+  nombre: string;
+  categoria: string;
+  descripcion: string;
+  precioLocalEstimated: number;
+  precioVerificado: boolean;
+  economiaCircular: boolean;
+}
+
+// Added CultureExperience interface to fix import error in ExperienceCard.tsx
+export interface CultureExperience {
+  titulo: string;
+  categoria: string;
+  descripcion: string;
+  impactoSocial: string;
+  ubicacion: string;
 }
 
 export interface FinancialSpot {
@@ -37,33 +63,6 @@ export interface GastroRecommendation {
   nombre: string;
   precio: number;
   descripcion?: string;
-}
-
-/**
- * Representa un plato típico con información de sostenibilidad y verificación.
- * Se utiliza en el componente DishCard.
- */
-export interface DishData {
-  nombre: string;
-  categoria: string;
-  descripcion: string;
-  precioLocalEstimated: number;
-  precioVerificado: boolean;
-  economiaCircular: boolean;
-  imagen?: string;
-}
-
-/**
- * Representa una experiencia cultural o turística.
- * Se utiliza en el componente ExperienceCard.
- */
-export interface CultureExperience {
-  titulo: string;
-  categoria: string;
-  descripcion: string;
-  impactoSocial: string;
-  ubicacion: string;
-  imagen?: string;
 }
 
 export interface PlaceData {
@@ -99,10 +98,11 @@ export interface PlaceData {
     cashOnly: boolean;
     cardAcceptance: 'Baja' | 'Media' | 'Alta';
     digitalTransfer: boolean;
-    tacticalNote?: string; // e.g., "Manda el efectivo y QR de Bancolombia"
+    tacticalNote?: string;
   };
   atmAvailable: boolean;
   financialSpots?: FinancialSpot[];
+  localStores?: LocalStore[];
   marketDay?: string;
   localMobility: {
     type: string;
@@ -123,14 +123,12 @@ export interface PlaceData {
   gastronomia?: GastroRecommendation[];
 }
 
-export type UnifiedItem = PlaceData;
-
 export interface AppState {
   busqueda: string;
   cargando: boolean;
   error: string | null;
   tarjeta: PlaceData | null;
-  unifiedResults: UnifiedItem[];
+  unifiedResults: PlaceData[];
   favoritePlaces: PlaceData[];
   language: SupportedLang;
   activeTab: AppTab;

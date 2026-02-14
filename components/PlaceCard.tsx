@@ -10,9 +10,9 @@ import {
   Activity, Instagram, Youtube, PlayCircle, Map, Waves, Coins,
   CreditCard, Store, Landmark, Info, Briefcase, Footprints, UserCheck, Bike,
   CheckCircle2, AlertCircle, Map as MapIcon, Flag, Link as LinkIcon, ShoppingCart, Coffee, Clock,
-  X, Repeat, ChevronRight, MapPinned
+  X, Repeat, ChevronRight, MapPinned, Award, Shield, ShoppingBag, Lightbulb, Compass as CompassIcon
 } from 'lucide-react';
-import { PlaceData, SupportedLang, CharcoTactico, FinancialSpot, GastroRecommendation, LocalTour } from '../types';
+import { PlaceData, SupportedLang, CharcoTactico, FinancialSpot, GastroRecommendation, LocalTour, LocalStore } from '../types';
 import { SafeImage } from './atoms/SafeImage';
 import { generateSmartItinerary, generateTacticalRecommendations, generateLocalTours } from '../services/geminiService';
 import { Badge } from './atoms/Badge';
@@ -23,6 +23,7 @@ interface PlaceCardProps {
   i18n: any;
   isFavorite: boolean;
   onToggleFavorite: (title: string) => void;
+  onRequestPayment: () => void;
 }
 
 type TabType = 'logistica' | 'economia' | 'aventura';
@@ -30,36 +31,27 @@ type TabType = 'logistica' | 'economia' | 'aventura';
 const RouteGraphic = ({ terminal, localType }: { terminal: string, localType: string }) => {
   return (
     <div className="relative py-12 px-4 flex flex-col items-center gap-12">
-      {/* Path Line */}
       <div className="absolute top-16 bottom-16 w-0.5 bg-slate-200 left-1/2 -translate-x-1/2 rounded-full" />
-      
-      {/* Stop: Medellín */}
       <div className="relative flex flex-col items-center gap-2">
          <div className="w-12 h-12 rounded-full bg-white border-2 border-slate-300 flex items-center justify-center text-slate-400 z-10 shadow-sm">
             <Flag size={18} />
          </div>
          <span className="text-[10px] font-black uppercase text-slate-400 tracking-tighter">Medellín</span>
       </div>
-
-      {/* Stop: Terminal */}
       <div className="relative flex flex-col items-center gap-2">
          <div className="w-16 h-16 rounded-full bg-paisa-emerald text-white flex items-center justify-center z-10 shadow-lg ring-4 ring-white">
             <Bus size={24} />
          </div>
          <span className="text-[10px] font-black uppercase text-paisa-emerald tracking-tighter">{terminal.toUpperCase()}</span>
       </div>
-
-      {/* Stop: Local Transport */}
       <div className="relative flex flex-col items-center gap-4 max-w-[140px] text-center">
          <div className="w-12 h-12 rounded-full bg-white border-2 border-paisa-gold flex items-center justify-center text-paisa-gold z-10 shadow-sm">
             <Bike size={18} />
          </div>
          <span className="text-[9px] font-black uppercase text-[#B48444] leading-tight tracking-tighter">
-            {localType || 'BUSES CIRCULARES Y TAXIS DE MONTAÑA (WILLYS PARA VEREDAS).'}
+            {localType || 'BUSES Y TAXIS DE MONTAÑA'}
          </span>
       </div>
-
-      {/* Stop: Destino */}
       <div className="relative flex flex-col items-center gap-2">
          <div className="w-12 h-12 rounded-full bg-slate-900 text-white flex items-center justify-center z-10 shadow-xl">
             <MapPin size={18} />
@@ -70,7 +62,7 @@ const RouteGraphic = ({ terminal, localType }: { terminal: string, localType: st
   );
 };
 
-export const PlaceCard: React.FC<PlaceCardProps> = ({ data, lang, i18n, isFavorite, onToggleFavorite }) => {
+export const PlaceCard: React.FC<PlaceCardProps> = ({ data, lang, i18n, isFavorite, onToggleFavorite, onRequestPayment }) => {
   const [activeTab, setActiveTab] = useState<TabType>('logistica');
   const [loadingItinerary, setLoadingItinerary] = useState(false);
   const [itinerary, setItinerary] = useState<any[] | null>(null);
@@ -85,9 +77,12 @@ export const PlaceCard: React.FC<PlaceCardProps> = ({ data, lang, i18n, isFavori
   const handleGenerateItinerary = async () => {
     if (loadingItinerary) return;
     setLoadingItinerary(true);
-    const result = await generateSmartItinerary(data.titulo, lang);
-    if (result && result.itinerary) {
-      setItinerary(result.itinerary);
+    onRequestPayment(); // Open support modal
+    try {
+      const res = await generateSmartItinerary(data.titulo, lang);
+      if (res?.itinerary) setItinerary(res.itinerary);
+    } catch (e) {
+      console.error("Failed to generate itinerary:", e);
     }
     setLoadingItinerary(false);
   };
@@ -95,16 +90,26 @@ export const PlaceCard: React.FC<PlaceCardProps> = ({ data, lang, i18n, isFavori
   const handleGetTips = async () => {
     if (loadingTips) return;
     setLoadingTips(true);
-    const results = await generateTacticalRecommendations(data.titulo, lang);
-    if (results) setTips(results);
+    onRequestPayment(); // Open support modal
+    try {
+      const res = await generateTacticalRecommendations(data.titulo, lang);
+      if (res) setTips(res);
+    } catch (e) {
+      console.error("Failed to generate tips:", e);
+    }
     setLoadingTips(false);
   };
 
   const handleGetTours = async () => {
     if (loadingTours) return;
     setLoadingTours(true);
-    const results = await generateLocalTours(data.titulo, lang);
-    if (results) setTours(results);
+    onRequestPayment(); // Open support modal
+    try {
+      const res = await generateLocalTours(data.titulo, lang);
+      if (res) setTours(res);
+    } catch (e) {
+      console.error("Failed to generate tours:", e);
+    }
     setLoadingTours(false);
   };
 
@@ -112,10 +117,10 @@ export const PlaceCard: React.FC<PlaceCardProps> = ({ data, lang, i18n, isFavori
   const mealCost = data.budget?.averageMeal || 25000;
   const stayCost = data.budget?.dailyStay || 80000;
   
-  const totalBuses = ticketCost * numPeople * 2;
-  const totalMeals = mealCost * numPeople * numMeals;
+  const totalTransport = ticketCost * numPeople * 2;
+  const totalFood = mealCost * numPeople * numMeals;
   const totalStay = stayCost * numPeople;
-  const totalBudget = totalBuses + totalMeals + totalStay;
+  const totalBudget = totalTransport + totalFood + totalStay;
 
   const renderFinancialSpotIcon = (tipo: string) => {
     switch (tipo) {
@@ -129,90 +134,62 @@ export const PlaceCard: React.FC<PlaceCardProps> = ({ data, lang, i18n, isFavori
   return (
     <motion.div layout className="w-full max-w-6xl mx-auto px-4 py-8 space-y-8">
       
-      {/* Hero Header */}
       <div className="rounded-[40px] md:rounded-[64px] bg-white shadow-2xl border border-slate-100 overflow-hidden flex flex-col relative">
         <div className="relative h-64 md:h-[400px] w-full">
            <SafeImage src={data.imagen} alt={data.titulo} region={data.region} className="w-full h-full object-cover" />
            <div className="absolute inset-0 bg-gradient-to-t from-slate-950 via-slate-950/20 to-transparent" />
-           
            <div className="absolute top-8 right-8">
               <button onClick={() => onToggleFavorite(data.titulo)} className={`p-4 rounded-full backdrop-blur-xl border transition-all shadow-2xl active:scale-90 ${isFavorite ? 'bg-red-500 text-white border-red-400' : 'bg-white/10 text-white border-white/20'}`}>
                 <Heart size={20} fill={isFavorite ? "white" : "none"} />
               </button>
            </div>
-
            <div className="absolute bottom-10 left-10 right-10 flex flex-col md:flex-row md:items-end justify-between gap-6">
               <div className="space-y-2">
-                 <Badge color="gold" className="bg-paisa-gold/90 backdrop-blur-sm">{data.region?.toUpperCase()}</Badge>
+                 <Badge color="gold">{data.region?.toUpperCase()}</Badge>
                  <h1 className="text-5xl md:text-8xl font-black uppercase tracking-tighter text-white leading-[0.8]">{data.titulo}</h1>
               </div>
-              <div className="flex gap-2">
-                 <div className="px-6 py-4 bg-white/10 backdrop-blur-xl rounded-2xl border border-white/20 text-white text-center">
-                    <span className="block text-[8px] font-black uppercase tracking-widest opacity-60">VIBE</span>
-                    <span className="text-xl font-black">{data.vibeScore || 95}%</span>
-                 </div>
+              <div className="px-6 py-4 bg-white/10 backdrop-blur-xl rounded-2xl border border-white/20 text-white text-center">
+                 <span className="block text-[8px] font-black uppercase tracking-widest opacity-60">VIBE</span>
+                 <span className="text-xl font-black">{data.vibeScore || 95}%</span>
               </div>
            </div>
         </div>
-        
         <div className="p-10 md:p-14 bg-white">
-           <p className="text-2xl md:text-4xl font-serif italic text-slate-400 leading-tight max-w-4xl">
-             "{data.descripcion || '...'}"
-           </p>
+           <p className="text-2xl md:text-4xl font-serif italic text-slate-400 leading-tight max-w-4xl">"{data.descripcion}"</p>
         </div>
       </div>
 
-      {/* Selector de Pestañas */}
       <div className="sticky top-[80px] z-[40] p-2 bg-white/80 backdrop-blur-xl rounded-full gap-2 shadow-2xl border border-slate-100 flex max-w-3xl mx-auto w-full">
-        {(['logistica', 'economia', 'aventura'] as TabType[]).map((tab) => {
-          const isActive = activeTab === tab;
-          const Icon = tab === 'logistica' ? Truck : tab === 'economia' ? Banknote : Compass;
-          return (
-            <button key={tab} onClick={() => setActiveTab(tab)} className={`flex-1 py-4 md:py-6 rounded-full flex items-center justify-center gap-3 transition-all duration-500 ${isActive ? 'bg-paisa-emerald text-white shadow-xl' : 'text-slate-400 hover:bg-slate-50'}`}>
-              <Icon size={18} />
-              <span className="text-[11px] font-black uppercase tracking-[0.2em]">{i18n.tabs[tab]}</span>
-            </button>
-          );
-        })}
+        {(['logistica', 'economia', 'aventura'] as TabType[]).map((tab) => (
+          <button key={tab} onClick={() => setActiveTab(tab)} className={`flex-1 py-4 md:py-6 rounded-full flex items-center justify-center gap-3 transition-all duration-500 ${activeTab === tab ? 'bg-paisa-emerald text-white shadow-xl' : 'text-slate-400 hover:bg-slate-50'}`}>
+            {tab === 'logistica' ? <Truck size={18} /> : tab === 'economia' ? <Banknote size={18} /> : <Compass size={18} />}
+            <span className="text-[11px] font-black uppercase tracking-[0.2em]">{i18n.tabs[tab]}</span>
+          </button>
+        ))}
       </div>
 
       <div className="min-h-[500px]">
         <AnimatePresence mode="wait">
-          
-          {/* TAB: LOGÍSTICA */}
           {activeTab === 'logistica' && (
             <motion.div key="log" initial={{ opacity: 0, y: 15 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -15 }} className="grid grid-cols-1 lg:grid-cols-2 gap-8">
                <div className="bg-[#F7FBF9] p-10 rounded-[56px] border border-[#EAF5EF] space-y-10 shadow-sm relative overflow-hidden">
                   <h3 className="text-xl font-black uppercase tracking-widest text-[#1A4731] flex items-center gap-3"><Bus size={24} /> {i18n.logisticsTitle}</h3>
-                  
-                  <div className="flex justify-center gap-4">
-                    <a href={data.terminalUrl || '#'} target="_blank" className="px-4 py-2 bg-white border border-slate-200 rounded-full text-[9px] font-black uppercase text-slate-400 hover:text-paisa-emerald transition-colors flex items-center gap-2">
-                       <Map size={10} /> {i18n.locationTerminal}
-                    </a>
-                    <a href={data.mapUrl || '#'} target="_blank" className="px-4 py-2 bg-white border border-slate-200 rounded-full text-[9px] font-black uppercase text-slate-400 hover:text-paisa-emerald transition-colors flex items-center gap-2">
-                       <MapPin size={10} /> {i18n.locationDestino}
-                    </a>
-                  </div>
-
                   <RouteGraphic terminal={data.terminalInfo?.split(' ').pop() || 'Terminal'} localType={data.localMobility?.type || ''} />
-                  
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                     <div className="bg-white p-8 rounded-[40px] shadow-sm border border-slate-50">
+                     <div className="bg-white p-8 rounded-[40px] shadow-sm border border-slate-50 text-center">
                         <span className="text-[9px] font-black uppercase tracking-widest text-slate-300 block mb-4">{i18n.buses}</span>
-                        <span className="text-lg md:text-xl font-black text-slate-900 leading-tight">
-                          {data.busFrequency || 'Cada 45 min aprox.'}
-                        </span>
+                        <span className="text-xl font-black text-slate-900">{data.busFrequency}</span>
                      </div>
-                     <div className="bg-white p-8 rounded-[40px] shadow-sm border border-slate-50">
+                     <div className="bg-white p-8 rounded-[40px] shadow-sm border border-slate-50 text-center">
                         <span className="text-[9px] font-black uppercase tracking-widest text-slate-300 block mb-4">{i18n.departure}</span>
-                        <span className="text-xl md:text-2xl font-black text-slate-900">{data.terminalInfo || 'Terminal del Sur'}</span>
+                        <span className="text-xl font-black text-slate-900">{data.terminalInfo}</span>
                      </div>
                   </div>
                </div>
-               <div className="bg-slate-950 p-10 rounded-[56px] text-white space-y-8 min-h-[400px]">
+               <div className="bg-slate-950 p-10 rounded-[56px] text-white space-y-8">
                   <h3 className="text-xl font-black uppercase tracking-widest text-paisa-gold flex items-center gap-3"><Briefcase size={24} /> {i18n.packingTitle}</h3>
                   <div className="grid grid-cols-1 gap-4">
-                     {(data.packingList && data.packingList.length > 0 ? data.packingList : ["Bloqueador solar", "Repelente", "Saco ligero", "Cámara", "Efectivo"]).map((item, idx) => (
+                     {data.packingList.map((item, idx) => (
                        <div key={idx} className="flex items-center gap-4 p-4 rounded-2xl bg-white/5 border border-white/10">
                           <CheckCircle2 size={16} className="text-paisa-gold" />
                           <span className="text-sm font-bold uppercase tracking-widest">{item}</span>
@@ -223,259 +200,274 @@ export const PlaceCard: React.FC<PlaceCardProps> = ({ data, lang, i18n, isFavori
             </motion.div>
           )}
 
-          {/* TAB: ECONOMÍA */}
           {activeTab === 'economia' && (
-            <motion.div key="eco" initial={{ opacity: 0, y: 15 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -15 }} className="space-y-8">
-               <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-                  <div className="bg-white p-10 rounded-[56px] border border-slate-100 space-y-8 shadow-xl">
-                    <h3 className="text-xl font-black uppercase tracking-widest text-slate-900 flex items-center gap-3"><Landmark size={24} className="text-paisa-emerald" /> {i18n.bankTitle}</h3>
-                    
-                    <div className="p-6 rounded-[32px] bg-slate-50 border border-slate-200">
-                       <p className="text-[10px] font-black uppercase tracking-widest text-slate-500 leading-relaxed text-center">
-                          {data.paymentMethods?.tacticalNote || i18n.paymentNote}
-                       </p>
-                    </div>
-
-                    <div className="space-y-6">
-                       <div className="flex items-center gap-3 p-4 bg-white border border-slate-100 rounded-3xl shadow-sm">
-                          <Store size={18} className="text-paisa-emerald" />
-                          <div className="flex flex-col">
-                             <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest">DÍA DE MERCADO</span>
-                             <span className="text-xs font-black text-slate-700">{data.marketDay || 'Sábados y Domingos'}</span>
-                          </div>
-                       </div>
-
-                       <div className="space-y-3 pt-2">
-                          <span className="text-[9px] font-black uppercase tracking-widest text-slate-400 block px-2">LUGARES DE RETIRO Y COMPRA</span>
-                          {(data.financialSpots && data.financialSpots.length > 0 ? data.financialSpots : [
-                            { nombre: 'Bancolombia (Corresponsal)', tipo: 'CORRESPONSAL' },
-                            { nombre: 'Cajero Servibanca', tipo: 'ATM' },
-                            { nombre: 'Western Union', tipo: 'CAMBIO' }
-                          ]).map((spot: any, idx: number) => (
-                            <div key={idx} className="p-4 rounded-2xl bg-slate-50 border border-slate-100 flex items-center justify-between">
-                               <div className="flex items-center gap-3">
-                                  <div className="p-2 bg-white rounded-xl shadow-sm text-paisa-emerald">
-                                    {renderFinancialSpotIcon(spot.tipo)}
-                                  </div>
-                                  <span className="text-[10px] font-bold text-slate-700 uppercase">{spot.nombre}</span>
-                               </div>
-                               <Badge color="slate" className="text-[7px]">{spot.tipo}</Badge>
-                            </div>
-                          ))}
-                       </div>
-                    </div>
+            <motion.div key="eco" initial={{ opacity: 0, y: 15 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -15 }} className="grid grid-cols-1 lg:grid-cols-12 gap-8">
+               
+               {/* Left Panel: Banca y Pagos */}
+               <div className="lg:col-span-4 bg-white p-10 rounded-[56px] border border-slate-100 space-y-10 shadow-xl">
+                  <h3 className="text-xl font-black uppercase tracking-widest text-slate-900 flex items-center gap-3"><Landmark size={24} className="text-paisa-emerald" /> {i18n.bankTitle}</h3>
+                  
+                  <div className="p-8 rounded-[32px] bg-slate-50 border border-slate-100 flex flex-col gap-4 text-center">
+                     <p className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 leading-relaxed px-4">
+                        {data.paymentMethods?.tacticalNote || i18n.paymentNote}
+                     </p>
                   </div>
 
-                  <div className="bg-[#FEFCE8] p-10 rounded-[56px] border border-amber-100 lg:col-span-2 space-y-8 shadow-sm">
-                    <div className="flex justify-between items-center px-2">
-                       <h3 className="text-xl md:text-3xl font-black uppercase tracking-widest text-[#5C3F1E] flex items-center gap-3">
-                        <Calculator size={24} /> {i18n.calcTitle}
-                       </h3>
-                       <Badge color="gold" className="bg-[#D4A574]/80 text-[#5C3F1E]">VIGENTE 2024</Badge>
-                    </div>
-
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-10">
-                       <div className="space-y-12">
-                          <div className="space-y-6">
-                             <div className="flex justify-between items-center px-2">
-                                <span className="text-[10px] font-black uppercase tracking-widest text-[#5C3F1E]">{i18n.travellers}</span>
-                                <div className="flex items-center gap-4">
-                                   <button onClick={() => setNumPeople(Math.max(1, numPeople - 1))} className="w-10 h-10 rounded-full bg-white border border-amber-200 flex items-center justify-center text-amber-900 shadow-sm"><Minus size={14}/></button>
-                                   <span className="text-3xl font-black text-amber-900 w-6 text-center">{numPeople}</span>
-                                   <button onClick={() => setNumPeople(numPeople + 1)} className="w-10 h-10 rounded-full bg-white border border-amber-200 flex items-center justify-center text-amber-900 shadow-sm"><Plus size={14}/></button>
-                                </div>
-                             </div>
-                             <div className="flex justify-between items-center px-2">
-                                <span className="text-[10px] font-black uppercase tracking-widest text-[#5C3F1E]">{i18n.mealsPerDay}</span>
-                                <div className="flex items-center gap-4">
-                                   <button onClick={() => setNumMeals(Math.max(1, numMeals - 1))} className="w-10 h-10 rounded-full bg-white border border-amber-200 flex items-center justify-center text-amber-900 shadow-sm"><Minus size={14}/></button>
-                                   <span className="text-3xl font-black text-amber-900 w-6 text-center">{numMeals}</span>
-                                   <button onClick={() => setNumMeals(numMeals + 1)} className="w-10 h-10 rounded-full bg-white border border-amber-200 flex items-center justify-center text-amber-900 shadow-sm"><Plus size={14}/></button>
-                                </div>
-                             </div>
-                          </div>
-
-                          <div className="space-y-6 pt-6 border-t border-amber-200/50">
-                             <div className="flex items-center justify-between px-2">
-                               <span className="text-[10px] font-black uppercase tracking-widest text-[#5C3F1E] flex items-center gap-2">
-                                  <Utensils size={14} /> {i18n.foodRecs}
-                               </span>
-                             </div>
-                             <div className="space-y-4">
-                                {(data.gastronomia && data.gastronomia.length > 0 ? data.gastronomia : [
-                                  { nombre: 'Bandeja Paisa Tradicional', precio: 25000, descripcion: 'Frijoles, chicharrón, huevo, tajada y carne molida. El motor del arriero.' },
-                                  { nombre: 'Mondongo Caldeño', precio: 18000, descripcion: 'Sopa espesa de callos y carne de cerdo, servida con aguacate y arepa.' }
-                                ]).map((dish: GastroRecommendation, idx: number) => (
-                                  <div key={idx} className="p-6 bg-white/60 rounded-[32px] border border-amber-200 flex flex-col gap-2 relative">
-                                     <div className="flex justify-between items-start">
-                                        <div className="flex flex-col gap-1">
-                                          <span className="text-[11px] font-black text-[#5C3F1E] uppercase tracking-tight">{dish.nombre}</span>
-                                          <p className="text-[9px] font-bold text-[#5C3F1E]/60 uppercase leading-relaxed max-w-[70%]">
-                                            {dish.descripcion}
-                                          </p>
-                                        </div>
-                                        <span className="text-xs font-black text-[#5C3F1E] mt-1">${dish.precio.toLocaleString()}</span>
-                                     </div>
-                                  </div>
-                                )).slice(0, 2)}
-                             </div>
-                          </div>
+                  <div className="space-y-6">
+                    <div className="flex items-center gap-4 px-6 py-4 rounded-3xl bg-slate-50 border border-slate-100 group hover:border-paisa-emerald/30 transition-all">
+                       <div className="p-3 rounded-2xl bg-white shadow-sm text-paisa-emerald">
+                          <Store size={20} />
                        </div>
-                       
-                       <div className="p-10 rounded-[48px] bg-amber-900 text-white space-y-6 shadow-2xl flex flex-col justify-center h-fit">
-                          <div>
-                            <span className="text-[11px] font-black uppercase tracking-widest opacity-40">{i18n.totalEstimated}</span>
-                            <div className="text-5xl font-black tracking-tighter">${totalBudget.toLocaleString()}</div>
-                          </div>
-                          <div className="pt-6 border-t border-white/10 space-y-4">
-                             <div className="flex justify-between text-[11px] font-bold uppercase tracking-widest">
-                                <span className="opacity-50">{i18n.budgetBreakdown.transport}</span>
-                                <span>${totalBuses.toLocaleString()}</span>
-                             </div>
-                             <div className="flex justify-between text-[11px] font-bold uppercase tracking-widest">
-                                <span className="opacity-50">{i18n.budgetBreakdown.food}</span>
-                                <span>${totalMeals.toLocaleString()}</span>
-                             </div>
-                             <div className="flex justify-between text-[11px] font-bold uppercase tracking-widest">
-                                <span className="opacity-50">{i18n.budgetBreakdown.stay}</span>
-                                <span>${totalStay.toLocaleString()}</span>
-                             </div>
-                          </div>
-                          <div className="p-4 bg-white/10 rounded-2xl flex items-center gap-3">
-                             <div className="shrink-0"><Info size={14} className="text-paisa-gold" /></div>
-                             <p className="text-[8px] font-bold uppercase tracking-widest leading-relaxed">
-                                {i18n.cashNote}
-                             </p>
-                          </div>
+                       <div className="flex flex-col">
+                          <span className="text-[8px] font-black text-slate-400 uppercase tracking-widest">DÍA DE MERCADO</span>
+                          <span className="text-sm font-black text-slate-900">{data.marketDay || "Sábados y Domingos"}</span>
                        </div>
                     </div>
+
+                    <div className="space-y-4">
+                       <h4 className="text-[9px] font-black uppercase tracking-[0.3em] text-slate-300 ml-4">LUGARES DE RETIRO Y COMPRA</h4>
+                       {(data.financialSpots || [
+                          { nombre: 'BANCOLOMBIA (CORRESPONSAL)', tipo: 'CORRESPONSAL' },
+                          { nombre: 'CAJERO SERVIBANCA', tipo: 'ATM' },
+                          { nombre: 'WESTERN UNION', tipo: 'CAMBIO' }
+                       ]).map((spot, idx) => (
+                         <div key={idx} className="p-5 rounded-[28px] bg-slate-50 border border-slate-50 flex items-center justify-between group hover:bg-white hover:shadow-lg transition-all">
+                            <div className="flex items-center gap-4">
+                               <div className="p-3 bg-white rounded-2xl shadow-sm text-paisa-emerald group-hover:bg-paisa-emerald group-hover:text-white transition-all">
+                                  {renderFinancialSpotIcon(spot.tipo)}
+                               </div>
+                               <span className="text-[10px] font-black text-slate-700 uppercase tracking-tight">{spot.nombre}</span>
+                            </div>
+                            <Badge color="slate" className="text-[7px] py-1 px-3 bg-slate-200/50">{spot.tipo}</Badge>
+                         </div>
+                       ))}
+                    </div>
+                  </div>
+               </div>
+
+               {/* Right Panel: Calculador Presupuestal */}
+               <div className="lg:col-span-8 bg-[#FFFDF0] p-10 md:p-14 rounded-[64px] border border-amber-100/50 shadow-sm space-y-12 relative overflow-hidden">
+                  <div className="flex items-center justify-between">
+                     <h3 className="text-3xl font-black uppercase tracking-tighter text-[#4A3728] flex items-center gap-4">
+                        <div className="p-3 rounded-2xl bg-amber-900/10 text-amber-900"><Calculator size={32} /></div>
+                        {i18n.calcTitle}
+                     </h3>
+                     <Badge color="gold" className="bg-[#D4A574]/20 text-[#8B5E34] border border-[#D4A574]/30 px-4 py-2">VIGENTE 2024</Badge>
+                  </div>
+
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-16">
+                     <div className="space-y-12">
+                        <div className="space-y-8">
+                           <div className="flex justify-between items-center group">
+                              <span className="text-[11px] font-black uppercase tracking-widest text-amber-900/60">{i18n.travellers}</span>
+                              <div className="flex items-center gap-6">
+                                 <button onClick={() => setNumPeople(Math.max(1, numPeople - 1))} className="w-10 h-10 rounded-full bg-white border border-amber-200 flex items-center justify-center shadow-sm text-amber-900 hover:bg-amber-900 hover:text-white transition-all"><Minus size={14}/></button>
+                                 <span className="text-3xl font-black text-amber-950 w-8 text-center">{numPeople}</span>
+                                 <button onClick={() => setNumPeople(numPeople + 1)} className="w-10 h-10 rounded-full bg-white border border-amber-200 flex items-center justify-center shadow-sm text-amber-900 hover:bg-amber-900 hover:text-white transition-all"><Plus size={14}/></button>
+                              </div>
+                           </div>
+                           
+                           <div className="flex justify-between items-center group">
+                              <span className="text-[11px] font-black uppercase tracking-widest text-amber-900/60">{i18n.mealsPerDay}</span>
+                              <div className="flex items-center gap-6">
+                                 <button onClick={() => setNumMeals(Math.max(1, numMeals - 1))} className="w-10 h-10 rounded-full bg-white border border-amber-200 flex items-center justify-center shadow-sm text-amber-900 hover:bg-amber-900 hover:text-white transition-all"><Minus size={14}/></button>
+                                 <span className="text-3xl font-black text-amber-950 w-8 text-center">{numMeals}</span>
+                                 <button onClick={() => setNumMeals(numMeals + 1)} className="w-10 h-10 rounded-full bg-white border border-amber-200 flex items-center justify-center shadow-sm text-amber-900 hover:bg-amber-900 hover:text-white transition-all"><Plus size={14}/></button>
+                              </div>
+                           </div>
+                        </div>
+
+                        <div className="space-y-6">
+                           <h4 className="text-[9px] font-black uppercase tracking-[0.3em] text-amber-900/40 flex items-center gap-2">
+                              <Utensils size={12} /> {i18n.foodRecs}
+                           </h4>
+                           <div className="space-y-4">
+                              {(data.gastronomia || [
+                                 { nombre: 'BANDEJA PAISA TRADICIONAL', precio: 25000, descripcion: 'FRIJOLES, CHICHARRÓN, HUEVO, TAJADA Y CARNE MOLIDA. EL MOTOR DEL ARRIERO.' },
+                                 { nombre: 'MONDONGO CALDEÑO', precio: 18000, descripcion: 'SOPA ESPESA DE CALLOS Y CARNE DE CERDO, SERVIDA CON AGUACATE Y AREPA.' }
+                              ]).map((food, idx) => (
+                                <div key={idx} className="p-6 rounded-[32px] bg-white border border-amber-200/50 shadow-sm flex flex-col gap-2 group hover:shadow-xl transition-all">
+                                   <div className="flex justify-between items-start">
+                                      <span className="text-sm font-black text-amber-950 uppercase">{food.nombre}</span>
+                                      <span className="text-sm font-black text-amber-900">${food.precio.toLocaleString()}</span>
+                                   </div>
+                                   <p className="text-[9px] font-bold text-amber-900/40 leading-relaxed uppercase tracking-widest">{food.descripcion}</p>
+                                </div>
+                              ))}
+                           </div>
+                        </div>
+                     </div>
+
+                     {/* Total Summary Card */}
+                     <div className="relative">
+                        <motion.div 
+                          layout
+                          className="p-10 md:p-12 rounded-[56px] bg-[#4A2C19] text-white space-y-8 shadow-4xl relative z-10"
+                        >
+                           <div className="space-y-1">
+                              <span className="text-[10px] font-black uppercase tracking-[0.3em] opacity-40">{i18n.totalEstimated}</span>
+                              <div className="text-6xl font-black tracking-tighter">${totalBudget.toLocaleString()}</div>
+                           </div>
+
+                           <div className="h-px bg-white/10 w-full" />
+
+                           <div className="space-y-6">
+                              {[
+                                 { label: i18n.budgetBreakdown.transport, val: totalTransport },
+                                 { label: i18n.budgetBreakdown.food, val: totalFood },
+                                 { label: i18n.budgetBreakdown.stay, val: totalStay }
+                              ].map((item, idx) => (
+                                 <div key={idx} className="flex justify-between items-center group">
+                                    <span className="text-[11px] font-black uppercase tracking-[0.2em] opacity-50 group-hover:opacity-100 transition-opacity">{item.label}</span>
+                                    <span className="text-lg font-black">${item.val.toLocaleString()}</span>
+                                 </div>
+                              ))}
+                           </div>
+
+                           <div className="pt-4">
+                              <div className="p-5 rounded-3xl bg-black/20 border border-white/5 flex items-center gap-4 text-center">
+                                 <Info size={16} className="text-amber-500 shrink-0" />
+                                 <p className="text-[8px] font-black uppercase leading-relaxed opacity-60 tracking-widest">
+                                    LOS PRECIOS SON PROMEDIOS LOCALES ACTUALES. EL EFECTIVO ES CLAVE PARA NEGOCIAR.
+                                 </p>
+                              </div>
+                           </div>
+                        </motion.div>
+                        <div className="absolute -bottom-4 -right-4 inset-0 bg-amber-900/10 rounded-[56px] -z-0 blur-2xl" />
+                     </div>
                   </div>
                </div>
             </motion.div>
           )}
 
-          {/* TAB: AVENTURA */}
           {activeTab === 'aventura' && (
             <motion.div key="ave" initial={{ opacity: 0, y: 15 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -15 }} className="space-y-12">
-               {itinerary && (
-                 <motion.div 
-                   initial={{ opacity: 0, scale: 0.95 }}
-                   animate={{ opacity: 1, scale: 1 }}
-                   className="bg-slate-900 p-12 rounded-[64px] border border-white/5 space-y-10 shadow-4xl relative"
-                 >
-                   <button onClick={() => setItinerary(null)} className="absolute top-10 right-10 text-white/40 hover:text-white">
-                     <X size={24} />
-                   </button>
-                   <div className="space-y-2">
-                     <h4 className="text-2xl font-black uppercase tracking-widest text-paisa-gold flex items-center gap-3">
-                       <Clock className="text-paisa-gold" size={24} /> {i18n.itineraryTitle}
-                     </h4>
-                     <p className="text-sm font-serif italic text-white/40">{i18n.itineraryNote}</p>
-                   </div>
-                   <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                      {itinerary.map((stop, idx) => (
-                        <div key={idx} className="p-8 bg-white/5 rounded-[40px] border border-white/10 space-y-4 hover:bg-white/10 transition-all group">
-                           <div className="flex items-center justify-between">
-                              <span className="text-paisa-gold font-black text-sm tracking-widest">{stop.hora}</span>
-                              <Badge color="white" className="opacity-20">STOP {idx + 1}</Badge>
-                           </div>
-                           <h5 className="text-xl font-black text-white uppercase tracking-tight">{stop.actividad}</h5>
-                           <div className="flex items-center gap-2 text-[10px] font-bold text-white/40 uppercase">
-                              <MapPin size={12} /> {stop.lugar}
-                           </div>
-                           <div className="pt-4 border-t border-white/5">
-                              <p className="text-[10px] italic font-medium text-paisa-gold leading-relaxed">"{stop.tip}"</p>
-                           </div>
-                        </div>
-                      ))}
-                   </div>
-                 </motion.div>
-               )}
+               
+               {/* Smart Results View - ITINERARY */}
+               <AnimatePresence>
+                 {itinerary && (
+                   <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.95 }} className="bg-slate-900 p-12 rounded-[64px] space-y-10 shadow-4xl relative">
+                     <button onClick={() => setItinerary(null)} className="absolute top-10 right-10 text-white/40 hover:text-white transition-all"><X size={24} /></button>
+                     <h4 className="text-2xl font-black uppercase text-paisa-gold flex items-center gap-3"><Clock size={24} /> {i18n.itineraryTitle}</h4>
+                     <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                        {itinerary.map((stop, idx) => (
+                          <div key={idx} className="p-8 bg-white/5 rounded-[40px] border border-white/10 space-y-4 hover:bg-white/10 transition-all group">
+                             <div className="flex justify-between items-center">
+                                <span className="text-paisa-gold font-black text-sm tracking-widest">{stop.hora}</span>
+                                <Badge color="white" className="text-[7px]">Sugerencia</Badge>
+                             </div>
+                             <h5 className="text-xl font-black text-white uppercase group-hover:text-paisa-gold transition-colors">{stop.actividad}</h5>
+                             <div className="flex items-center gap-2 text-[10px] text-white/40 uppercase group-hover:text-white/60"><MapPin size={12} /> {stop.lugar}</div>
+                             <p className="text-[9px] italic text-white/30 font-serif leading-relaxed line-clamp-2">"{stop.tip}"</p>
+                          </div>
+                        ))}
+                     </div>
+                   </motion.div>
+                 )}
+               </AnimatePresence>
 
+               {/* Smart Results View - TIPS */}
+               <AnimatePresence>
+                 {tips && (
+                   <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.95 }} className="bg-amber-50 p-12 rounded-[64px] space-y-10 shadow-xl border border-amber-100 relative">
+                     <button onClick={() => setTips(null)} className="absolute top-10 right-10 text-amber-900/40 hover:text-amber-900 transition-all"><X size={24} /></button>
+                     <h4 className="text-2xl font-black uppercase text-amber-900 flex items-center gap-3"><Lightbulb size={24} /> {i18n.secretsTitle}</h4>
+                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                        {tips.map((tip, idx) => (
+                          <div key={idx} className="p-8 bg-white rounded-[40px] border border-amber-100 space-y-4 shadow-sm hover:shadow-xl transition-all">
+                             <div className="w-10 h-10 rounded-2xl bg-amber-900 text-white flex items-center justify-center">
+                                <span className="text-xs font-black">{idx + 1}</span>
+                             </div>
+                             <p className="text-sm font-serif italic text-amber-950 leading-relaxed">"{tip}"</p>
+                          </div>
+                        ))}
+                     </div>
+                   </motion.div>
+                 )}
+               </AnimatePresence>
+
+               {/* Smart Results View - TOURS */}
+               <AnimatePresence>
+                 {tours && (
+                   <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.95 }} className="bg-emerald-900 p-12 rounded-[64px] space-y-10 shadow-4xl relative overflow-hidden">
+                     <div className="absolute top-0 right-0 p-20 opacity-5 pointer-events-none">
+                        <CompassIcon size={200} />
+                     </div>
+                     <button onClick={() => setTours(null)} className="absolute top-10 right-10 text-white/40 hover:text-white transition-all"><X size={24} /></button>
+                     <h4 className="text-2xl font-black uppercase text-paisa-gold flex items-center gap-3"><MapPinned size={24} /> TOURS IDEALES EN {data.titulo.toUpperCase()}</h4>
+                     <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                        {tours.map((tour, idx) => (
+                          <div key={idx} className="p-8 bg-white/5 rounded-[40px] border border-white/10 space-y-6 flex flex-col justify-between hover:bg-white/10 transition-all group">
+                             <div className="space-y-4">
+                                <div className="flex justify-between items-start">
+                                   <Badge color="gold">{tour.duracion}</Badge>
+                                </div>
+                                <h5 className="text-xl font-black text-white uppercase group-hover:text-paisa-gold transition-colors">{tour.nombre}</h5>
+                                <p className="text-[10px] text-white/50 leading-relaxed italic line-clamp-3">"{tour.descripcion}"</p>
+                             </div>
+                             <div className="pt-4 border-t border-white/10">
+                                <span className="text-[8px] font-black uppercase tracking-widest text-white/30 block mb-2">INCLUYE</span>
+                                <div className="flex flex-wrap gap-1">
+                                   {tour.incluye.map((item, i) => <Badge key={i} color="white" className="text-[6px] py-0.5 px-2 bg-white/5">{item}</Badge>)}
+                                </div>
+                             </div>
+                          </div>
+                        ))}
+                     </div>
+                   </motion.div>
+                 )}
+               </AnimatePresence>
+
+               {/* Charcos Section */}
                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-                  {(data.charcosTacticos && data.charcosTacticos.length > 0 ? data.charcosTacticos : [
-                    { nombre: 'Charco Escondido', descripcion: 'Aguas cristalinas a 20 min del parque.', dificultad: 'Media', requiereGuia: false, mapUrl: '#' },
-                    { nombre: 'Cascada del Arriero', descripcion: 'Impresionante caída de agua de 30m.', dificultad: 'Arriero', requiereGuia: true, mapUrl: '#' }
-                  ]).map((charco, idx) => (
-                    <div key={idx} className="bg-white p-10 rounded-[56px] border border-slate-100 shadow-xl space-y-8 relative overflow-hidden group">
-                       <div className="absolute top-6 right-6"><Badge color={charco.dificultad === 'Arriero' ? 'red' : charco.dificultad === 'Media' ? 'gold' : 'emerald'}>{charco.dificultad.toUpperCase()}</Badge></div>
-                       <div className="p-4 rounded-3xl bg-blue-50 text-blue-600 w-max group-hover:scale-110 transition-transform"><Waves size={24} /></div>
-                       <div className="space-y-3">
-                          <h4 className="text-2xl font-black uppercase tracking-tighter text-slate-900">{charco.nombre}</h4>
-                          <p className="text-xs font-serif italic text-slate-500 leading-relaxed">"{charco.descripcion}"</p>
+                  {(data.charcosTacticos || []).map((charco, idx) => (
+                    <div key={idx} className="bg-white p-10 rounded-[56px] border border-slate-100 shadow-xl space-y-6 group hover:shadow-2xl transition-all">
+                       <div className="p-4 rounded-3xl bg-blue-50 text-blue-600 w-max group-hover:bg-blue-600 group-hover:text-white transition-all"><Waves size={24} /></div>
+                       <div className="space-y-2">
+                          <h4 className="text-2xl font-black uppercase text-slate-900">{charco.nombre}</h4>
+                          <p className="text-xs font-serif italic text-slate-500">"{charco.descripcion}"</p>
                        </div>
-                       <div className="space-y-4 pt-4 border-t border-slate-50">
-                          <div className="flex items-center gap-3"><UserCheck size={16} className={charco.requiereGuia ? 'text-amber-600' : 'text-emerald-600'} /><span className="text-[10px] font-black uppercase tracking-widest">{charco.requiereGuia ? 'GUÍA OBLIGATORIO' : 'ENTRADA LIBRE'}</span></div>
-                       </div>
-                       <div className="flex flex-col gap-3 pt-2">
-                          <a href={charco.mapUrl} target="_blank" className="w-full py-4 rounded-xl bg-blue-50 text-blue-700 font-black uppercase text-[9px] tracking-widest flex items-center justify-center gap-2">UBICACIÓN</a>
+                       <div className="flex items-center justify-between pt-4 border-t border-slate-50">
+                          <Badge color="slate">{charco.dificultad || 'Media'}</Badge>
+                          <a href={charco.mapUrl} target="_blank" className="p-2 rounded-full hover:bg-slate-100 transition-all text-slate-400 hover:text-paisa-emerald"><Navigation size={18} /></a>
                        </div>
                     </div>
                   ))}
                </div>
 
-               {/* RECOMENDACIONES DE TOURS SOLICITADAS */}
-               {tours && (
-                 <div className="bg-white p-12 rounded-[64px] border border-slate-100 space-y-10 shadow-3xl">
-                    <div className="space-y-2">
-                      <h4 className="text-2xl font-black uppercase tracking-widest text-slate-900 flex items-center gap-3">
-                        <MapPinned className="text-paisa-emerald" size={24} /> TOURS IDEALES RECOMENDADOS
-                      </h4>
-                      <p className="text-sm font-serif italic text-slate-400">Seleccionados por nuestro concierge para su disfrute mijo.</p>
-                    </div>
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                       {tours.map((tour, idx) => (
-                         <div key={idx} className="p-8 rounded-[40px] bg-slate-50 border border-slate-100 space-y-4 relative group hover:bg-emerald-50 transition-all">
-                            <div className="flex justify-between items-center">
-                               <Badge color="emerald">{tour.duracion}</Badge>
-                               <span className="text-[11px] font-black text-slate-900">{tour.precioCosto}</span>
-                            </div>
-                            <h5 className="text-lg font-black text-slate-900 uppercase leading-tight">{tour.nombre}</h5>
-                            <p className="text-[11px] text-slate-500 leading-relaxed italic">"{tour.descripcion}"</p>
-                            <div className="pt-4 border-t border-slate-200 space-y-2">
-                               <span className="text-[8px] font-black text-slate-400 uppercase tracking-widest block">INCLUYE:</span>
-                               <div className="flex flex-wrap gap-2">
-                                  {tour.incluye.map((inc, i) => (
-                                    <span key={i} className="text-[8px] font-bold text-paisa-emerald bg-white px-2 py-1 rounded-md shadow-sm border border-slate-100">{inc}</span>
-                                  ))}
-                               </div>
-                            </div>
-                         </div>
-                       ))}
-                    </div>
-                 </div>
-               )}
-
-               {tips && (
-                 <div className="bg-[#FEFCE8] p-10 rounded-[48px] border border-amber-200 space-y-6">
-                    <h4 className="text-xl font-black uppercase tracking-widest text-amber-900 flex items-center gap-3">
-                      <Star className="text-amber-600" size={24} /> {i18n.secretsTitle}
-                    </h4>
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                      {tips.map((tip, idx) => (
-                        <div key={idx} className="p-4 bg-white/50 rounded-2xl border border-amber-100 text-sm font-medium text-amber-800 italic">
-                          "{tip}"
-                        </div>
-                      ))}
-                    </div>
-                 </div>
-               )}
-
-               <div className="bg-[#1A4731] p-12 rounded-[64px] text-center space-y-10 shadow-2xl relative overflow-hidden">
-                  <h3 className="text-white text-3xl md:text-5xl font-serif italic max-w-2xl mx-auto leading-tight">
-                    "¿Quiere que le arme el plan completo mijo?"
-                  </h3>
-                  <div className="flex flex-wrap items-center justify-center gap-4">
-                    <button onClick={handleGenerateItinerary} disabled={loadingItinerary} className="px-8 py-5 rounded-3xl bg-white text-paisa-emerald font-black uppercase text-[11px] tracking-widest shadow-2xl flex items-center justify-center gap-3 hover:scale-105 transition-all">
-                      {loadingItinerary ? <Loader2 className="animate-spin" size={20} /> : <><Sparkles size={20}/> {i18n.btnItinerary}</>}
+               {/* Call to Action Section with Loading Indicators */}
+               <div className="bg-[#1A4731] p-12 md:p-20 rounded-[64px] text-center space-y-12 shadow-2xl relative overflow-hidden">
+                  <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-paisa-gold/30 to-transparent" />
+                  <h3 className="text-white text-4xl md:text-6xl font-serif italic max-w-2xl mx-auto leading-tight">"¿Quiere que le arme el plan completo mijo?"</h3>
+                  
+                  <div className="flex flex-wrap items-center justify-center gap-6">
+                    <button 
+                      onClick={handleGenerateItinerary} 
+                      className="px-10 py-6 rounded-[32px] bg-white text-paisa-emerald font-black uppercase text-[12px] shadow-2xl flex items-center gap-4 hover:scale-105 active:scale-95 transition-all"
+                    >
+                      <Sparkles size={20} className="text-paisa-gold" /> {i18n.btnItinerary}
                     </button>
-                    <button onClick={handleGetTips} disabled={loadingTips} className="px-8 py-5 rounded-3xl bg-white/10 text-white border border-white/20 font-black uppercase text-[11px] tracking-widest shadow-2xl flex items-center justify-center gap-3 hover:bg-white/20 transition-all">
-                      {loadingTips ? <Loader2 className="animate-spin" size={20} /> : <><Info size={20}/> {i18n.btnTips}</>}
+                    <button 
+                      onClick={handleGetTips} 
+                      className="px-10 py-6 rounded-[32px] bg-white/10 text-white border border-white/20 font-black uppercase text-[12px] flex items-center gap-4 hover:bg-white/20 transition-all"
+                    >
+                      <Lightbulb size={20} className="text-paisa-gold" /> {i18n.btnTips}
                     </button>
-                    <button onClick={handleGetTours} disabled={loadingTours} className="px-8 py-5 rounded-3xl bg-paisa-gold text-slate-900 font-black uppercase text-[11px] tracking-widest shadow-2xl flex items-center justify-center gap-3 hover:scale-105 transition-all">
-                      {loadingTours ? <Loader2 className="animate-spin" size={20} /> : <><MapPinned size={20}/> VER TOURS IDEALES</>}
+                    <button 
+                      onClick={handleGetTours} 
+                      className="px-10 py-6 rounded-[32px] bg-paisa-gold text-slate-900 font-black uppercase text-[12px] flex items-center gap-4 hover:scale-105 active:scale-95 transition-all shadow-xl"
+                    >
+                      <MapPinned size={20} /> VER TOURS IDEALES
                     </button>
                   </div>
+
+                  <AnimatePresence>
+                    {(loadingItinerary || loadingTips || loadingTours) && (
+                       <motion.p initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="text-white/40 text-[10px] font-black uppercase tracking-[0.4em] animate-pulse">
+                          Consultando Inteligencia Táctica en Campo...
+                       </motion.p>
+                    )}
+                  </AnimatePresence>
                </div>
             </motion.div>
           )}

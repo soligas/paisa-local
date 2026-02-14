@@ -24,7 +24,7 @@ export async function searchUnified(query: string, lang: SupportedLang = 'es'): 
   const apiKey = process.env.API_KEY || "";
   
   if (!apiKey || apiKey === "undefined" || apiKey === "") {
-    console.warn("Mijo, falta la API_KEY en el entorno. Usando datos locales.");
+    console.warn("Advertencia: No se encontró la API_KEY en el entorno. Utilizando datos locales de respaldo.");
     return localMatch ? [localMatch] : [];
   }
   
@@ -33,13 +33,13 @@ export async function searchUnified(query: string, lang: SupportedLang = 'es'): 
   try {
     const response = await ai.models.generateContent({
       model: "gemini-3-flash-preview",
-      contents: `Realiza una auditoría táctica de viaje para: "${query}, Antioquia". Idioma: ${lang}.
-      Necesito detalles CRUDOS para un turista:
-      1. Logística: Debes especificar la frecuencia exacta de buses (ej: cada 20 min) y decir exactamente si sale de la 'Terminal del Norte' o 'Terminal del Sur'. No digas 'Norte/Sur'.
-      2. Economía: Cajeros (ATM), si aceptan tarjeta, nota táctica sobre pagos (efectivo vs QR Bancolombia), lugares específicos de cambio de moneda (Western Union o bancos), puntos específicos de retiro y qué día es el mercado.
-      3. Gastronomía: 3 platos típicos imperdibles con precio estimado.
-      4. Aventura: 3 charcos/rutas con dificultad y equipo.
-      5. Maleta: 5 cosas esenciales.`,
+      contents: `Realiza una auditoría técnica de viaje para: "${query}, Antioquia". Idioma: ${lang}.
+      Necesito detalles precisos para un turista:
+      1. Logística: frecuencia de transporte y terminal de salida.
+      2. Economía: Cajeros (ATM), aceptación de medios electrónicos, nota sobre pagos.
+      3. Gastronomía: platos típicos con precio promedio actual.
+      4. Aventura: sitios de interés/rutas con nivel de dificultad.
+      5. Maleta: 5 elementos esenciales para el clima local.`,
       config: {
         tools: [{ googleSearch: {} }],
         responseMimeType: "application/json",
@@ -54,8 +54,8 @@ export async function searchUnified(query: string, lang: SupportedLang = 'es'): 
                   titulo: { type: Type.STRING },
                   region: { type: Type.STRING },
                   descripcion: { type: Type.STRING },
-                  busFrequency: { type: Type.STRING, description: "Frecuencia de salida de buses desde Medellín" },
-                  terminalInfo: { type: Type.STRING, description: "Indicar si es Terminal del Norte o Terminal del Sur" },
+                  busFrequency: { type: Type.STRING },
+                  terminalInfo: { type: Type.STRING },
                   atmAvailable: { type: Type.BOOLEAN },
                   marketDay: { type: Type.STRING },
                   paymentMethods: {
@@ -88,14 +88,6 @@ export async function searchUnified(query: string, lang: SupportedLang = 'es'): 
                       }
                     }
                   },
-                  localMobility: {
-                    type: Type.OBJECT,
-                    properties: {
-                      type: { type: Type.STRING },
-                      estimatedCost: { type: Type.NUMBER }
-                    }
-                  },
-                  packingList: { type: Type.ARRAY, items: { type: Type.STRING } },
                   budget: {
                     type: Type.OBJECT,
                     properties: {
@@ -104,6 +96,7 @@ export async function searchUnified(query: string, lang: SupportedLang = 'es'): 
                       dailyStay: { type: Type.NUMBER }
                     }
                   },
+                  packingList: { type: Type.ARRAY, items: { type: Type.STRING } },
                   charcosTacticos: {
                     type: Type.ARRAY,
                     items: {
@@ -112,10 +105,7 @@ export async function searchUnified(query: string, lang: SupportedLang = 'es'): 
                         nombre: { type: Type.STRING },
                         descripcion: { type: Type.STRING },
                         dificultad: { type: Type.STRING },
-                        requiereGuia: { type: Type.BOOLEAN },
-                        equipoNecesario: { type: Type.ARRAY, items: { type: Type.STRING } },
-                        mapUrl: { type: Type.STRING },
-                        videoUrl: { type: Type.STRING }
+                        mapUrl: { type: Type.STRING }
                       }
                     }
                   }
@@ -124,9 +114,23 @@ export async function searchUnified(query: string, lang: SupportedLang = 'es'): 
             }
           }
         },
-        systemInstruction: "Eres Arriero Pro. No uses marcadores de posición como '...'. Si no conoces la terminal exacta, búscala. Suroeste sale de la Sur, Oriente/Norte sale de la Norte."
+        systemInstruction: "Eres Arriero Pro, un asistente experto en turismo para los 125 municipios de Antioquia. Responde con precisión técnica, claridad y en el idioma solicitado. Evita el uso de modismos informales extremados."
       },
     });
+
+    const groundingLinks: GroundingLink[] = [];
+    const groundingChunks = response.candidates?.[0]?.groundingMetadata?.groundingChunks;
+    if (groundingChunks) {
+      groundingChunks.forEach((chunk: any) => {
+        if (chunk.web) {
+          groundingLinks.push({
+            title: chunk.web.title || "Fuente oficial",
+            uri: chunk.web.uri,
+            type: 'news'
+          });
+        }
+      });
+    }
 
     const rawData = safeJsonParse(response.text || "");
     const results: any[] = [];
@@ -138,15 +142,16 @@ export async function searchUnified(query: string, lang: SupportedLang = 'es'): 
           ...data,
           imagen: img || "https://images.unsplash.com/photo-1591605417688-6c0b3b320791",
           terminalInfo: data.terminalInfo || (data.region?.toLowerCase().includes('oriente') ? "Terminal del Norte" : "Terminal del Sur"),
-          busFrequency: data.busFrequency || "Cada 30 minutos aprox.",
-          packingList: (data.packingList && data.packingList.length > 0) ? data.packingList : ["Bloqueador solar", "Repelente", "Saco ligero", "Cámara", "Efectivo"],
-          vibeScore: data.vibeScore || 95
+          busFrequency: data.busFrequency || "Frecuencia regular cada 30 min.",
+          packingList: data.packingList || ["Protección solar", "Ropa cómoda", "Cámara fotográfica", "Identificación", "Efectivo"],
+          vibeScore: data.vibeScore || 95,
+          groundingLinks: groundingLinks
         });
       }
     }
     return results.length === 0 && localMatch ? [localMatch] : results;
   } catch (e) { 
-    console.error("Gemini Error:", e);
+    console.error("Gemini API Error:", e);
     return localMatch ? [localMatch] : []; 
   }
 }
@@ -158,7 +163,7 @@ export async function generateSmartItinerary(place: string, lang: SupportedLang 
   try {
     const response = await ai.models.generateContent({
       model: 'gemini-3-flash-preview',
-      contents: `Crea un itinerario táctico de un día (mañana, tarde, noche) para un viaje a ${place}, Antioquia. Incluye horas sugeridas, actividades recomendadas y un 'tip del arriero' por cada parada. Idioma: ${lang}.`,
+      contents: `Crea un itinerario de viaje detallado para un día en ${place}, Antioquia. Idioma: ${lang}.`,
       config: { 
         responseMimeType: "application/json",
         responseSchema: {
@@ -191,7 +196,7 @@ export async function generateTacticalRecommendations(place: string, lang: Suppo
   try {
     const response = await ai.models.generateContent({
       model: 'gemini-3-flash-preview',
-      contents: `Dime 5 secretos o 'tips del arriero' que solo un local sabe sobre ${place}, Antioquia. Se muy específico sobre lugares, rutas o comida.`,
+      contents: `Proporciona 5 recomendaciones de viaje importantes sobre ${place}, Antioquia.`,
       config: {
         responseMimeType: "application/json",
         responseSchema: {
@@ -214,7 +219,7 @@ export async function generateLocalTours(place: string, lang: SupportedLang = 'e
   try {
     const response = await ai.models.generateContent({
       model: 'gemini-3-flash-preview',
-      contents: `Proporciona 3 recomendaciones de tours ideales para ${place}, Antioquia. Incluye tours de aventura, culturales o de naturaleza. Formato JSON.`,
+      contents: `Sugiere 3 tours ideales para contratar en ${place}, Antioquia. No incluyas precios, solo nombre, descripción, duración e incluye.`,
       config: {
         responseMimeType: "application/json",
         responseSchema: {
@@ -227,7 +232,6 @@ export async function generateLocalTours(place: string, lang: SupportedLang = 'e
                 properties: {
                   nombre: { type: Type.STRING },
                   descripcion: { type: Type.STRING },
-                  precioCosto: { type: Type.STRING },
                   duracion: { type: Type.STRING },
                   incluye: { type: Type.ARRAY, items: { type: Type.STRING } }
                 }

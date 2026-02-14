@@ -49,12 +49,12 @@ export const BlobManager: React.FC<BlobManagerProps> = ({ onClose }) => {
       saveManualToken(manualToken.trim());
       setTokenExists(true);
       setShowConfig(false);
-      setStatus({ msg: 'Bodega vinculada con éxito.', type: 'success' });
+      setStatus({ msg: 'Servicio vinculado con éxito.', type: 'success' });
       loadBlobs();
     } else {
       clearManualToken();
       setTokenExists(false);
-      setStatus({ msg: 'Token removido.', type: 'info' });
+      setStatus({ msg: 'Token removido del sistema.', type: 'info' });
     }
     setTimeout(() => setStatus({ msg: '', type: 'info' }), 3000);
   };
@@ -78,11 +78,11 @@ export const BlobManager: React.FC<BlobManagerProps> = ({ onClose }) => {
       try {
         await uploadToVercelBlob(file, name);
       } catch (err) {
-        console.error("Fallo en lote:", err);
+        console.error("Fallo en la carga por lotes:", err);
       }
     }
 
-    setStatus({ msg: `¡Berraquera! ${total} fotos sincronizadas.`, type: 'success' });
+    setStatus({ msg: `Carga finalizada. ${total} imágenes sincronizadas.`, type: 'success' });
     setUploading(false);
     setFileInputName('');
     if (fileInputRef.current) fileInputRef.current.value = '';
@@ -92,37 +92,36 @@ export const BlobManager: React.FC<BlobManagerProps> = ({ onClose }) => {
 
   const handleLinkUpload = async () => {
     if (!urlInput || !fileInputName) {
-      setStatus({ msg: 'Escriba el nombre y pegue el link, mijo.', type: 'error' });
+      setStatus({ msg: 'Por favor complete el nombre y el enlace de la imagen.', type: 'error' });
       return;
     }
     setUploading(true);
-    setStatus({ msg: 'Indexando link...', type: 'info' });
+    setStatus({ msg: 'Indexando enlace externo...', type: 'info' });
     const res = await uploadToVercelBlob(urlInput, fileInputName);
     if (res.url) {
-      setStatus({ msg: 'Link guardado en la bodega.', type: 'success' });
+      setStatus({ msg: 'Enlace guardado correctamente.', type: 'success' });
       setUrlInput('');
       setFileInputName('');
       loadBlobs();
     } else {
-      setStatus({ msg: res.error || 'Error de link.', type: 'error' });
+      setStatus({ msg: res.error || 'No se pudo procesar el enlace.', type: 'error' });
     }
     setUploading(false);
     setTimeout(() => setStatus({ msg: '', type: 'info' }), 5000);
   };
 
   const handleDelete = (file: any) => {
-    if (!confirm('¿Seguro que quiere borrar esta foto?')) return;
+    if (!confirm('¿Desea eliminar este registro permanentemente?')) return;
     if (file.isLocal) {
       deleteLocalBlob(file.pathname);
       loadBlobs();
     } else {
-      alert("Mijo, las fotos de la nube se gestionan desde Vercel Dashboard.");
+      alert("La eliminación de archivos en la nube debe realizarse desde el panel de control del servicio.");
     }
   };
 
   const formatFileName = (pathname: string) => {
     const fileName = pathname.split('/').pop() || "";
-    // Usamos la misma lógica de normalización para mostrar un nombre limpio
     return fileName.split('.')[0]
       .replace(/^paisa-local-?/i, '')
       .replace(/-/g, ' ')
@@ -142,7 +141,7 @@ export const BlobManager: React.FC<BlobManagerProps> = ({ onClose }) => {
                 <Database size={32} />
              </div>
              <div>
-                <h2 className="text-3xl md:text-4xl font-black uppercase tracking-tighter text-white">Bodega de Fotos</h2>
+                <h2 className="text-3xl md:text-4xl font-black uppercase tracking-tighter text-white">Galería de Imágenes</h2>
                 <div className="flex items-center gap-2 mt-1">
                    <div className={`flex items-center gap-1.5 px-3 py-1 rounded-full border text-[9px] font-black uppercase tracking-widest ${tokenExists ? 'bg-emerald-500/10 border-emerald-500/20 text-emerald-500' : 'bg-amber-500/10 border-amber-500/20 text-amber-500'}`}>
                       {tokenExists ? <><Globe size={10} /> Sincronizado con Vercel</> : <><AlertTriangle size={10} /> Modo Local</>}
@@ -158,7 +157,7 @@ export const BlobManager: React.FC<BlobManagerProps> = ({ onClose }) => {
           </button>
         </div>
 
-        {/* Panel de Configuración */}
+        {/* Configuration Panel */}
         <AnimatePresence>
           {showConfig && (
             <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: 'auto', opacity: 1 }} exit={{ height: 0, opacity: 0 }} className="overflow-hidden">
@@ -181,10 +180,10 @@ export const BlobManager: React.FC<BlobManagerProps> = ({ onClose }) => {
                   </div>
                   <div className="p-6 rounded-2xl bg-white/5 border border-white/5 space-y-3">
                     <h4 className="text-[10px] font-black text-paisa-gold uppercase tracking-widest flex items-center gap-2">
-                       <Info size={14} /> Tip de Sincronización
+                       <Info size={14} /> Información del Sistema
                     </h4>
                     <p className="text-xs text-white/40 leading-relaxed italic">
-                      "Si ya subiste la foto en Vercel, asegúrate de tener el Token pegado aquí y dale al botón de <span className="text-white font-bold">Refrescar</span> abajo."
+                      "Para sincronizar con el servicio en la nube, asegúrese de configurar correctamente el Token y utilice la opción de actualización de la lista."
                     </p>
                   </div>
                 </div>
@@ -193,7 +192,7 @@ export const BlobManager: React.FC<BlobManagerProps> = ({ onClose }) => {
           )}
         </AnimatePresence>
 
-        {/* Status con Barra de Progreso */}
+        {/* Status Messages */}
         <AnimatePresence>
           {status.msg && (
             <motion.div initial={{ opacity: 0, y: -20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -20 }} className="space-y-4">
@@ -219,13 +218,13 @@ export const BlobManager: React.FC<BlobManagerProps> = ({ onClose }) => {
         </AnimatePresence>
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-12">
-          {/* Panel de Acción */}
+          {/* Action Panel */}
           <div className="space-y-8">
             <div className="p-10 rounded-[48px] bg-white/5 border border-white/10 space-y-10 shadow-2xl">
                <div className="flex justify-between items-start">
                   <div className="space-y-2">
-                    <h3 className="text-2xl font-black text-white">Cargar Fotos</h3>
-                    <p className="text-slate-500 text-sm font-serif italic">Subí una o varias de un solo tacazo.</p>
+                    <h3 className="text-2xl font-black text-white">Cargar Contenido</h3>
+                    <p className="text-slate-500 text-sm font-serif italic">Subida de archivos individuales o por lotes.</p>
                   </div>
                   <div className="p-4 rounded-3xl bg-paisa-emerald/20 text-paisa-emerald">
                      <Layers size={24} />
@@ -234,9 +233,9 @@ export const BlobManager: React.FC<BlobManagerProps> = ({ onClose }) => {
 
                <div className="space-y-6">
                   <div className="space-y-3">
-                    <label className="text-[10px] font-black uppercase tracking-widest text-white/30 ml-4">Nombre (Opcional si es lote)</label>
+                    <label className="text-[10px] font-black uppercase tracking-widest text-white/30 ml-4">Nombre de Referencia</label>
                     <input 
-                      type="text" placeholder="Ej: Guatape, Jardin..."
+                      type="text" placeholder="Ej: Guatapé, Jardín..."
                       className="w-full bg-slate-900 border border-white/10 p-6 rounded-[28px] text-white outline-none focus:border-paisa-gold transition-all text-xl font-bold"
                       value={fileInputName} onChange={e => setFileInputName(e.target.value)}
                     />
@@ -253,7 +252,7 @@ export const BlobManager: React.FC<BlobManagerProps> = ({ onClose }) => {
                               <Upload size={28} />
                            </div>
                            <div className="text-center">
-                              <span className="block text-[10px] font-black uppercase tracking-widest text-white/50">Seleccionar Fotos</span>
+                              <span className="block text-[10px] font-black uppercase tracking-widest text-white/50">Cargar Archivos</span>
                            </div>
                         </label>
                      </div>
@@ -261,7 +260,7 @@ export const BlobManager: React.FC<BlobManagerProps> = ({ onClose }) => {
                      <div className="space-y-4">
                         <div className="bg-slate-900/50 p-6 rounded-[32px] border border-white/5 space-y-4">
                           <input 
-                            type="text" placeholder="Link de Imagen"
+                            type="text" placeholder="URL de la imagen"
                             className="w-full bg-slate-950 border border-white/10 p-4 rounded-2xl text-white outline-none focus:border-paisa-emerald text-sm"
                             value={urlInput} onChange={e => setUrlInput(e.target.value)}
                           />
@@ -270,7 +269,7 @@ export const BlobManager: React.FC<BlobManagerProps> = ({ onClose }) => {
                             disabled={uploading || !urlInput || !fileInputName}
                             className="w-full py-4 bg-paisa-emerald text-white rounded-2xl font-black uppercase text-[10px] tracking-widest shadow-xl disabled:opacity-20 flex items-center justify-center gap-2"
                           >
-                            <LinkIcon size={14} /> Indexar Link
+                            <LinkIcon size={14} /> Vincular URL
                           </button>
                         </div>
                      </div>
@@ -279,15 +278,15 @@ export const BlobManager: React.FC<BlobManagerProps> = ({ onClose }) => {
             </div>
           </div>
 
-          {/* Galería / Inventario */}
+          {/* Inventory Gallery */}
           <div className="space-y-6">
              <div className="flex justify-between items-center px-4">
                 <div className="flex items-center gap-3">
-                   <h4 className="text-[11px] font-black uppercase tracking-[0.3em] text-white/40">Inventario Bodega</h4>
+                   <h4 className="text-[11px] font-black uppercase tracking-[0.3em] text-white/40">Inventario de Imágenes</h4>
                    <div className="px-2 py-0.5 rounded-md bg-white/5 text-[9px] font-black text-white/30">{files.length}</div>
                 </div>
                 <button onClick={loadBlobs} disabled={isVerifying} className="flex items-center gap-2 text-paisa-gold text-[10px] font-black uppercase hover:underline transition-all">
-                  <RefreshCw size={12} className={isVerifying ? 'animate-spin' : ''} /> Refrescar
+                  <RefreshCw size={12} className={isVerifying ? 'animate-spin' : ''} /> Actualizar
                 </button>
              </div>
              
@@ -297,7 +296,7 @@ export const BlobManager: React.FC<BlobManagerProps> = ({ onClose }) => {
                     key={i} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}
                     className="relative aspect-square rounded-[32px] overflow-hidden border border-white/10 group bg-slate-900 shadow-xl"
                   >
-                    <img src={file.url} className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110" alt="Bodega" />
+                    <img src={file.url} className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110" alt="Archivo" />
                     
                     <div className="absolute top-3 right-3">
                        <div className={`px-2 py-1 rounded-lg text-[7px] font-black uppercase shadow-2xl border border-white/10 ${file.isLocal ? 'bg-amber-500 text-white' : 'bg-emerald-500 text-white flex items-center gap-1'}`}>
@@ -324,7 +323,7 @@ export const BlobManager: React.FC<BlobManagerProps> = ({ onClose }) => {
                 {files.length === 0 && !isVerifying && (
                   <div className="col-span-3 py-32 text-center opacity-10 border border-white/5 rounded-[64px] flex flex-col items-center justify-center gap-6">
                      <ImageIcon size={64} />
-                     <p className="text-[10px] font-black uppercase tracking-[0.4em]">Bodega sin existencias</p>
+                     <p className="text-[10px] font-black uppercase tracking-[0.4em]">Sin archivos registrados</p>
                   </div>
                 )}
              </div>
