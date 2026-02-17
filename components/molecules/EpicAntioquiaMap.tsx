@@ -93,28 +93,28 @@ export const EpicAntioquiaMap: React.FC<EpicAntioquiaMapProps> = ({ onSelectRegi
                     <activeRegion.icon size={40} strokeWidth={2.5} style={{ color: activeRegion.color }} />
                  </div>
                  <div className="space-y-1">
-                    <h4 className="text-[11px] font-black uppercase tracking-[0.4em] text-paisa-gold">{t.tag}</h4>
-                    <h2 className="text-5xl md:text-7xl font-black uppercase tracking-tighter text-slate-900 leading-none">{activeRegion.name[lang]}</h2>
+                    <h4 className="text-[11px] font-black uppercase tracking-[0.4em] text-paisa-gold">{t?.tag || "SECTOR"}</h4>
+                    <h2 className="text-5xl md:text-7xl font-black uppercase tracking-tighter text-slate-900 leading-none">{activeRegion.name?.[lang]}</h2>
                  </div>
               </div>
 
               <div className="grid grid-cols-2 gap-6">
                  <div className="p-8 rounded-[40px] bg-white border border-slate-100 shadow-sm flex flex-col gap-2">
-                    <span className="text-[9px] font-black uppercase tracking-[0.2em] text-slate-400">{t.census}</span>
+                    <span className="text-[9px] font-black uppercase tracking-[0.2em] text-slate-400">{t?.census || "CENSO"}</span>
                     <span className="text-3xl font-black text-slate-900 leading-none">{activeRegion.municipios} Pueblos</span>
                  </div>
                  <div className="p-8 rounded-[40px] bg-emerald-50/50 border border-emerald-100 flex flex-col gap-2">
-                    <span className="text-[9px] font-black uppercase tracking-[0.2em] text-paisa-emerald">{t.pulse}</span>
+                    <span className="text-[9px] font-black uppercase tracking-[0.2em] text-paisa-emerald">{t?.pulse || "PULSO"}</span>
                     <span className="text-3xl font-black text-paisa-emerald leading-none">Top Vibe</span>
                  </div>
               </div>
 
               <div className="space-y-6">
                  <span className="text-[10px] font-black uppercase tracking-[0.3em] text-slate-400 flex items-center gap-2 px-2">
-                    <LayoutGrid size={12} /> {t.treasures}
+                    <LayoutGrid size={12} /> {t?.treasures || "TESOROS"}
                  </span>
                  <div className="flex flex-wrap gap-2.5">
-                    {activeRegion.tesoros[lang].map((t_name, idx) => (
+                    {(activeRegion.tesoros?.[lang] || []).map((t_name, idx) => (
                       <button key={t_name} onClick={() => onSelectRegion(t_name)} className="px-6 py-4 rounded-2xl bg-white border border-slate-100 text-[10px] font-black uppercase tracking-widest hover:bg-paisa-emerald hover:text-white transition-all shadow-sm active:scale-95">
                         {t_name}
                       </button>
@@ -124,10 +124,10 @@ export const EpicAntioquiaMap: React.FC<EpicAntioquiaMapProps> = ({ onSelectRegi
 
               <div className="pt-6 space-y-4">
                 <button 
-                  onClick={() => onSelectRegion(activeRegion.name[lang])} 
+                  onClick={() => onSelectRegion(activeRegion.name?.[lang] || activeRegion.id)} 
                   className="w-full py-8 bg-slate-900 text-white rounded-[32px] font-black uppercase text-[14px] tracking-[0.3em] shadow-4xl hover:bg-paisa-emerald transition-all flex items-center justify-center gap-4 group"
                 >
-                  {t.exploreBtn} {activeRegion.name[lang].toUpperCase()} <ChevronRight size={20} className="group-hover:translate-x-2 transition-transform" />
+                  {t?.exploreBtn || "EXPLORAR"} {(activeRegion.name?.[lang] || "").toUpperCase()} <ChevronRight size={20} className="group-hover:translate-x-2 transition-transform" />
                 </button>
 
                 {/* Support Button Pill as shown in screenshot */}
@@ -140,7 +140,7 @@ export const EpicAntioquiaMap: React.FC<EpicAntioquiaMapProps> = ({ onSelectRegi
                       <div className="w-1.5 h-4 bg-emerald-600 rounded-full" />
                    </div>
                    <span className="text-[12px] font-black uppercase tracking-[0.3em] flex items-center gap-2">
-                     {t.impulsar}
+                     {t?.impulsar || "APOYAR PROYECTO"}
                    </span>
                    <div className="flex gap-1.5 items-center opacity-40 group-hover:opacity-100 transition-opacity">
                       <div className="w-1.5 h-4 bg-emerald-600 rounded-full" />

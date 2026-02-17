@@ -35,6 +35,12 @@ export default defineConfig(({ mode }) => {
     },
     build: {
       outDir: 'dist',
+      rollupOptions: {
+        input: {
+          main: path.resolve(__dirname, 'index.html'),
+          google_verification: path.resolve(__dirname, 'googlefbbe824193a2b73c.html')
+        }
+      }
     }
   };
 });

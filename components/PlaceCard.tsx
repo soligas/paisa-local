@@ -145,7 +145,7 @@ export const PlaceCard: React.FC<PlaceCardProps> = ({ data, lang, i18n, isFavori
                   <div className="w-1.5 h-4 bg-emerald-600 rounded-full" />
                </div>
                <span className="text-[14px] font-black uppercase tracking-[0.3em] flex items-center gap-2">
-                 {t.mapLabels.impulsar}
+                 {t.mapLabels?.impulsar || "IMPULSAR"}
                </span>
                <div className="flex gap-1.5 items-center opacity-40 group-hover:opacity-100 transition-opacity">
                   <div className="w-1.5 h-4 bg-emerald-600 rounded-full" />
@@ -159,7 +159,7 @@ export const PlaceCard: React.FC<PlaceCardProps> = ({ data, lang, i18n, isFavori
         {(['logistica', 'economia', 'aventura'] as TabType[]).map((tab) => (
           <button key={tab} onClick={() => setActiveTab(tab)} className={`flex-1 py-8 md:py-12 rounded-[40px] flex flex-col items-center justify-center gap-4 transition-all duration-500 border-4 ${activeTab === tab ? 'bg-[#2D7A4C] text-[#ffffff] border-[#2D7A4C] shadow-2xl scale-[1.05]' : 'bg-[#ffffff] text-[#64748b] border-transparent hover:bg-[#f8fafc] hover:text-[#1e293b] shadow-sm'}`}>
             {tab === 'logistica' ? <Truck size={32} strokeWidth={3} /> : tab === 'economia' ? <Banknote size={32} strokeWidth={3} /> : <Compass size={32} strokeWidth={3} />}
-            <span className="text-[13px] md:text-[15px] font-black uppercase tracking-[0.25em]">{i18n.tabs[tab]}</span>
+            <span className="text-[13px] md:text-[15px] font-black uppercase tracking-[0.25em]">{i18n.tabs?.[tab]}</span>
           </button>
         ))}
       </div>
@@ -198,7 +198,7 @@ export const PlaceCard: React.FC<PlaceCardProps> = ({ data, lang, i18n, isFavori
                   </div>
                   <h3 className="text-3xl font-black uppercase tracking-widest text-[#D4A574] flex items-center gap-6 relative z-10"><Briefcase size={40} strokeWidth={3} /> {i18n.packingTitle}</h3>
                   <div className="grid grid-cols-1 gap-6 relative z-10">
-                     {data.packingList.map((item, idx) => (
+                     {(data.packingList || []).map((item, idx) => (
                        <div key={idx} className="flex items-center gap-8 p-8 rounded-[36px] bg-[#1e293b] border-2 border-white/10 group hover:bg-[#2D7A4C] transition-all hover:border-[#2D7A4C]">
                           <CheckCircle2 size={32} className="text-[#D4A574] group-hover:text-white transition-colors" strokeWidth={3} />
                           <span className="text-2xl font-black uppercase tracking-[0.1em] text-[#f1f5f9]">{item}</span>
@@ -311,14 +311,14 @@ export const PlaceCard: React.FC<PlaceCardProps> = ({ data, lang, i18n, isFavori
                        <h4 className="text-4xl font-black uppercase tracking-tighter text-slate-900">TOURS IDEALES RECOMENDADOS</h4>
                     </div>
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-10">
-                       {tours.map((tour, idx) => (
+                       {(tours || []).map((tour, idx) => (
                          <div key={idx} className="p-12 rounded-[56px] bg-white border-4 border-slate-100 space-y-8 shadow-2xl hover:border-[#2D7A4C]/30 transition-all group relative">
                             <Badge color="emerald" className="px-6 py-2 border-2 border-white shadow-md">{tour.duracion}</Badge>
                             <h5 className="text-3xl font-black uppercase leading-[1.1] text-slate-900 group-hover:text-[#2D7A4C] transition-colors">{tour.nombre}</h5>
                             <p className="text-lg text-slate-600 italic font-medium leading-relaxed">"{tour.descripcion}"</p>
                             <div className="pt-8 border-t-2 border-slate-100 space-y-5">
                                <span className="text-[12px] font-black text-slate-400 uppercase tracking-widest">INCLUYE:</span>
-                               {tour.incluye.map((inc, i) => (
+                               {(tour.incluye || []).map((inc, i) => (
                                  <div key={i} className="flex items-center gap-4">
                                     <div className="w-2.5 h-2.5 rounded-full bg-[#2D7A4C]" />
                                     <span className="text-[11px] font-black text-slate-800 uppercase tracking-tight">{inc}</span>
@@ -340,7 +340,7 @@ export const PlaceCard: React.FC<PlaceCardProps> = ({ data, lang, i18n, isFavori
                     <Clock size={36} strokeWidth={3} /> ITINERARIO TÁCTICO
                    </h4>
                    <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-                      {itinerary.map((stop, idx) => (
+                      {(itinerary || []).map((stop, idx) => (
                         <div key={idx} className="p-10 bg-white/5 rounded-[48px] border-2 border-white/10 space-y-5 hover:bg-white/10 transition-all">
                            <span className="text-[#D4A574] font-black text-xl tracking-widest border-b-2 border-[#D4A574]/30 pb-2 inline-block">{stop.hora}</span>
                            <h5 className="text-2xl font-black text-white uppercase leading-tight">{stop.actividad}</h5>
