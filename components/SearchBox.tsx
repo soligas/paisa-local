@@ -48,7 +48,7 @@ export const SearchBox: React.FC<SearchBoxProps> = ({
 
   return (
     <div ref={containerRef} className="w-full max-w-2xl mx-auto px-4 space-y-4 flex flex-col items-center relative z-[60]">
-      {/* Search Input Container - Slightly reduced height */}
+      {/* Search Input Container - Added more visible border-slate-200 */}
       <div className="w-full group relative">
         <div className="absolute left-6 top-1/2 -translate-y-1/2 z-10 transition-transform group-focus-within:scale-110">
           <Search className={isDark ? 'text-[#D4A574]' : 'text-slate-400'} size={24} strokeWidth={3} />
@@ -58,8 +58,8 @@ export const SearchBox: React.FC<SearchBoxProps> = ({
           placeholder={placeholder}
           className={`w-full h-20 pl-16 pr-8 rounded-full border-2 shadow-[0_15px_40px_-15px_rgba(0,0,0,0.1)] outline-none text-lg transition-all font-bold tracking-tight
             ${isDark 
-              ? 'bg-slate-900/80 border-white/10 text-white focus:border-[#D4A574] placeholder:text-white/20' 
-              : 'bg-white border-slate-100 focus:border-[#2D7A4C] placeholder:text-slate-400'}`}
+              ? 'bg-slate-900/80 border-white/20 text-white focus:border-[#D4A574] placeholder:text-white/20' 
+              : 'bg-white border-slate-200 focus:border-[#2D7A4C] placeholder:text-slate-400'}`}
           value={value}
           onFocus={() => setShowSuggestions(true)}
           onChange={e => {
@@ -83,7 +83,7 @@ export const SearchBox: React.FC<SearchBoxProps> = ({
         </AnimatePresence>
       </div>
       
-      {/* Tracking Button - More balanced height */}
+      {/* Tracking Button */}
       <button 
         onClick={() => { onSearch(); setShowSuggestions(false); }} 
         className={`w-full max-w-xs py-5 rounded-[40px] shadow-[0_20px_50px_-15px_rgba(45,122,76,0.3)] active:scale-95 transition-all flex flex-col items-center justify-center border-4 border-white group relative
