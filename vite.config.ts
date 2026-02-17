@@ -38,7 +38,8 @@ export default defineConfig(({ mode }) => {
       rollupOptions: {
         input: {
           main: path.resolve(__dirname, 'index.html'),
-          google_verification: path.resolve(__dirname, 'googlefbbe824193a2b73c.html')
+          google_verification: path.resolve(__dirname, 'googlefbbe824193a2b73c.html'),
+          sitemap: path.resolve(__dirname, 'sitemap.xml')
         }
       }
     }

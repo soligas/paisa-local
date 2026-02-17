@@ -16,6 +16,7 @@
   ],
   "rewrites": [
     { "source": "/googlefbbe824193a2b73c.html", "destination": "/googlefbbe824193a2b73c.html" },
+    { "source": "/sitemap.xml", "destination": "/sitemap.xml" },
     { "source": "/(.*)", "destination": "/index.html" }
   ]
 }
