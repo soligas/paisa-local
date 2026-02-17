@@ -12,11 +12,17 @@
         { "key": "Permissions-Policy", "value": "microphone=(self), geolocation=(self), camera=()" },
         { "key": "Cache-Control", "value": "public, max-age=0, must-revalidate" }
       ]
+    },
+    {
+      "source": "/sitemap.xml",
+      "headers": [
+        { "key": "Content-Type", "value": "application/xml" }
+      ]
     }
   ],
   "rewrites": [
-    { "source": "/googlefbbe824193a2b73c.html", "destination": "/googlefbbe824193a2b73c.html" },
     { "source": "/sitemap.xml", "destination": "/sitemap.xml" },
-    { "source": "/(.*)", "destination": "/index.html" }
+    { "source": "/googlefbbe824193a2b73c.html", "destination": "/googlefbbe824193a2b73c.html" },
+    { "source": "/((?!api/|.*\\..*).*)", "destination": "/index.html" }
   ]
 }
