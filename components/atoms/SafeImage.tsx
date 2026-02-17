@@ -39,11 +39,11 @@ export const SafeImage: React.FC<SafeImageProps> = ({
 
   const regionConfig = {
     'Suroeste': { color: '#3E2A19', Icon: Coffee, label: 'Tierra Cafetera', grad: 'from-amber-100 to-amber-50' },
-    'Oriente': { color: '#1B4D31', Icon: Waves, label: 'Aguas del Oriente', grad: 'from-emerald-100 to-emerald-50' },
-    'Urabá': { color: '#112D8C', Icon: Wind, label: 'Mar de Antioquia', grad: 'from-blue-100 to-blue-50' },
-    'Norte': { color: '#0F4021', Icon: Trees, label: 'Ruta Lechera', grad: 'from-green-100 to-green-50' },
-    'Occidente': { color: '#A35A05', Icon: Sun, label: 'Sol de Occidente', grad: 'from-orange-100 to-orange-50' },
-    'Valle de Aburrá': { color: '#036346', Icon: Sparkles, label: 'Corazón Urbano', grad: 'from-slate-100 to-slate-50' },
+    'Oriente': { color: '#0369a1', Icon: Waves, label: 'Aguas del Oriente', grad: 'from-blue-100 to-blue-50' },
+    'Urabá': { color: '#1e40af', Icon: Wind, label: 'Mar de Antioquia', grad: 'from-blue-200 to-blue-50' },
+    'Norte': { color: '#065f46', Icon: Trees, label: 'Ruta Lechera', grad: 'from-green-100 to-green-50' },
+    'Occidente': { color: '#b45309', Icon: Sun, label: 'Sol de Occidente', grad: 'from-orange-100 to-orange-50' },
+    'Valle de Aburrá': { color: '#065f46', Icon: Sparkles, label: 'Corazón Urbano', grad: 'from-emerald-100 to-emerald-50' },
     'Nordeste': { color: '#B45309', Icon: Mountain, label: 'Minería y Montaña', grad: 'from-amber-200 to-amber-50' },
     'Bajo Cauca': { color: '#1E3A8A', Icon: Waves, label: 'Riberas del Cauca', grad: 'from-blue-200 to-blue-100' },
     'Magdalena Medio': { color: '#92400E', Icon: Sun, label: 'Calor de Río', grad: 'from-yellow-100 to-orange-50' },
@@ -104,8 +104,8 @@ export const SafeImage: React.FC<SafeImageProps> = ({
                   </>
                 )}
                 
-                <div className={`relative z-10 rounded-full bg-white/80 shadow-2xl flex items-center justify-center border border-white ${isThumbnail ? 'w-12 h-12' : 'w-24 h-24'}`}>
-                  <config.Icon size={isThumbnail ? 24 : 44} style={{ color: config.color }} className="opacity-90" strokeWidth={1.5} />
+                <div className={`relative z-10 rounded-[28px] bg-white shadow-[0_20px_50px_-10px_rgba(0,0,0,0.15)] flex items-center justify-center border-2 border-white ${isThumbnail ? 'w-12 h-12' : 'w-24 h-24'}`}>
+                  <config.Icon size={isThumbnail ? 24 : 48} style={{ color: config.color }} strokeWidth={2.5} />
                   <div className={`absolute -top-1 -right-1 bg-emerald-500 rounded-full text-white shadow-lg flex items-center justify-center ${isThumbnail ? 'p-0.5' : 'p-1.5'}`}>
                     <ShieldCheck size={isThumbnail ? 8 : 12} strokeWidth={3} />
                   </div>

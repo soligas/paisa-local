@@ -24,7 +24,6 @@ export async function searchUnified(query: string, lang: SupportedLang = 'es'): 
   const apiKey = process.env.API_KEY || "";
   
   if (!apiKey || apiKey === "undefined" || apiKey === "") {
-    console.warn("Advertencia: No se encontró la API_KEY en el entorno. Utilizando datos locales de respaldo.");
     return localMatch ? [localMatch] : [];
   }
   
@@ -33,13 +32,13 @@ export async function searchUnified(query: string, lang: SupportedLang = 'es'): 
   try {
     const response = await ai.models.generateContent({
       model: "gemini-3-flash-preview",
-      contents: `Realiza una auditoría técnica de viaje para: "${query}, Antioquia". Idioma: ${lang}.
-      Necesito detalles precisos para un turista:
-      1. Logística: frecuencia de transporte y terminal de salida.
-      2. Economía: Cajeros (ATM), aceptación de medios electrónicos, nota sobre pagos.
-      3. Gastronomía: platos típicos con precio promedio actual.
-      4. Aventura: sitios de interés/rutas con nivel de dificultad.
-      5. Maleta: 5 elementos esenciales para el clima local.`,
+      contents: `Realiza una auditoría TÁCTICA de viaje para: "${query}, Antioquia". Idioma: ${lang}.
+      Necesito detalles CRUDOS para un turista:
+      1. Logística: Debes especificar la frecuencia exacta de buses (ej: cada 20 min) y decir exactamente si sale de la 'Terminal del Norte' o 'Terminal del Sur'. No digas 'Norte/Sur'.
+      2. Economía: Cajeros (ATM), si aceptan tarjeta, nota táctica sobre pagos (efectivo vs QR Bancolombia), lugares específicos de cambio de moneda, puntos de retiro y qué día es el mercado.
+      3. Gastronomía: 3 platos típicos imperdibles con precio estimado.
+      4. Aventura: 3 charcos/rutas con dificultad y equipo.
+      5. Maleta: 5 cosas esenciales.`,
       config: {
         tools: [{ googleSearch: {} }],
         responseMimeType: "application/json",
@@ -114,23 +113,9 @@ export async function searchUnified(query: string, lang: SupportedLang = 'es'): 
             }
           }
         },
-        systemInstruction: "Eres Arriero Pro, un asistente experto en turismo para los 125 municipios de Antioquia. Responde con precisión técnica, claridad y en el idioma solicitado. Evita el uso de modismos informales extremados."
+        systemInstruction: "Eres Arriero Pro. No uses marcadores de posición. Si no conoces la terminal exacta, búscala: Suroeste sale de la Sur, Oriente/Norte sale de la Norte."
       },
     });
-
-    const groundingLinks: GroundingLink[] = [];
-    const groundingChunks = response.candidates?.[0]?.groundingMetadata?.groundingChunks;
-    if (groundingChunks) {
-      groundingChunks.forEach((chunk: any) => {
-        if (chunk.web) {
-          groundingLinks.push({
-            title: chunk.web.title || "Fuente oficial",
-            uri: chunk.web.uri,
-            type: 'news'
-          });
-        }
-      });
-    }
 
     const rawData = safeJsonParse(response.text || "");
     const results: any[] = [];
@@ -143,15 +128,13 @@ export async function searchUnified(query: string, lang: SupportedLang = 'es'): 
           imagen: img || "https://images.unsplash.com/photo-1591605417688-6c0b3b320791",
           terminalInfo: data.terminalInfo || (data.region?.toLowerCase().includes('oriente') ? "Terminal del Norte" : "Terminal del Sur"),
           busFrequency: data.busFrequency || "Frecuencia regular cada 30 min.",
-          packingList: data.packingList || ["Protección solar", "Ropa cómoda", "Cámara fotográfica", "Identificación", "Efectivo"],
-          vibeScore: data.vibeScore || 95,
-          groundingLinks: groundingLinks
+          packingList: data.packingList || ["Protección solar", "Ropa cómoda", "Efectivo"],
+          vibeScore: data.vibeScore || 95
         });
       }
     }
     return results.length === 0 && localMatch ? [localMatch] : results;
   } catch (e) { 
-    console.error("Gemini API Error:", e);
     return localMatch ? [localMatch] : []; 
   }
 }
@@ -163,7 +146,7 @@ export async function generateSmartItinerary(place: string, lang: SupportedLang 
   try {
     const response = await ai.models.generateContent({
       model: 'gemini-3-flash-preview',
-      contents: `Crea un itinerario de viaje detallado para un día en ${place}, Antioquia. Idioma: ${lang}.`,
+      contents: `Crea un itinerario de viaje detallado de 1 día para ${place}, Antioquia. Idioma: ${lang}.`,
       config: { 
         responseMimeType: "application/json",
         responseSchema: {
@@ -196,7 +179,7 @@ export async function generateTacticalRecommendations(place: string, lang: Suppo
   try {
     const response = await ai.models.generateContent({
       model: 'gemini-3-flash-preview',
-      contents: `Proporciona 5 recomendaciones de viaje importantes sobre ${place}, Antioquia.`,
+      contents: `Dime 5 secretos o consejos tácticos locales sobre ${place}, Antioquia.`,
       config: {
         responseMimeType: "application/json",
         responseSchema: {
@@ -219,7 +202,7 @@ export async function generateLocalTours(place: string, lang: SupportedLang = 'e
   try {
     const response = await ai.models.generateContent({
       model: 'gemini-3-flash-preview',
-      contents: `Sugiere 3 tours ideales para contratar en ${place}, Antioquia. No incluyas precios, solo nombre, descripción, duración e incluye.`,
+      contents: `Sugiere 3 tours ideales para contratar en ${place}, Antioquia. Incluye nombre, descripción, duración e incluye. Formato JSON.`,
       config: {
         responseMimeType: "application/json",
         responseSchema: {

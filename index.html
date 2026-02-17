@@ -10,81 +10,95 @@
     <title>Arriero Pro | Inteligencia Turística de Antioquia</title>
     
     <script src="https://cdn.tailwindcss.com"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@200;400;600;700;800&family=Montserrat:wght@900&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@200;400;600;700;800&family=Montserrat:wght@900&family=JetBrains+Mono:wght@700&display=swap" rel="stylesheet">
     
     <script>
-      // Inicialización segura de process.env para no borrar la API_KEY
-      window.process = window.process || { env: {} };
-      window.process.env = window.process.env || {};
-      window.process.env.NODE_ENV = 'production';
-
-      tailwind.config = {
-        theme: {
-          extend: {
-            colors: {
-              paisa: {
-                emerald: '#2D7A4C',
-                gold: '#D4A574',
-                charcoal: '#1A242F',
-                light: '#F8FAFC'
-              }
-            },
-            fontFamily: {
-              sans: ['Plus Jakarta Sans', 'sans-serif'],
-              paisa: ['Montserrat', 'sans-serif'],
-            },
-            animation: {
-              marquee: 'marquee 25s linear infinite',
-            },
-            keyframes: {
-              marquee: {
-                '0%': { transform: 'translateX(0%)' },
-                '100%': { transform: 'translateX(-50%)' },
-              }
-            }
-          }
-        }
-      }
+      window.process = {
+        env: { 
+          NODE_ENV: 'production',
+          API_KEY: '' 
+        },
+        cwd: () => '/',
+        browser: true
+      };
     </script>
     
     <style>
-        :root { --paisa-emerald: #2D7A4C; --paisa-gold: #D4A574; --paisa-charcoal: #1A242F; }
-        body { background-color: #fcfdfd; color: var(--paisa-charcoal); overflow-x: hidden; margin: 0; padding: 0; -webkit-font-smoothing: antialiased; }
-        .font-paisa { font-family: 'Montserrat', sans-serif; font-weight: 900; text-transform: uppercase; }
-        .no-scrollbar::-webkit-scrollbar { display: none; }
-        .animate-marquee { display: flex; gap: 40px; }
+        :root { 
+          --paisa-emerald: #2D7A4C; 
+          --paisa-gold: #D4A574; 
+          --paisa-charcoal: #1A242F;
+          --paisa-bg: #f8faf9;
+          --paisa-white-solid: #ffffff;
+          --paisa-dark-solid: #0f172a;
+        }
         
-        /* Estilos para el iframe de Helio */
-        #helio-container iframe {
-          border-radius: 32px;
-          border: none;
-          width: 100%;
-          height: 500px;
+        body { 
+          background-color: var(--paisa-bg); 
+          color: var(--paisa-charcoal); 
+          overflow-x: hidden; 
+          margin: 0; 
+          padding: 0; 
+          -webkit-font-smoothing: antialiased;
+          font-family: 'Plus Jakarta Sans', sans-serif;
+        }
+
+        .font-paisa { font-family: 'Montserrat', sans-serif; font-weight: 900; text-transform: uppercase; }
+        .font-tactical { font-family: 'JetBrains Mono', monospace; }
+        
+        .no-scrollbar::-webkit-scrollbar { display: none; }
+        
+        .animate-marquee { 
+          display: flex; 
+          gap: 60px; 
+          animation: marquee 40s linear infinite;
+        }
+
+        @keyframes marquee {
+          0% { transform: translateX(0); }
+          100% { transform: translateX(-50%); }
+        }
+
+        .shadow-4xl {
+          box-shadow: 0 32px 64px -16px rgba(0, 0, 0, 0.15);
+        }
+
+        .scrim-bottom {
+          background: linear-gradient(to top, #0f172a 0%, #0f172a 20%, transparent 100%);
+        }
+
+        .map-grid {
+          background-image: radial-gradient(circle at 1px 1px, #2D7A4C 1px, transparent 0);
+          background-size: 24px 24px;
+        }
+
+        .text-shadow-tactical {
+          text-shadow: 0 2px 4px rgba(0,0,0,0.5);
         }
     </style>
 <script type="importmap">
 {
   "imports": {
-    "react": "https://esm.sh/react@19.2.3",
-    "react-dom": "https://esm.sh/react-dom@19.2.3",
-    "react-dom/client": "https://esm.sh/react-dom@19.2.3/client",
+    "react": "https://esm.sh/react@19.0.0",
+    "react-dom": "https://esm.sh/react-dom@19.0.0",
+    "react-dom/client": "https://esm.sh/react-dom@19.0.0/client",
     "@google/genai": "https://esm.sh/@google/genai@1.3.0",
     "framer-motion": "https://esm.sh/framer-motion@11.11.17?external=react,react-dom",
-    "lucide-react": "https://esm.sh/lucide-react@0.454.0?external=react,react-dom",
-    "react/": "https://esm.sh/react@^19.2.4/",
-    "process": "https://esm.sh/process@^0.11.10",
+    "lucide-react": "https://esm.sh/lucide-react@0.475.0?external=react,react-dom",
+    "process": "https://esm.sh/process@0.11.10",
+    "@vercel/blob": "https://esm.sh/@vercel/blob@2.2.0",
     "react-dom/": "https://esm.sh/react-dom@^19.2.4/",
-    "@vitejs/plugin-react": "https://esm.sh/@vitejs/plugin-react@^5.1.2",
+    "react/": "https://esm.sh/react@^19.2.4/",
     "vite": "https://esm.sh/vite@^7.3.1",
-    "url": "https://esm.sh/url@^0.11.4",
+    "@vitejs/plugin-react": "https://esm.sh/@vitejs/plugin-react@^5.1.4",
     "path": "https://esm.sh/path@^0.12.7",
-    "@vercel/blob": "https://esm.sh/@vercel/blob@^2.0.1"
+    "url": "https://esm.sh/url@^0.11.4"
   }
 }
 </script>
 </head>
 <body>
     <div id="root"></div>
-    <script type="module" src="/index.tsx"></script>
+    <script type="module" src="index.tsx"></script>
 </body>
 </html>
